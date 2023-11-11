@@ -28,8 +28,10 @@ local mods = {
  idle     = false, -- whether to select only idle units
  same     = false, -- whether to select only units that share type with current selection
  deselect = false, -- whether to select units not present in current selection
- all      = false, -- whether to select all units
  mobile   = false, -- whether to select only mobile units
+ all      = false, -- whether to select without filters
+ append   = false, -- whether to append units to current selection
+ builder  = false, -- whether to select only builders
 }
 local customFilterDef = ""
 local lastMods = mods
@@ -258,12 +260,14 @@ function widget:Update(dt)
 		and mods.deselect == lastMods[3]
 		and mods.all == lastMods[4]
 		and mods.mobile == lastMods[5]
+		and mods.append == lastMods[6]
+		and mods.builder == lastMods[7]
 		and customFilterDef == lastCustomFilterDef
 	then
 		return
 	end
 
-	lastMods = { mods.idle, mods.same, mods.deselect, mods.all, mods.mobile }
+	lastMods = { mods.idle, mods.same, mods.deselect, mods.all, mods.mobile, mods.append, mods.builder }
 	lastCustomFilterDef = customFilterDef
 
 	-- Fill dictionary for set comparison
@@ -293,80 +297,129 @@ function widget:Update(dt)
 		end
 	end
 
-	if mods.idle then
-		tmp = {}
-		for i = 1, #mouseSelection do
-			uid = mouseSelection[i]
-			udid = spGetUnitDefID(uid)
-			if spGetUnitCommandCount(uid) == 0 then
-				tmp[#tmp + 1] = uid
+	if mods.all then
+		if not selectBuildingsWithMobile then
+			-- only select mobile units, not buildings
+			local mobiles = false
+			for i = 1, #mouseSelection do
+				uid = mouseSelection[i]
+				if mobileFilter[ spGetUnitDefID(uid) ] then
+					mobiles = true
+					break
+				end
+			end
+
+			if mobiles then
+				tmp = {}
+				for i = 1, #mouseSelection do
+					uid = mouseSelection[i]
+					udid = spGetUnitDefID(uid)
+					if buildingFilter[udid] == false then
+						tmp[#tmp + 1] = uid
+					end
+				end
+				mouseSelection = tmp
 			end
 		end
-		mouseSelection = tmp
-	end
-
-	-- only select new units identical to those already selected
-	if mods.same and #referenceSelection > 0 then
-		tmp = {}
-		for i = 1, #mouseSelection do
-			uid = mouseSelection[i]
-			if referenceSelectionTypes[ spGetUnitDefID(uid) ] ~= nil then
-				tmp[#tmp + 1] = uid
-			end
-		end
-		mouseSelection = tmp
-	end
-
-	if mods.mobile then  -- only select mobile combat units
-		if not mods.deselect then
+	else
+		if mods.idle then
 			tmp = {}
-			for i = 1, #referenceSelection do
-				uid = referenceSelection[i]
+			for i = 1, #mouseSelection do
+				uid = mouseSelection[i]
+				udid = spGetUnitDefID(uid)
+				if spGetUnitCommandCount(uid) == 0 then
+					tmp[#tmp + 1] = uid
+				end
+			end
+			mouseSelection = tmp
+		end
+
+		-- only select new units identical to those already selected
+		if mods.same and #referenceSelection > 0 then
+			tmp = {}
+			for i = 1, #mouseSelection do
+				uid = mouseSelection[i]
+				if referenceSelectionTypes[ spGetUnitDefID(uid) ] ~= nil then
+					tmp[#tmp + 1] = uid
+				end
+			end
+			mouseSelection = tmp
+		end
+
+		if mods.mobile then  -- only select mobile combat units
+			if not mods.deselect then
+				tmp = {}
+				for i = 1, #referenceSelection do
+					uid = referenceSelection[i]
+					if combatFilter[ spGetUnitDefID(uid) ] then  -- is a combat unit
+						tmp[#tmp + 1] = uid
+					end
+				end
+				newSelection = tmp
+			end
+
+			tmp = {}
+			for i = 1, #mouseSelection do
+				uid = mouseSelection[i]
 				if combatFilter[ spGetUnitDefID(uid) ] then  -- is a combat unit
 					tmp[#tmp + 1] = uid
 				end
 			end
-			newSelection = tmp
-		end
+			mouseSelection = tmp
 
-		tmp = {}
-		for i = 1, #mouseSelection do
-			uid = mouseSelection[i]
-			if combatFilter[ spGetUnitDefID(uid) ] then  -- is a combat unit
-				tmp[#tmp + 1] = uid
-			end
-		end
-		mouseSelection = tmp
-
-	elseif selectBuildingsWithMobile == false and mods.all == false and mods.deselect == false then
-		-- only select mobile units, not buildings
-		local mobiles = false
-		for i = 1, #mouseSelection do
-			uid = mouseSelection[i]
-			if mobileFilter[ spGetUnitDefID(uid) ] then
-				mobiles = true
-				break
-			end
-		end
-
-		if mobiles then
-			tmp = {}
-			local tmp2 = {}
-			for i = 1, #mouseSelection do
-				uid = mouseSelection[i]
-				udid = spGetUnitDefID(uid)
-				if buildingFilter[udid] == false then
-					if includeBuilders or not builderFilter[udid] then
+		elseif mods.builder then  -- only select mobile builder units
+			if not mods.deselect then
+				tmp = {}
+				for i = 1, #referenceSelection do
+					uid = referenceSelection[i]
+					local unitDefID = spGetUnitDefID(uid)
+					if builderFilter[unitDefID] and mobileFilter[unitDefID] then  -- is a a builder unit
 						tmp[#tmp + 1] = uid
-					else
-						tmp2[#tmp2 + 1] = uid
 					end
 				end
+				newSelection = tmp
 			end
-			if #tmp == 0 then
-				tmp = tmp2
+
+			tmp = {}
+			for i = 1, #mouseSelection do
+				uid = mouseSelection[i]
+				local unitDefID = spGetUnitDefID(uid)
+				if builderFilter[unitDefID] and mobileFilter[unitDefID] then  -- is a a builder unit
+					tmp[#tmp + 1] = uid
+				end
 			end
 			mouseSelection = tmp
+
+		elseif selectBuildingsWithMobile == false and mods.all == false and mods.deselect == false then
+			-- only select mobile units, not buildings
+			local mobiles = false
+			for i = 1, #mouseSelection do
+				uid = mouseSelection[i]
+				if mobileFilter[ spGetUnitDefID(uid) ] then
+					mobiles = true
+					break
+				end
+			end
+
+			if mobiles then
+				tmp = {}
+				local tmp2 = {}
+				for i = 1, #mouseSelection do
+					uid = mouseSelection[i]
+					udid = spGetUnitDefID(uid)
+					if buildingFilter[udid] == false then
+						if includeBuilders or not builderFilter[udid] then
+							tmp[#tmp + 1] = uid
+						else
+							tmp2[#tmp2 + 1] = uid
+						end
+					end
+				end
+				if #tmp == 0 then
+					tmp = tmp2
+				end
+				mouseSelection = tmp
+			end
 		end
 	end
 
@@ -392,7 +445,7 @@ function widget:Update(dt)
 		selectedUnits = newSelection
 		spSelectUnitArray(selectedUnits)
 
-	elseif mods.all then  -- append units inside selection rectangle to current selection
+	elseif mods.append then  -- append units inside selection rectangle to current selection
 		spSelectUnitArray(newSelection)
 		spSelectUnitArray(mouseSelection, true)
 		selectedUnits = Spring.GetSelectedUnits()
