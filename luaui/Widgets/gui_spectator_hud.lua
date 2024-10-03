@@ -1952,7 +1952,7 @@ function widget:Shutdown()
 end
 
 function widget:ViewResize()
-        font = WG['fonts'].getFont()
+	font = WG['fonts'].getFont()
 end
 
 function widget:UnitFinished(unitID, unitDefID, unitTeam)
