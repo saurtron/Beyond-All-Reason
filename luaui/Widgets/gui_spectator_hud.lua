@@ -85,6 +85,7 @@ local regenerateTextTextures = true
 local titleTexture = nil
 local titleTextureDone = false
 local statsTexture = nil
+local font
 
 local knobVertexShaderSource = [[
 #version 420
@@ -1948,6 +1949,10 @@ function widget:Shutdown()
 	if shader then
 		shader:Finalize()
 	end
+end
+
+function widget:ViewResize()
+        font = WG['fonts'].getFont()
 end
 
 function widget:UnitFinished(unitID, unitDefID, unitTeam)
