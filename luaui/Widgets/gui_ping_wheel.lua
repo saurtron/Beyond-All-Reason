@@ -223,6 +223,7 @@ end
 -- when widget exits, re-enable the mouse build spacing widget
 function widget:Shutdown()
     --:EnableWidget("Mouse Buildspacing")
+    widgetHandler:DeregisterGlobal(widget, 'MapPingEvent')
 end
 
 -- Store the ping location in pingWorldLocation
