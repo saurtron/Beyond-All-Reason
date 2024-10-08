@@ -1505,6 +1505,12 @@
 				"buildinggrid_descr": "Affiche une grille de construction au sol afin de faciliter le placement des bâtiments.",
 				"buildinggridopacity": "opacité"
 			}
+		},
+		"wheel": {
+			"paid": "Payé",
+			"omw": "En chemin",
+			"attack": "Attaque",
+			"retreat": "Reviens"
 		}
 	}
 }

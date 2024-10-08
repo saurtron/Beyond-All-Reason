@@ -1661,6 +1661,12 @@
 				"title": "%{role1}/%{role2}",
 				"description": "%{role1}\n\nand/or\n\n%{role2}"
 			}
+		},
+		"wheel": {
+			"paid": "Paid",
+			"omw": "OMW",
+			"attack": "Attack",
+			"retreat": "Retreat"
 		}
 	}
 }

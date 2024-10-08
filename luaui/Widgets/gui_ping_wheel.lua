@@ -30,10 +30,10 @@ end
 local custom_keybind_mode = false                  -- set to true for custom keybind
 
 local pingCommands = {                             -- the options in the ping wheel, displayed clockwise from 12 o'clock
-    { name = "Attack",  color = { 1, 0.5, 0.3, 1 } }, -- color is optional, if no color is chosen it will be white
+    { name = "ui.wheel.attack",  color = { 1, 0.5, 0.3, 1 } }, -- color is optional, if no color is chosen it will be white
     { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 } },
     { name = "Defend",  color = { 0.7, 0.9, 1, 1 } },
-    { name = "Retreat", color = { 0.9, 0.7, 1, 1 } },
+    { name = "ui.wheel.retreat", color = { 0.9, 0.7, 1, 1 } },
     { name = "Alert",   color = { 1, 1, 0.5, 1 } },
     { name = "Reclaim", color = { 0.7, 1, 0.7, 1 } },
     { name = "Stop",    color = { 1, 0.2, 0.2, 1 } },
@@ -48,8 +48,8 @@ local pingMessages = {
     { name = "Sorry!",   color = { 0, 1, 0, 1 } },
     { name = "LOL",      color = { 0, 1, 1, 1 } },
     { name = "No",       color = { 0, 0, 1, 1 } },
-    { name = "OMW",      color = { 0.5, 0, 1, 1 } },
-    { name = "For sale", color = { 1, 0, 1, 1 } },
+    { name = "ui.wheel.omw",  color = { 0.5, 0, 1, 1 } },
+    { name = "ui.wheel.paid", color = { 1, 0, 1, 1 } },
 }
 
 local styleChoice = 1 -- 1 = circle, 2 = ring, 3 = custom
@@ -175,10 +175,32 @@ local function colourNames(R, G, B)
     return "\255" .. string.char(R255) .. string.char(G255) .. string.char(B255) --works thanks to zwzsg
 end
 
+local function getTranslatedText(text)
+    if string.sub(text, 1, 3) == 'ui.' then
+        text = Spring.I18N(text)
+    end
+    return text
+end
+
+function MapPingEvent(playerID, str)
+    local data = Json.decode(str)
+    local text = getTranslatedText(data['text'])
+    -- Send a local ping since each user will see it in their own language
+    Spring.MarkerAddPoint(data['x'], data['y'], data['z'],
+        text, true, playerID)
+end
+
+local function createMapPing(playerID, text, x, y, z, r, g, b)
+    data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b}
+    msg = Json.encode(data)
+    Spring.SendLuaRulesMsg('ping:' .. msg)
+end
+
 function widget:Initialize()
     -- add the action handler with argument for press and release using the same function call
     widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { true }, "pR")
     widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { false }, "r")
+    widgetHandler:RegisterGlobal(widget, 'MapPingEvent', MapPingEvent)
     pingWheelPlayerColor = { Spring.GetTeamColor(Spring.GetMyTeamID()) }
     if player_color_mode then
         pingWheelColor = pingWheelPlayerColor
@@ -322,8 +344,9 @@ function widget:MouseRelease(mx, my, button)
             --Spring.Echo("pingWheelSelection: " .. pingWheel[pingWheelSelection].name)
             local pingText = pingWheel[pingWheelSelection].name
             local color = pingWheel[pingWheelSelection].color or pingWheelColor
-            Spring.MarkerAddPoint(pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
-                colourNames(color[1], color[2], color[3]) .. pingText, false)
+
+            createMapPing(Spring.GetMyPlayerID(), pingWheel[pingWheelSelection].name, pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
+	        color[1], color[2], color[3])
 
             -- Spam control is necessary!
             spamControl = spamControlFrames
@@ -543,7 +566,7 @@ function widget:DrawScreen()
         --glColor(textColor)
         glBeginText()
         if pingWheelSelection ~= 0 then
-            local text = pingWheel[pingWheelSelection].name
+            local text = getTranslatedText(pingWheel[pingWheelSelection].name)
             local color = pingWheel[pingWheelSelection].color or textColor
             color[4] = 1
             if flashBlack then
@@ -563,7 +586,7 @@ function widget:DrawScreen()
         for i = 1, #pingWheel do
             if i ~= pingWheelSelection or pingWheelSelection == 0 then
                 angle = (i - 1) * 2 * math.pi / #pingWheel
-                local text = pingWheel[i].name
+                local text = getTranslatedText(pingWheel[i].name)
                 local color = pingWheel[i].color or pingWheelTextColor
                 color[4] = 0.75
                 glColor(color)
