@@ -86,7 +86,6 @@ local styleConfig = {
 }
 
 -- On/Off switches
-local use_colors = false -- set to false to use player color instead of custom ping color (controlled from options ui)
 local draw_dividers = true     -- set to false to disable the dividers between options
 local draw_line = false       -- set to true to draw a line from the center to the cursor during selection
 local draw_circle = false      -- set to false to disable the circle around the ping wheel
@@ -156,38 +155,11 @@ local sqrt = math.sqrt
 local soundDefaultSelect = "sounds/commands/cmd-default-select.wav"
 local soundSetTarget = "sounds/commands/cmd-settarget.wav"
 
-local function colourNames(R, G, B)
-    local R255 = math.floor(R * 255) --the first \255 is just a tag (not colour setting) no part can end with a zero due to engine limitation (C)
-    local G255 = math.floor(G * 255)
-    local B255 = math.floor(B * 255)
-    if R255 % 10 == 0 then
-        R255 = R255 + 1
-    end
-    if G255 % 10 == 0 then
-        G255 = G255 + 1
-    end
-    if B255 % 10 == 0 then
-        B255 = B255 + 1
-    end
-    return "\255" .. string.char(R255) .. string.char(G255) .. string.char(B255) --works thanks to zwzsg
-end
-
 local function getTranslatedText(text)
     if string.sub(text, 1, 3) == 'ui.' then
         text = Spring.I18N(text)
     end
     return text
-end
-
-function MapPingEvent(playerID, str)
-    local data = Json.decode(str)
-    local text = getTranslatedText(data['text'])
-    -- Send a local ping since each user will see it in their own language
-    if use_colors and data['r'] and data['g'] and data['b'] then
-        text = colourNames(data['r'], data['g'], data['b']) .. text
-    end
-    Spring.MarkerAddPoint(data['x'], data['y'], data['z'],
-        text, true, playerID)
 end
 
 local function createMapPing(playerID, text, x, y, z, r, g, b)
@@ -196,31 +168,10 @@ local function createMapPing(playerID, text, x, y, z, r, g, b)
     Spring.SendLuaRulesMsg('ping:' .. msg)
 end
 
-function widget:GetConfigData()
-    return {
-        useColors = use_colors
-    }
-end
-
-function widget:SetConfigData(data)
-    if data.useColors ~= nil then
-        use_colors = data.useColors
-    end
-end
-
-
 function widget:Initialize()
-    WG['pingwheel'] = {}
-    WG['pingwheel'].getUseColors = function()
-        return use_colors
-    end
-    WG['pingwheel'].setUseColors = function(value)
-        use_colors = value
-    end
     -- add the action handler with argument for press and release using the same function call
     widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { true }, "pR")
     widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { false }, "r")
-    widgetHandler:RegisterGlobal(widget, 'MapPingEvent', MapPingEvent)
     pingWheelPlayerColor = { Spring.GetTeamColor(Spring.GetMyTeamID()) }
     pingWheelColor = pingWheelPlayerColor
 
@@ -236,7 +187,6 @@ function widget:Initialize()
 end
 
 function widget:Shutdown()
-    widgetHandler:DeregisterGlobal(widget, 'MapPingEvent')
 end
 
 -- Store the ping location in pingWorldLocation

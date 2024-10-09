@@ -3709,10 +3709,10 @@ function init()
 		},
 		{ id = "pingwheel_showcolors", group = "ui", category = types.advanced, name = Spring.I18N('ui.settings.option.pingwheel') .. widgetOptionColor .. "  " .. Spring.I18N('ui.settings.option.pingwheel_colors'), type = "bool", value = (WG['pingwheel'] ~= nil and WG['pingwheel'].getUseColors() or 0), description = Spring.I18N('ui.settings.option.pingwheel_colors_descr'),
 		  onload = function(i)
-			  loadWidgetData("Ping Wheel", "pingwheel_showcolors", { 'useColors' })
+			  loadWidgetData("Ping Wheel Event", "pingwheel_showcolors", { 'useColors' })
 		  end,
 		  onchange = function(i, value)
-			  saveOptionValue('Ping Wheel', 'pingwheel', 'setUseColors', { 'useColors' }, value)
+			  saveOptionValue('Ping Wheel Event', 'pingwheel', 'setUseColors', { 'useColors' }, value)
 		  end,
 		},
 
