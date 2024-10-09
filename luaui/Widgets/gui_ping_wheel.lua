@@ -2,7 +2,7 @@ function widget:GetInfo()
     return {
         name    = "Ping Wheel",
         desc    =
-        "Displays a ping wheel when a keybind is held down. Default keybind is 'alt-f', rebindable. Left click (or mouse 4) to bring up commands wheel, right click (or mouse 5) for messages wheel. \nNow with two wheel styles! (edit file param to change style)",
+        "Displays a ping wheel when a keybind is held down. Default keybind is 'alt-w', rebindable. Left click (or mouse 4) to bring up commands wheel, right click (or mouse 5) for messages wheel. \nNow with two wheel styles! (edit file param to change style)",
         author  = "Errrrrrr",
         date    = "June 27, 2023",
         license = "GNU GPL, v2 or later",
@@ -14,9 +14,8 @@ function widget:GetInfo()
 end
 
 -----------------------------------------------------------------------------------------------
--- The wheel is opened by holding the keybind (default: alt-f), left click to select an option.
+-- The wheel is opened by holding the keybind (default: alt-w), left click to select an option.
 --
--- Set custom_keybind_mode to true for custom keybind.
 -- Bindable action name: ping_wheel_on
 --
 -- You can add or change the options in the pingWheel tables.
@@ -27,8 +26,6 @@ end
 -- NEW: you can now use mouse 4 and 5 directly for the two wheels!
 -- NEW: LOTS OF PRETTY COLORS!
 -----------------------------------------------------------------------------------------------
-local custom_keybind_mode = false                  -- set to true for custom keybind
-
 local pingCommands = {                             -- the options in the ping wheel, displayed clockwise from 12 o'clock
     { name = "ui.wheel.attack",  color = { 1, 0.5, 0.3, 1 } }, -- color is optional, if no color is chosen it will be white
     { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 } },
@@ -235,7 +232,7 @@ local function SetPingLocation()
 end
 
 local function FadeIn()
-    if numFadeInFrames == 0 then return end
+    if numFadeInFrames == 0 or not displayPingWheel then return end
     globalFadeIn = numFadeInFrames
     globalFadeOut = 0
 end
@@ -274,7 +271,7 @@ function PingWheelAction(_, _, _, args)
         keyDown = true
         --Spring.Echo("keyDown: " .. tostring(keyDown))
     else
-        --keyDown = false
+        keyDown = false
         --Spring.Echo("keyDown: " .. tostring(keyDown))
     end
 end
@@ -285,21 +282,6 @@ local function FlashAndOff()
     flashFrame = numFlashFrames
     --FadeOut()
     --Spring.Echo("Flashing off: " .. tostring(flashFrame))
-end
-
-function widget:KeyPress(key, mods, isRepeat)
-    if not custom_keybind_mode then
-        if key == 102 and mods.alt then -- alt + f
-            keyDown = true
-        end
-    end
-end
-
-function widget:KeyRelease(key, mods)
-    -- making sure weird lingering display doesn't happen with custom keybind!
-    keyDown = false
-    --TurnOff("key release")
-    --Spring.Echo("keyDown: " .. tostring(keyDown))
 end
 
 function widget:MousePress(mx, my, button)

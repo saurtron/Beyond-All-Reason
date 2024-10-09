@@ -63,3 +63,6 @@ bind       Any+pagedown  movedown
 bind            Any+alt  movereset      // fast camera reset on mousewheel
 bind            Any+alt  moverotate     // rotate on x,y with mmb hold + move (Spring Camera)
 bind           Any+ctrl  movetilt       // rotate on x with mousewheel
+
+// ping wheel
+bind           Alt+sc_w  ping_wheel_on
