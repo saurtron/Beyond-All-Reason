@@ -86,7 +86,7 @@ local styleConfig = {
 }
 
 -- On/Off switches
-local player_color_mode = true -- set to false to use default pingWheelColor instead of player color
+local use_colors = false -- set to false to use player color instead of custom ping color (controlled from options ui)
 local draw_dividers = true     -- set to false to disable the dividers between options
 local draw_line = false       -- set to true to draw a line from the center to the cursor during selection
 local draw_circle = false      -- set to false to disable the circle around the ping wheel
@@ -183,6 +183,9 @@ function MapPingEvent(playerID, str)
     local data = Json.decode(str)
     local text = getTranslatedText(data['text'])
     -- Send a local ping since each user will see it in their own language
+    if use_colors and data['r'] and data['g'] and data['b'] then
+        text = colourNames(data['r'], data['g'], data['b']) .. text
+    end
     Spring.MarkerAddPoint(data['x'], data['y'], data['z'],
         text, true, playerID)
 end
@@ -193,15 +196,33 @@ local function createMapPing(playerID, text, x, y, z, r, g, b)
     Spring.SendLuaRulesMsg('ping:' .. msg)
 end
 
+function widget:GetConfigData()
+    return {
+        useColors = use_colors
+    }
+end
+
+function widget:SetConfigData(data)
+    if data.useColors ~= nil then
+        use_colors = data.useColors
+    end
+end
+
+
 function widget:Initialize()
+    WG['pingwheel'] = {}
+    WG['pingwheel'].getUseColors = function()
+        return use_colors
+    end
+    WG['pingwheel'].setUseColors = function(value)
+        use_colors = value
+    end
     -- add the action handler with argument for press and release using the same function call
     widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { true }, "pR")
     widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { false }, "r")
     widgetHandler:RegisterGlobal(widget, 'MapPingEvent', MapPingEvent)
     pingWheelPlayerColor = { Spring.GetTeamColor(Spring.GetMyTeamID()) }
-    if player_color_mode then
-        pingWheelColor = pingWheelPlayerColor
-    end
+    pingWheelColor = pingWheelPlayerColor
 
     -- set the style from config
     local style = styleConfig[styleChoice]

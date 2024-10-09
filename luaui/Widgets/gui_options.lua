@@ -3707,7 +3707,14 @@ function init()
 			  Spring.SetConfigInt("widgetselector", (value and 1 or 0))
 		  end,
 		},
-
+		{ id = "pingwheel_showcolors", group = "ui", category = types.advanced, name = Spring.I18N('ui.settings.option.pingwheel') .. widgetOptionColor .. "  " .. Spring.I18N('ui.settings.option.pingwheel_colors'), type = "bool", value = (WG['pingwheel'] ~= nil and WG['pingwheel'].getUseColors() or 0), description = Spring.I18N('ui.settings.option.pingwheel_colors_descr'),
+		  onload = function(i)
+			  loadWidgetData("Ping Wheel", "pingwheel_showcolors", { 'useColors' })
+		  end,
+		  onchange = function(i, value)
+			  saveOptionValue('Ping Wheel', 'pingwheel', 'setUseColors', { 'useColors' }, value)
+		  end,
+		},
 
 		{ id = "label_ui_visuals", group = "ui", name = Spring.I18N('ui.settings.option.label_visuals'), category = types.basic },
 		{ id = "label_ui_visuals_spacer", group = "ui", category = types.basic },
