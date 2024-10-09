@@ -215,14 +215,9 @@ function widget:Initialize()
     dividerOuterRatio = style.dividerOuterRatio
     textAlignRadiusRatio = style.textAlignRadiusRatio
     dividerColor = style.dividerColor
-
-    -- we disable the mouse build spacing widget here, sigh
-    widgetHandler:DisableWidget("Mouse Buildspacing")
 end
 
--- when widget exits, re-enable the mouse build spacing widget
 function widget:Shutdown()
-    --:EnableWidget("Mouse Buildspacing")
     widgetHandler:DeregisterGlobal(widget, 'MapPingEvent')
 end
 
@@ -309,25 +304,22 @@ end
 
 function widget:MousePress(mx, my, button)
     if keyDown or button == 4 or button == 5 then
-        -- functionality of mouse build spacing is put in here, sigh
-        -- check if alt is pressed
         local alt, ctrl, meta, shift = spGetModKeyState()
-        if (button == 4 or button == 5) and alt then
-            if button == 4 then
-                Spring.SendCommands("buildspacing inc")
-            elseif button == 5 then
-                Spring.SendCommands("buildspacing dec")
+        -- If any modifier is pressed we let other widgets handle this
+        -- unless on our keydown event.
+        if keyDown or not (alt or ctrl or meta or shift) then
+            local chosenWheel = false
+            if button == 1 or button == 4 then
+                chosenWheel = pingCommands
+            elseif button == 3 or button == 5 then
+                chosenWheel = pingMessages
             end
-            return
+            if chosenWheel then
+                pingWheel = chosenWheel
+                TurnOn("mouse press")
+                return true -- block all other mouse presses
+            end
         end
-
-        if button == 1 or button == 4 then
-            pingWheel = pingCommands
-        elseif button == 3 or button == 5 then
-            pingWheel = pingMessages
-        end
-        TurnOn("mouse press")
-        return true -- block all other mouse presses
     else
         -- set pingwheel to not display
         --TurnOff("mouse press")
