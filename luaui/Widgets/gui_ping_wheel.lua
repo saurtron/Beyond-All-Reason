@@ -47,6 +47,8 @@ local pingMessages = {
     { name = "No",       color = { 0, 0, 1, 1 } },
     { name = "ui.wheel.omw",  color = { 0.5, 0, 1, 1 } },
     { name = "ui.wheel.paid", color = { 1, 0, 1, 1 } },
+    -- add (possibly longer) msg attribute to have separate text on the wheel (name) and ping/chat (msg). as follows:
+    -- { name = "Shop Open", msg = "shop open; 440m per each (paying is mandatory)", color = { 0.5, 0, 1, 1 } },
 }
 
 local styleChoice = 1 -- 1 = circle, 2 = ring, 3 = custom
@@ -288,7 +290,7 @@ function widget:MouseRelease(mx, my, button)
     then
         if pingWheelSelection > 0 then
             --Spring.Echo("pingWheelSelection: " .. pingWheel[pingWheelSelection].name)
-            local pingText = pingWheel[pingWheelSelection].name
+            local pingText = pingWheel[pingWheelSelection].msg or pingWheel[pingWheelSelection].name
             local color = pingWheel[pingWheelSelection].color or pingWheelColor
 
             createMapPing(Spring.GetMyPlayerID(), pingWheel[pingWheelSelection].name, pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
