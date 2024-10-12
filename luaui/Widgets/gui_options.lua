@@ -3715,6 +3715,14 @@ function init()
 			  saveOptionValue('Ping Wheel Event', 'pingwheel', 'setUseColors', { 'useColors' }, value)
 		  end,
 		},
+		{ id = "pingwheel_style", group = "ui", category = types.advanced, name = widgetOptionColor .. "   " .. Spring.I18N('ui.settings.option.pingwheel_style'), type = "select", options = { Spring.I18N('ui.settings.option.pingwheel_style_white'), Spring.I18N('ui.settings.option.pingwheel_style_black'), Spring.I18N('ui.settings.option.pingwheel_style_old1'), Spring.I18N('ui.settings.option.pingwheel_style_old2') }, description = Spring.I18N('ui.settings.option.pingwheel_style_descr'), value = 1,
+			onload = function(i)
+				loadWidgetData("Ping Wheel", "pingwheel_style", { 'wheelStyle' })
+			end,
+			onchange = function(i, value)
+				saveOptionValue('Ping Wheel', 'pingwheel_gui', 'setWheelStyle', { 'wheelStyle' }, value)
+			end,
+		},
 
 		{ id = "label_ui_visuals", group = "ui", name = Spring.I18N('ui.settings.option.label_visuals'), category = types.basic },
 		{ id = "label_ui_visuals_spacer", group = "ui", category = types.basic },
