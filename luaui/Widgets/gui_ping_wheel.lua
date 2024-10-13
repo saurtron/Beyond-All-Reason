@@ -58,62 +58,45 @@ local styleChoice = 1 -- 1 = circle, 2 = ring, 3 = custom
 local styleConfig = {
     [1] = {
         name = "White",
-        bgTexture = "LuaUI/images/glow.dds",
-        bgTextureSizeRatio = 2.2,
-        bgTextureColor = { 0, 0, 0, 0.9 },
-        textAlignRadiusRatio = 1.1,
-        textSize = 16,
         gl4 = true,
-        pingWheelSelColor = {1.0, 1.0, 1.0, 0.5},
-        pingWheelRingColor = {1.0, 1.0, 1.0, 0.5},
-        fallback = 3,
     },
     [2] = {
         name = "Black",
-        bgTexture = "LuaUI/images/enemyspotter.dds",
-        bgTextureSizeRatio = 1.9,
-        bgTextureColor = { 0, 0, 0, 0.66 },
-        textAlignRadiusRatio = 1.1,
-        textSize = 16,
         gl4 = true,
         pingWheelSelColor = {0.0, 0.0, 0.0, 0.7},
         pingWheelRingColor = {0.0, 0.0, 0.0, 0.7},
-        fallback = 3,
     },
     [3] = {
         name = "Circle Light",
         bgTexture = "LuaUI/images/glow.dds",
         bgTextureSizeRatio = 2.2,
         bgTextureColor = { 0, 0, 0, 0.9 },
-        dividerInnerRatio = 0.45,
-        dividerOuterRatio = 1.1,
-        dividerColor = { 1, 1, 1, 0.15 },
-        textAlignRadiusRatio = 1.1,
         textSize = 24,
         gl4 = false,
     },
     [4] = {
         name = "Ring Light",
         bgTexture = "LuaUI/images/enemyspotter.dds",
-        bgTextureSizeRatio = 1.9,
-        bgTextureColor = { 0, 0, 0, 0.66 },
         dividerInnerRatio = 0.6,
         dividerOuterRatio = 1.2,
-        dividerColor = { 1, 1, 1, 0.15 },
-        textAlignRadiusRatio = 1.1,
         textSize = 24,
         gl4 = false,
     },
-    [5] = {
-        name = "Custom",
-        bgTexture = "",
-        bgTextureSizeRatio = 1.6,
-        bgTextureColor = { 0, 0, 0, 0.7 },
-        dividerInnerRatio = 0.4,
-        dividerOuterRatio = 1,
-        dividerColor = { 1, 1, 1, 0.15 },
-        textAlignRadiusRatio = 0.9,
-    },
+}
+
+-- Style defaults
+local defaults = {
+    iconSize = 0.16,
+    bgTextureColor = { 0, 0, 0, 0.66 },
+    bgTextureSizeRatio = 1.9,
+    dividerColor = { 1, 1, 1, 0.15 },
+    dividerInnerRatio = 0.45,
+    dividerOuterRatio = 1.1,
+    textSize = 16,
+    textAlignRadiusRatio = 1.1,
+    wheelSelColor = {1.0, 1.0, 1.0, 0.5},
+    wheelRingColor = {1.0, 1.0, 1.0, 0.5},
+    fallback = 3, -- should automatically set this to first non-gl4 style
 }
 
 -- On/Off switches
@@ -131,7 +114,6 @@ local numFlashFrames = 7    -- how many frames to flash when spamming
 local spamControlFrames = 8 -- how many frames to wait before allowing another ping
 
 -- Sizes and colors
-local doGl4BackgroundTexture = false
 local pingWheelBaseRadius = 0.1         -- base radius for whole wheel size (10% of the screen size)
 local dividerLineBaseWidth = 3.5        -- width of the divider empty space between sections
 local outerCircleBaseWidth = 2          -- width of the outer circle line
@@ -140,7 +122,7 @@ local linesBaseWidth = 2		-- thickness of the ping wheel line drawing
 local deadZoneRadiusRatio = 0.3         -- the center "no selection" area as a ratio of the ping wheel radius
 local outerLimitRadiusRatio = 5         -- the outer limit ratio where "no selection" is active
 
-local pingWheelTextBaseSize = 16
+local pingWheelTextBaseSize = defaults.textSize
 local pingWheelTextColor = { 1, 1, 1, 0.7 }
 local pingWheelTextHighlightColor = { 1, 1, 1, 1 }
 local pingWheelTextSpamColor = { 0.9, 0.9, 0.9, 0.4 }
@@ -148,11 +130,8 @@ local pingWheelPlayerColor = { 0.9, 0.8, 0.5, 0.8 }
 
 local pingWheelColor = { 0.9, 0.8, 0.5, 0.6 }
 local pingWheelBaseColor = {0.0, 0.0, 0.0, 0.3}
-local pingWheelSelColor = {1.0, 1.0, 1.0, 0.5}
-local pingWheelRingColor = {1.0, 1.0, 1.0, 0.5}
--- dark variant
--- local pingWheelSelColor = {0.0, 0.0, 0.0, 0.7}
--- local pingWheelRingColor = {0.0, 0.0, 0.0, 0.7}
+local pingWheelSelColor = defaults.wheelSelColor
+local pingWheelRingColor = defaults.wheelRingColor
 
 local selectedScaleFactor = 1.3         -- how much bigger to draw selected item text
 
@@ -168,6 +147,7 @@ local doubleWheel = false
 local useIcons = true
 
 -- Calculated sizes
+local iconSize = defaults.iconSize
 local viewSizeX, viewSizeY = Spring.GetViewGeometry()
 
 local pingWheelRadius = pingWheelBaseRadius * math.min(viewSizeX, viewSizeY)
@@ -188,11 +168,11 @@ local globalFadeIn = 0  -- how many frames left to fade in
 local globalFadeOut = 0 -- how many frames left to fade out
 
 local bgTexture = "LuaUI/images/glow.dds"
-local bgTextureSizeRatio = 1.9
-local bgTextureColor = { 0, 0, 0, 0.8 }
-local dividerInnerRatio = 0.4
-local dividerOuterRatio = 1
-local textAlignRadiusRatio = 1.1
+local bgTextureSizeRatio = defaults.bgTextureSizeRatio
+local bgTextureColor = defaults.bgTextureColor
+local dividerInnerRatio = defaults.dividerInnerRatio
+local dividerOuterRatio = defaults.dividerOuterRatio
+local textAlignRadiusRatio = defaults.textAlignRadiusRatio
 local dividerColor = { 1, 1, 1, 0.15 }
 
 local pingWheel = pingCommands
@@ -400,7 +380,7 @@ local function drawIcon(img, x, y, size, offset)
     glTexture(img)
     if not size then size = 1.0 end
     if not offset then offset = {x=0, y=0} end
-        local halfSize = pingWheelRadius * bgTextureSizeRatio * 0.08 * size
+        local halfSize = pingWheelRadius * iconSize * size
 
         local pos = {x=x+offset.x, y=y+offset.y}
 
@@ -550,31 +530,32 @@ end
 local function applyStyle()
     local style = styleConfig[styleChoice]
     bgTexture = style.bgTexture
-    bgTextureSizeRatio = style.bgTextureSizeRatio
-    bgTextureColor = style.bgTextureColor
-    dividerInnerRatio = style.dividerInnerRatio
-    dividerOuterRatio = style.dividerOuterRatio
-    textAlignRadiusRatio = style.textAlignRadiusRatio
-    dividerColor = style.dividerColor
-    local textSize = style.textSize or pingWheelTextBaseSize
+    bgTextureSizeRatio = style.bgTextureSizeRatio or defaults.bgTextureSizeRatio
+    bgTextureColor = style.bgTextureColor or defaults.bgTextureColor
+    pingWheelIconSize = style.iconSize or defaults.iconSize
+    dividerInnerRatio = style.dividerInnerRatio or defaults.dividerInnerRatio
+    dividerOuterRatio = style.dividerOuterRatio or defaults.dividerOuterRatio
+    textAlignRadiusRatio = style.textAlignRadiusRatio or defaults.textAlignRadiusRatio
+    dividerColor = style.dividerColor or defaults.dividerColor
+    pingWheelTextBaseSize = style.textSize or defaults.textSize
 
     gl4Style = style.gl4
     if gl4Style and not gl4Available then
-        styleChoice = style.fallback
+        styleChoice = style.fallback or defaults.fallback
         applyStyle()
         return
     end
     local vx, vy = Spring.GetViewGeometry()
 
     local sizeRatio = math.min(vx, vy)/1080.0
-    pingWheelTextSize = textSize * sizeRatio
+    pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
 
     if style.gl4 then
-        pingWheelSelColor = style.pingWheelSelColor
-        pingWheelRingColor = style.pingWheelRingColor
+        pingWheelSelColor = style.pingWheelSelColor or defaults.wheelSelColor
+        pingWheelRingColor = style.pingWheelRingColor or defaults.wheelRingColor
         draw_dividers = false
     else
-        draw_dividers = doDividers and true
+        draw_dividers = doDividers
     end
 end
 
@@ -927,6 +908,18 @@ local function drawLabels()
     glEndText()
 end
 
+local function drawBgTexture()
+    if bgTexture then
+          glColorDimmed(bgTextureColor)
+          glTexture(bgTexture)
+          -- use pingWheelRadius as the size of the background texture
+          local halfSize = pingWheelRadius * bgTextureSizeRatio
+          glTexRect(pingWheelScreenLocation.x - halfSize, pingWheelScreenLocation.y - halfSize,
+              pingWheelScreenLocation.x + halfSize, pingWheelScreenLocation.y + halfSize)
+          glTexture(false)
+      end
+end
+
 function widget:DrawScreen()
     if displayPingWheel and pingWheelScreenLocation and gl4Style then
         drawWheelGl4()
@@ -948,15 +941,7 @@ function widget:DrawScreen()
     if displayPingWheel and pingWheelScreenLocation then
         -- add the blackCircleTexture as background texture
         glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        if not gl4Available or not gl4Style or doGl4BackgroundTexture then
-            glColorDimmed(bgTextureColor) -- inverting color for the glow texture :)
-            glTexture(bgTexture)
-            -- use pingWheelRadius as the size of the background texture
-            local halfSize = pingWheelRadius * bgTextureSizeRatio
-            glTexRect(pingWheelScreenLocation.x - halfSize, pingWheelScreenLocation.y - halfSize,
-            pingWheelScreenLocation.x + halfSize, pingWheelScreenLocation.y + halfSize)
-            glTexture(false)
-        end
+        drawBgTexture()
 
         -- draw a smooth circle at the pingWheelScreenLocation with 128 vertices
         --glColor(pingWheelColor)
