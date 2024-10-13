@@ -123,8 +123,6 @@ local draw_line = false     -- set to true to draw a line from the center to the
 local draw_circle = false   -- set to false to disable the circle around the ping wheel
 local draw_icons = true     -- set to false to not draw item icons
 
-local doDividers = true
-
 -- Fade and spam frames (set to 0 to disable)
 -- NOTE: these are now game frames, not display frames, so always 30 fps
 local numFadeInFrames = 4   -- how many frames to fade in
@@ -161,6 +159,14 @@ local selectedScaleFactor = 1.3         -- how much bigger to draw selected item
 ---------------------------------------------------------------
 -- End of params
 --
+
+-- Internal switches
+local doDividers = true
+
+local pressReleaseMode = false
+local doubleWheel = false
+local useIcons = true
+
 -- Calculated sizes
 local viewSizeX, viewSizeY = Spring.GetViewGeometry()
 
@@ -519,13 +525,25 @@ end
 
 function widget:GetConfigData()
     return {
-        wheelStyle = styleChoice
+        wheelStyle = styleChoice,
+        interactionMode = pressReleaseMode and 2 or 1,
+        useIcons = useIcons,
+        doubleWheel = doubleWheel
     }
 end
 
 function widget:SetConfigData(data)
     if data.wheelStyle ~= nil then
         styleChoice = data.wheelStyle
+    end
+    if data.pressRelease ~= nil then
+        pressReleaseMode = data.interactionMode == 2
+    end
+    if data.useIcons ~= nil then
+        useIcons = data.useIcons
+    end
+    if data.doubleWheel ~= nil then
+        doubleWheel = data.doubleWheel
     end
 end
 
@@ -542,9 +560,9 @@ local function applyStyle()
 
     gl4Style = style.gl4
     if gl4Style and not gl4Available then
-	    styleChoice = style.fallback
-	    applyStyle()
-	    return
+        styleChoice = style.fallback
+        applyStyle()
+        return
     end
     local vx, vy = Spring.GetViewGeometry()
 
@@ -569,11 +587,30 @@ function widget:Initialize()
         styleChoice = value
         applyStyle()
     end
+    WG['pingwheel_gui'].getUseIcons = function()
+        return useIcons
+    end
+    WG['pingwheel_gui'].setUseIcons = function(value)
+        useIcons = value
+    end
+    WG['pingwheel_gui'].getInteractionMode = function()
+        return pressReleaseMode and 2 or 1
+    end
+    WG['pingwheel_gui'].setInteractionMode = function(value)
+        pressReleaseMode = value == 2
+    end
+    WG['pingwheel_gui'].getDoubleWheel = function()
+        return doubleWheel
+    end
+    WG['pingwheel_gui'].setDoubleWheel = function(value)
+        doubleWheel = value
+    end
+
+
 
     -- add the action handler with argument for press and release using the same function call
-    -- XXX TODO -> when releasing alt before w it won't fire the release handler!!!
-    widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { true }, "pR")
-    widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { false }, "r")
+    widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { true }, "p") --pR do we actually want Repeat?
+    -- widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { false }, "r") -- can't trust release event since releasing modified first makes it fail detection
     pingWheelPlayerColor = { Spring.GetTeamColor(Spring.GetMyTeamID()) }
     pingWheelColor = pingWheelPlayerColor
 
@@ -618,6 +655,7 @@ local function FadeIn()
 end
 
 local function FadeOut()
+    if flashing then return end
     if numFadeOutFrames == 0 then return end
     globalFadeIn = 0
     globalFadeOut = numFadeOutFrames
@@ -646,16 +684,6 @@ local function TurnOff(reason)
     end
 end
 
-function PingWheelAction(_, _, _, args)
-    if args[1] then
-        keyDown = true
-        --Spring.Echo("keyDown: " .. tostring(keyDown))
-    else
-        keyDown = false
-        --Spring.Echo("keyDown: " .. tostring(keyDown))
-    end
-end
-
 -- sets flashing effect to true and turn off wheel display
 local function FlashAndOff()
     flashing = true
@@ -664,39 +692,12 @@ local function FlashAndOff()
     --Spring.Echo("Flashing off: " .. tostring(flashFrame))
 end
 
-function widget:MousePress(mx, my, button)
-    if keyDown or button == 4 or button == 5 then
-        local alt, ctrl, meta, shift = spGetModKeyState()
-        -- If any modifier is pressed we let other widgets handle this
-        -- unless on our keydown event.
-        if keyDown or not (alt or ctrl or meta or shift) then
-            local chosenWheel = false
-            if button == 1 or button == 4 then
-                chosenWheel = pingCommands
-            elseif button == 3 or button == 5 then
-                chosenWheel = pingMessages
-            end
-            if chosenWheel then
-                pingWheel = chosenWheel
-                TurnOn("mouse press")
-                return true -- block all other mouse presses
-            end
-        end
-    else
-        -- set pingwheel to not display
-        --TurnOff("mouse press")
-        FadeOut()
-    end
-end
-
--- when mouse is pressed, issue the ping command
-function widget:MouseRelease(mx, my, button)
+local function checkRelease()
     if displayPingWheel
         and pingWorldLocation
         and spamControl == 0
     then
-        if pingWheelSelection > 0 then
-            --Spring.Echo("pingWheelSelection: " .. pingWheel[pingWheelSelection].name)
+        if pingWheelSelection > 0 and not flashing then
             local pingText = pingWheel[pingWheelSelection].msg or pingWheel[pingWheelSelection].name
             local color = pingWheel[pingWheelSelection].color or pingWheelColor
 
@@ -716,6 +717,86 @@ function widget:MouseRelease(mx, my, button)
     else
         --TurnOff("mouse release")
         FadeOut()
+    end
+end
+
+function widget:KeyRelease(key)
+    keyDown = false
+    if not pressReleaseMode and displayPingWheel and key == 27 then -- could include KEYSIMS but not sure it's worth it
+        -- click mode: allow closing with esc.
+        FadeOut()
+    elseif pressReleaseMode and displayPingWheel and not doubleWheel then
+        -- release mode, single wheel: allow activating on key release.
+        checkRelease()
+    end
+end
+
+function PingWheelAction(_, _, _, args)
+    if args[1] then
+        keyDown = true
+        if not displayPingWheel and not doubleWheel then
+            TurnOn("Single press")
+        end
+    else
+        -- NOTE: can't trust release action since if modifier is released first it won't trigger
+        --keyDown = false
+        --if displayPingWheel and not doubleWheel then
+        --    checkRelease()
+        --end
+        --Spring.Echo("keyDown: " .. tostring(keyDown))
+    end
+end
+
+function widget:MousePress(mx, my, button)
+    if displayPingWheel and not pressReleaseMode then
+        -- click mode: allow activating option with left and close with right.
+        if button == 1 then
+            checkRelease()
+        else
+            -- should be right click, but any button other than left seems more intuitive
+            FadeOut()
+        end
+    elseif displayPingWheel and pressReleaseMode and not doubleWheel then
+        -- release mode: if single wheel allow click as well as release.
+         if button == 1 then
+            checkRelease()
+            keyDown = false
+        elseif button == 3 then
+            FadeOut()
+            keyDown = false
+        end
+    elseif keyDown or button == 4 or button == 5 then
+        -- release mode.
+        local alt, ctrl, meta, shift = spGetModKeyState()
+        -- If any modifier is pressed we let other widgets handle this
+        -- unless on our keydown event.
+        if keyDown or not (alt or ctrl or meta or shift) then
+            local chosenWheel = false
+            if button == 1 or button == 4 then
+                chosenWheel = pingCommands
+            elseif not doubleWheel and (button == 3 or button == 5) then
+                chosenWheel = pingCommands
+            elseif button == 3 or button == 5 then
+                chosenWheel = pingMessages
+            end
+            if chosenWheel then
+                pingWheel = chosenWheel
+                TurnOn("mouse press")
+                return true -- block all other mouse presses
+            end
+        end
+    else
+        -- set pingwheel to not display
+        --TurnOff("mouse press")
+        FadeOut()
+    end
+end
+
+
+-- when mouse is pressed, issue the ping command
+function widget:MouseRelease(mx, my, button)
+    if pressReleaseMode then
+        checkRelease()
     end
 end
 
@@ -823,7 +904,7 @@ local function drawLabels()
         local isSelected = pingWheelSelection == i
         local angle = (i - 1) * 2 * pi / #pingWheel
         local text = getTranslatedText(pingWheel[i].name)
-        local color = isSelected and pingWheelTextHighlightColor or pingWheelTextColor
+        local color = (WG['pingwheel'].getUseColors() and pingWheel[i].color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
         color[4] = isSelected and 1 or 0.75
         if isSelected and flashBlack then
             color = { 0, 0, 0, 0 }
@@ -834,7 +915,7 @@ local function drawLabels()
         local y = pingWheelScreenLocation.y + pingWheelRadius * textAlignRadiusRatio * cos(angle)
         local icon = pingWheel[i].icon
         local textScale = isSelected and selectedScaleFactor or 1.0
-        if icon and draw_icons then
+        if icon and draw_icons and useIcons then
             drawIcon(icon, x, y+0.2*pingWheelRadius, pingWheel[i].size, pingWheel[i].icon_offset)
             y = y-0.05*pingWheelRadius
         end
@@ -852,7 +933,7 @@ function widget:DrawScreen()
     end
     -- if keyDown then draw a dot at where mouse is
     glPushMatrix()
-    if keyDown and not displayPingWheel then
+    if keyDown and not displayPingWheel and doubleWheel then
         -- draw dot at mouse location
         local mx, my = spGetMouseState()
         glColor(pingWheelColor)
@@ -921,9 +1002,9 @@ function widget:DrawScreen()
             end
         end
 
+        drawLabels()
     end
 
-    drawLabels()
 
     glPopMatrix()
     if displayPingWheel and pingWheelScreenLocation then
