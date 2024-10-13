@@ -3707,21 +3707,45 @@ function init()
 			  Spring.SetConfigInt("widgetselector", (value and 1 or 0))
 		  end,
 		},
-		{ id = "pingwheel_showcolors", group = "ui", category = types.advanced, name = Spring.I18N('ui.settings.option.pingwheel') .. widgetOptionColor .. "  " .. Spring.I18N('ui.settings.option.pingwheel_colors'), type = "bool", value = (WG['pingwheel'] ~= nil and WG['pingwheel'].getUseColors() or 0), description = Spring.I18N('ui.settings.option.pingwheel_colors_descr'),
+		{ id = "pingwheel_style", group = "ui", category = types.advanced, name = Spring.I18N('ui.settings.option.pingwheel') .. widgetOptionColor .. "  " .. Spring.I18N('ui.settings.option.pingwheel_style'), type = "select", options = { Spring.I18N('ui.settings.option.pingwheel_style_white'), Spring.I18N('ui.settings.option.pingwheel_style_black'), Spring.I18N('ui.settings.option.pingwheel_style_circle'), Spring.I18N('ui.settings.option.pingwheel_style_ring') }, description = Spring.I18N('ui.settings.option.pingwheel_style_descr'), value = 1,
+		  onload = function(i)
+			loadWidgetData("Ping Wheel", "pingwheel_style", { 'wheelStyle' })
+		  end,
+		  onchange = function(i, value)
+			saveOptionValue('Ping Wheel', 'pingwheel_gui', 'setWheelStyle', { 'wheelStyle' }, value)
+		  end,
+		},
+		{ id = "pingwheel_interaction", group = "ui", category = types.advanced, name = widgetOptionColor .. "  " .. Spring.I18N('ui.settings.option.pingwheel_interaction'), type = "select", value = 1, options = { Spring.I18N('ui.settings.option.pingwheel_interaction_click'), Spring.I18N('ui.settings.option.pingwheel_interaction_release') }, description = Spring.I18N('ui.settings.option.pingwheel_interaction_descr'),
+		  onload = function(i)
+			  loadWidgetData("Ping Wheel", "pingwheel_interaction", { 'interactionMode' })
+		  end,
+		  onchange = function(i, value)
+			  saveOptionValue('Ping Wheel', 'pingwheel_gui', 'setInteractionMode', { 'interactionMode' }, value)
+		  end,
+		},
+		{ id = "pingwheel_icons", group = "ui", category = types.advanced, name = widgetOptionColor .. "  " .. Spring.I18N('ui.settings.option.pingwheel_icons'), type = "bool", value = 1, description = Spring.I18N('ui.settings.option.pingwheel_icons_descr'),
+		  onload = function(i)
+			  loadWidgetData("Ping Wheel", "pingwheel_icons", { 'useIcons' })
+		  end,
+		  onchange = function(i, value)
+			  saveOptionValue('Ping Wheel', 'pingwheel_gui', 'setUseIcons', { 'useIcons' }, value)
+		  end,
+		},
+		{ id = "pingwheel_doublewheel", group = "ui", category = types.advanced, name = widgetOptionColor .. "  " .. Spring.I18N('ui.settings.option.pingwheel_doublewheel'), type = "bool", value = 0, description = Spring.I18N('ui.settings.option.pingwheel_doublewheel_descr'),
+		  onload = function(i)
+			  loadWidgetData("Ping Wheel", "pingwheel_doublewheel", { 'doubleWheel' })
+		  end,
+		  onchange = function(i, value)
+			  saveOptionValue('Ping Wheel', 'pingwheel_gui', 'setDoubleWheel', { 'doubleWheel' }, value)
+		  end,
+		},
+		{ id = "pingwheel_showcolors", group = "ui", category = types.advanced, name = widgetOptionColor .. "  " .. Spring.I18N('ui.settings.option.pingwheel_colors'), type = "bool", value = (WG['pingwheel'] ~= nil and WG['pingwheel'].getUseColors() or 0), description = Spring.I18N('ui.settings.option.pingwheel_colors_descr'),
 		  onload = function(i)
 			  loadWidgetData("Ping Wheel Event", "pingwheel_showcolors", { 'useColors' })
 		  end,
 		  onchange = function(i, value)
 			  saveOptionValue('Ping Wheel Event', 'pingwheel', 'setUseColors', { 'useColors' }, value)
 		  end,
-		},
-		{ id = "pingwheel_style", group = "ui", category = types.advanced, name = widgetOptionColor .. "   " .. Spring.I18N('ui.settings.option.pingwheel_style'), type = "select", options = { Spring.I18N('ui.settings.option.pingwheel_style_white'), Spring.I18N('ui.settings.option.pingwheel_style_black'), Spring.I18N('ui.settings.option.pingwheel_style_old1'), Spring.I18N('ui.settings.option.pingwheel_style_old2') }, description = Spring.I18N('ui.settings.option.pingwheel_style_descr'), value = 1,
-			onload = function(i)
-				loadWidgetData("Ping Wheel", "pingwheel_style", { 'wheelStyle' })
-			end,
-			onchange = function(i, value)
-				saveOptionValue('Ping Wheel', 'pingwheel_gui', 'setWheelStyle', { 'wheelStyle' }, value)
-			end,
 		},
 
 		{ id = "label_ui_visuals", group = "ui", name = Spring.I18N('ui.settings.option.label_visuals'), category = types.basic },
