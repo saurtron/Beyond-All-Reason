@@ -173,7 +173,7 @@ local bgTextureColor = defaults.bgTextureColor
 local dividerInnerRatio = defaults.dividerInnerRatio
 local dividerOuterRatio = defaults.dividerOuterRatio
 local textAlignRadiusRatio = defaults.textAlignRadiusRatio
-local dividerColor = { 1, 1, 1, 0.15 }
+local dividerColor = defaults.dividerColor
 
 local pingWheel = pingCommands
 local keyDown = false
@@ -390,7 +390,7 @@ local function drawIcon(img, x, y, size, offset)
 end
 
 
-local function drawDividers(r)
+local function drawGl4Dividers(r)
     glLineWidth(dividerLineWidth * lineScale)
     circleShader:SetUniform("circleradius", r*pingWheelGl4Radius)
     local function Lines()
@@ -418,6 +418,7 @@ local function resetDrawState()
     glColor(1.0, 1.0, 1.0, 1.0)
     glLineWidth(1.0)
     gl.Clear(GL.STENCIL_BUFFER_BIT, 0)
+    glPointSize(1)
 end
 
 local function drawMask()
@@ -430,7 +431,7 @@ local function drawMask()
     circleShader:SetUniform("circleradius", 0.3*pingWheelGl4Radius)
     circleInstanceVBO.VAO:DrawArrays(GL_TRIANGLE_FAN, circleInstanceVBO.numVertices, 0, circleInstanceVBO.usedElements, 0)
 
-    drawDividers(0.9)
+    drawGl4Dividers(0.9)
 end
 
 local function drawWheelGl4()
@@ -854,17 +855,17 @@ function widget:Update(dt)
 end
 
 local function drawDottedLine()
-        local function line(x1, y1, x2, y2)
-            glVertex(x1, y1)
-            glVertex(x2, y2)
-        end
-        -- draw a dotted line connecting from center of wheel to the mouse location
-        if draw_line and pingWheelSelection > 0 then
-            glColorDimmed(1, 1, 1, 0.5)
-            glLineWidth(pingWheelThickness / 4)
-            local mx, my = spGetMouseState()
-            glBeginEnd(GL_LINES, line, pingWheelScreenLocation.x, pingWheelScreenLocation.y, mx, my)
-        end
+    local function line(x1, y1, x2, y2)
+        glVertex(x1, y1)
+        glVertex(x2, y2)
+    end
+    -- draw a dotted line connecting from center of wheel to the mouse location
+    if draw_line and pingWheelSelection > 0 then
+        glColorDimmed(1, 1, 1, 0.5)
+        glLineWidth(pingWheelThickness / 4)
+        local mx, my = spGetMouseState()
+        glBeginEnd(GL_LINES, line, pingWheelScreenLocation.x, pingWheelScreenLocation.y, mx, my)
+    end
 end
 
 local function drawLabels()
@@ -908,6 +909,18 @@ local function drawLabels()
     glEndText()
 end
 
+local function drawWheelChoiceHelper()
+    -- draw dot at mouse location
+    local mx, my = spGetMouseState()
+    glColor(pingWheelColor)
+    glPointSize(centerDotSize)
+    glBeginEnd(GL_POINTS, glVertex, mx, my)
+    -- draw two hints at the top left and right of the location
+    glColor(1, 1, 1, 1)
+    glText("R-click\nMsgs", mx + 15, my + 11, 12, "os")
+    glText("L-click\nCmds", mx - 15, my + 11, 12, "ros")
+end
+
 local function drawBgTexture()
     if bgTexture then
           glColorDimmed(bgTextureColor)
@@ -920,6 +933,50 @@ local function drawBgTexture()
       end
 end
 
+local function drawDividers()
+    -- draw divider lines between slices
+    if not draw_dividers then return end
+    local function Lines()
+        for i = 1, #pingWheel do
+            local angle = (i - 1.5) * 2 * pi / #pingWheel
+            glVertex(pingWheelScreenLocation.x + pingWheelRadius * dividerInnerRatio * sin(angle),
+                pingWheelScreenLocation.y + pingWheelRadius * dividerInnerRatio * cos(angle))
+            glVertex(pingWheelScreenLocation.x + pingWheelRadius * dividerOuterRatio * sin(angle),
+                pingWheelScreenLocation.y + pingWheelRadius * dividerOuterRatio * cos(angle))
+        end
+    end
+
+    glColorDimmed(dividerColor)
+    glLineWidth(pingWheelThickness)
+    glBeginEnd(GL_LINES, Lines)
+end
+
+local function drawDeadZone()
+    -- draw a smooth circle at the pingWheelScreenLocation with 64 vertices
+    if not draw_circle then return end
+    --glColor(pingWheelColor)
+    glColorDimmed(1, 1, 1, 0.25)
+    glLineWidth(pingWheelThickness)
+
+    local function Circle(r)
+        for i = 1, 64 do
+            local angle = (i - 1) * 2 * pi / 64
+            glVertex(pingWheelScreenLocation.x + r * sin(angle), pingWheelScreenLocation.y + r * cos(angle))
+        end
+    end
+
+    -- draw the dead zone circle
+    glBeginEnd(GL_LINE_LOOP, Circle, pingWheelRadius * deadZoneRadiusRatio)
+end
+
+local function drawCenterDot()
+    -- draw the center dot
+    glColorDimmed(pingWheelColor)
+    glPointSize(centerDotSize)
+    glBeginEnd(GL_POINTS, glVertex, pingWheelScreenLocation.x, pingWheelScreenLocation.y)
+end
+
+
 function widget:DrawScreen()
     if displayPingWheel and pingWheelScreenLocation and gl4Style then
         drawWheelGl4()
@@ -927,15 +984,7 @@ function widget:DrawScreen()
     -- if keyDown then draw a dot at where mouse is
     glPushMatrix()
     if keyDown and not displayPingWheel and doubleWheel then
-        -- draw dot at mouse location
-        local mx, my = spGetMouseState()
-        glColor(pingWheelColor)
-        glPointSize(centerDotSize)
-        glBeginEnd(GL_POINTS, glVertex, mx, my)
-        -- draw two hints at the top left and right of the location
-        glColor(1, 1, 1, 1)
-        glText("R-click\nMsgs", mx + 15, my + 11, 12, "os")
-        glText("L-click\nCmds", mx - 15, my + 11, 12, "ros")
+        drawWheelChoiceHelper()
     end
     -- we draw a wheel at the pingWheelScreenLocation divided into #pingWheel slices, with the first slice starting at the top
     if displayPingWheel and pingWheelScreenLocation then
@@ -943,49 +992,12 @@ function widget:DrawScreen()
         glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         drawBgTexture()
 
-        -- draw a smooth circle at the pingWheelScreenLocation with 128 vertices
-        --glColor(pingWheelColor)
-        glColorDimmed(1, 1, 1, 0.25)
-        glLineWidth(pingWheelThickness)
-
-        local function Circle(r)
-            for i = 1, 128 do
-                local angle = (i - 1) * 2 * pi / 128
-                glVertex(pingWheelScreenLocation.x + r * sin(angle), pingWheelScreenLocation.y + r * cos(angle))
-            end
-        end
-
         glStencilFunc(GL_ALWAYS, 1, 1)
 
-        -- draw the dead zone circle
-        if draw_circle then
-            glBeginEnd(GL_LINE_LOOP, Circle, pingWheelRadius * deadZoneRadiusRatio)
-        end
-
-        -- draw the center dot
-        glColorDimmed(pingWheelColor)
-        glPointSize(centerDotSize)
-        glBeginEnd(GL_POINTS, glVertex, pingWheelScreenLocation.x, pingWheelScreenLocation.y)
-        glPointSize(1)
-
+        drawDeadZone()
+        drawCenterDot()
         drawDottedLine()
-
-        -- draw divider lines between slices
-        if draw_dividers then
-            local function Line2(angle)
-                glVertex(pingWheelScreenLocation.x + pingWheelRadius * dividerInnerRatio * sin(angle),
-                    pingWheelScreenLocation.y + pingWheelRadius * dividerInnerRatio * cos(angle))
-                glVertex(pingWheelScreenLocation.x + pingWheelRadius * dividerOuterRatio * sin(angle),
-                    pingWheelScreenLocation.y + pingWheelRadius * dividerOuterRatio * cos(angle))
-            end
-
-            glColorDimmed(dividerColor)
-            glLineWidth(pingWheelThickness * 1)
-            for i = 1, #pingWheel do
-                local angle2 = (i - 1.5) * 2 * pi / #pingWheel
-                glBeginEnd(GL_LINES, Line2, angle2)
-            end
-        end
+        drawDividers()
 
         drawLabels()
     end
