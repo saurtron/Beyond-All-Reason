@@ -985,19 +985,37 @@ local function drawCenterDot()
     glBeginEnd(GL_POINTS, glVertex, pingWheelScreenLocation.x, pingWheelScreenLocation.y)
 end
 
+local function drawCloseHint()
+    if pressReleaseMode then return end
+
+    local x = pingWheelScreenLocation.x
+    local y = pingWheelScreenLocation.y-pingWheelRadius*1.7
+    local hintIconSize = 0.8
+    local hintTextSize = 0.9
+    local drawIconSize = pingWheelRadius * iconSize * hintIconSize
+    local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
+    x_offset = (w+drawIconSize)/2.0
+    drawIcon("icons/mouse/rclick_glow.png", x-x_offset, y, hintIconSize)
+    glColorDimmed(1, 1, 1, 0.7)
+    glBeginText()
+    glText("Cancel", x+drawIconSize/2-x_offset+w/6,
+            y,
+            pingWheelTextSize*hintTextSize, "lovs")
+    glEndText()
+
+end
 
 function widget:DrawScreen()
     if displayPingWheel and pingWheelScreenLocation and gl4Style then
         drawWheelGl4()
     end
-    -- if keyDown then draw a dot at where mouse is
     glPushMatrix()
+    -- if keyDown then draw a dot at where mouse is
     if keyDown and not displayPingWheel and doubleWheel then
         drawWheelChoiceHelper()
     end
     -- we draw a wheel at the pingWheelScreenLocation divided into #pingWheel slices, with the first slice starting at the top
     if displayPingWheel and pingWheelScreenLocation then
-        -- add the blackCircleTexture as background texture
         glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         drawBgTexture()
 
@@ -1009,8 +1027,8 @@ function widget:DrawScreen()
         drawDividers()
 
         drawLabels()
+        drawCloseHint()
     end
-
 
     glPopMatrix()
     if displayPingWheel and pingWheelScreenLocation then
