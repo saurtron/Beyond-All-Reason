@@ -59,12 +59,14 @@ local styleConfig = {
     [1] = {
         name = "White",
         gl4 = true,
+        baseTextOpacity = 1.0,
     },
     [2] = {
         name = "Black",
         gl4 = true,
         pingWheelSelColor = {0.0, 0.0, 0.0, 0.7},
         pingWheelRingColor = {0.0, 0.0, 0.0, 0.7},
+        baseTextOpacity = 1.0,
     },
     [3] = {
         name = "Circle Light",
@@ -96,6 +98,8 @@ local defaults = {
     textAlignRadiusRatio = 1.1,
     wheelSelColor = {1.0, 1.0, 1.0, 0.5},
     wheelRingColor = {1.0, 1.0, 1.0, 0.5},
+    selTextOpacity = 1.0,
+    baseTextOpacity = 0.75,
     fallback = 3, -- should automatically set this to first non-gl4 style
 }
 
@@ -121,6 +125,9 @@ local centerDotBaseSize = 20            -- size of the center dot
 local linesBaseWidth = 2		-- thickness of the ping wheel line drawing
 local deadZoneRadiusRatio = 0.3         -- the center "no selection" area as a ratio of the ping wheel radius
 local outerLimitRadiusRatio = 5         -- the outer limit ratio where "no selection" is active
+
+pingWheelSelTextAlpha = defaults.selSelTextOpacity
+pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
 
 local pingWheelTextBaseSize = defaults.textSize
 local pingWheelTextColor = { 1, 1, 1, 0.7 }
@@ -539,6 +546,8 @@ local function applyStyle()
     textAlignRadiusRatio = style.textAlignRadiusRatio or defaults.textAlignRadiusRatio
     dividerColor = style.dividerColor or defaults.dividerColor
     pingWheelTextBaseSize = style.textSize or defaults.textSize
+    pingWheelSelTextAlpha = style.selTextOpacity
+    pingWheelBaseTextAlpha = style.baseTextOpacity
 
     gl4Style = style.gl4
     if gl4Style and not gl4Available then
@@ -887,7 +896,7 @@ local function drawLabels()
         local angle = (i - 1) * 2 * pi / #pingWheel
         local text = getTranslatedText(pingWheel[i].name)
         local color = (WG['pingwheel'].getUseColors() and pingWheel[i].color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
-        color[4] = isSelected and 1 or 0.75
+        color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
         if isSelected and flashBlack then
             color = { 0, 0, 0, 0 }
         elseif spamControl > 0 and not flashing then
