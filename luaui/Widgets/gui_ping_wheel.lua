@@ -397,8 +397,9 @@ local function drawIcon(img, x, y, size, offset)
 end
 
 
-local function drawGl4Dividers(r)
-    glLineWidth(dividerLineWidth * lineScale)
+local function drawGl4Dividers(r, width)
+    if not width then width = 1.0 end
+    glLineWidth(dividerLineWidth * lineScale * width)
     circleShader:SetUniform("circleradius", r*pingWheelGl4Radius)
     local function Lines()
         for i = 1, #pingWheel do
@@ -480,8 +481,16 @@ local function drawWheelGl4()
     circleShader:SetUniform("color", unpack(dimmed(pingWheelRingColor)))
     circleInstanceVBO.VAO:DrawArrays(GL_LINE_LOOP, circleInstanceVBO.numVertices, 0, circleInstanceVBO.usedElements, 0)
 
-    -- selected part
     glStencilFunc(GL_NOTEQUAL, 1, 1)
+    -- subtle border around sections
+    circleShader:SetUniform("color", unpack(dimmed(pingWheelBaseColor)))
+    circleShader:SetUniform("circleradius", 0.9*pingWheelGl4Radius)
+    circleInstanceVBO.VAO:DrawArrays(GL_LINE_LOOP, circleInstanceVBO.numVertices, 0, circleInstanceVBO.usedElements, 0)
+    circleShader:SetUniform("circleradius", 0.3*pingWheelGl4Radius)
+    circleInstanceVBO.VAO:DrawArrays(GL_LINE_LOOP, circleInstanceVBO.numVertices, 0, circleInstanceVBO.usedElements, 0)
+    drawGl4Dividers(0.9, 1.5)
+
+    -- selected part
     if pingWheelSelection ~= 0 then
         circleShader:SetUniform("circleradius", 0.9*pingWheelGl4Radius)
         circleShader:SetUniform("color", unpack(dimmed(pingWheelSelColor)))
