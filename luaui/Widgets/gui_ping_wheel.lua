@@ -533,7 +533,7 @@ function widget:SetConfigData(data)
     if data.wheelStyle ~= nil then
         styleChoice = data.wheelStyle
     end
-    if data.pressRelease ~= nil then
+    if data.interactionMode ~= nil then
         pressReleaseMode = data.interactionMode == 2
     end
     if data.useIcons ~= nil then
