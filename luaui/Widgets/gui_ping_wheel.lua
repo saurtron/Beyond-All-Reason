@@ -387,13 +387,13 @@ local function drawIcon(img, x, y, size, offset)
     glTexture(img)
     if not size then size = 1.0 end
     if not offset then offset = {x=0, y=0} end
-        local halfSize = pingWheelRadius * iconSize * size
+    local halfSize = pingWheelRadius * iconSize * size
 
-        local pos = {x=x+offset.x, y=y+offset.y}
+    local pos = {x=x+offset.x, y=y+offset.y}
 
-        glTexRect(pos.x - halfSize, pos.y - halfSize,
-            pos.x + halfSize, pos.y + halfSize)
-        glTexture(false)
+    glTexRect(pos.x - halfSize, pos.y - halfSize,
+        pos.x + halfSize, pos.y + halfSize)
+    glTexture(false)
 end
 
 
@@ -941,14 +941,14 @@ end
 
 local function drawBgTexture()
     if bgTexture then
-          glColorDimmed(bgTextureColor)
-          glTexture(bgTexture)
-          -- use pingWheelRadius as the size of the background texture
-          local halfSize = pingWheelRadius * bgTextureSizeRatio
-          glTexRect(pingWheelScreenLocation.x - halfSize, pingWheelScreenLocation.y - halfSize,
-              pingWheelScreenLocation.x + halfSize, pingWheelScreenLocation.y + halfSize)
-          glTexture(false)
-      end
+        glColorDimmed(bgTextureColor)
+        glTexture(bgTexture)
+        -- use pingWheelRadius as the size of the background texture
+        local halfSize = pingWheelRadius * bgTextureSizeRatio
+        glTexRect(pingWheelScreenLocation.x - halfSize, pingWheelScreenLocation.y - halfSize,
+            pingWheelScreenLocation.x + halfSize, pingWheelScreenLocation.y + halfSize)
+        glTexture(false)
+    end
 end
 
 local function drawDividers()
