@@ -31,7 +31,7 @@ else	-- UNSYNCED
 	local function sendMapPing(_, playerID, msg)
 		local name,_,spec,_,playerAllyTeamID = Spring.GetPlayerInfo(playerID)
 		local mySpec = Spring.GetSpectatingState()
-		if not spec and (playerAllyTeamID == Spring.GetMyAllyTeamID() or mySpec) then
+		if playerAllyTeamID == Spring.GetMyAllyTeamID() or mySpec then
 			if Script.LuaUI("MapPingEvent") then
 				Script.LuaUI.MapPingEvent(playerID, msg)
 			end
