@@ -581,7 +581,7 @@ end
 local function createMapPoint(playerID, text, x, y, z, r, g, b, icon)
     data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
     msg = Json.encode(data)
-    Spring.SendLuaUIMsg('mppnt:' .. msg, 'a')
+    Spring.SendLuaUIMsg('mppnt:' .. msg)
 end
 
 function widget:GetConfigData()
