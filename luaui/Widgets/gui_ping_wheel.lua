@@ -532,9 +532,22 @@ local function drawWheelGl4()
     circleShader:Deactivate()
 end
 
+local cachedTexts = {}
+
+function widget:LanguageChanged()
+    cachedTexts = {}
+end
+
 local function getTranslatedText(text)
     if string.sub(text, 1, 3) == 'ui.' then
-        text = Spring.I18N(text)
+        if cachedTexts[text] then return cachedTexts[text] end
+        local newText = Spring.I18N(text)
+        if text == newText then
+            local splitText = string.split(text, ".")
+            newText = splitText[#splitText]:gsub("^%l", string.upper)
+        end
+        cachedTexts[text] = newText
+        return newText
     end
     return text
 end
