@@ -256,6 +256,13 @@ end
 -- Display lists
 local dividerDlist
 local squareDlist
+local partsDlist
+
+local function destroyPartsDlist()
+    if not partsDlist then return end
+    gl.DeleteList(partsDlist)
+    partsDlist = nil
+end
 
 -- GL speedups
 local glColor                = gl.Color
@@ -479,6 +486,13 @@ local function drawMask()
     drawGl4Dividers(0.9)
 end
 
+local function setSelection(selected)
+    if selected ~= pingWheelSelection then
+        destroyPartsDlist()
+    end
+    pingWheelSelection = selected
+end
+
 local function drawWheelGl4()
     if not gl4Available then return end
     if not pingWheelScreenLocation then return end
@@ -626,6 +640,7 @@ local function applyStyle()
     else
         draw_dividers = doDividers
     end
+    destroyPartsDlist()
 end
 
 function widget:Initialize()
@@ -642,18 +657,21 @@ function widget:Initialize()
     end
     WG['pingwheel_gui'].setUseIcons = function(value)
         useIcons = value
+        destroyPartsDlist()
     end
     WG['pingwheel_gui'].getInteractionMode = function()
         return pressReleaseMode and 2 or 1
     end
     WG['pingwheel_gui'].setInteractionMode = function(value)
         pressReleaseMode = value == 2
+        destroyPartsDlist()
     end
     WG['pingwheel_gui'].getDoubleWheel = function()
         return doubleWheel
     end
     WG['pingwheel_gui'].setDoubleWheel = function(value)
         doubleWheel = value
+        destroyPartsDlist()
     end
 
 
@@ -675,6 +693,7 @@ end
 function widget:Shutdown()
     gl.DeleteList(dividerDlist)
     gl.DeleteList(squareDlist)
+    destroyPartsDlist()
 end
 
 function widget:ViewResize(vsx, vsy)
@@ -686,6 +705,7 @@ function widget:ViewResize(vsx, vsy)
     dividerLineWidth = dividerLineBaseWidth * f
     pingWheelThickness = linesBaseWidth * f
     pingWheelRingWidth = outerCircleBaseWidth * f
+    destroyPartsDlist()
 end
 
 -- Store the ping location in pingWorldLocation
@@ -729,6 +749,7 @@ end
 
 local function TurnOff(reason)
     if displayPingWheel then
+        destroyPartsDlist()
         displayPingWheel = false
         pingWorldLocation = nil
         pingWheelScreenLocation = nil
@@ -915,10 +936,10 @@ function widget:Update(dt)
             if (dist < deadZoneRadiusRatio * pingWheelRadius)
                 or (dist > outerLimitRadiusRatio * pingWheelRadius)
             then
-                pingWheelSelection = 0
+                setSelection(0)
                 --Spring.SetMouseCursor("cursornormal")
             elseif selection ~= pingWheelSelection then
-                pingWheelSelection = selection
+                setSelection(selection)
                 Spring.PlaySoundFile(soundDefaultSelect, 0.3, 'ui')
                 --Spring.SetMouseCursor("cursorjump")
             end
@@ -971,6 +992,43 @@ local function drawDottedLine()
     end
 end
 
+local function drawCloseHint()
+    if pressReleaseMode then return end
+
+    local x = pingWheelScreenLocation.x
+    local y = pingWheelScreenLocation.y-pingWheelRadius*1.7
+    local hintIconSize = 0.8
+    local hintTextSize = 0.9
+    local drawIconSize = pingWheelRadius * iconSize * hintIconSize
+    local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
+    x_offset = (w+drawIconSize)/2.0
+    drawIcon("icons/mouse/rclick_glow.png", {x-x_offset, y}, hintIconSize)
+    glColorDimmed({1, 1, 1, 0.7})
+    glBeginText()
+    glText("Cancel", x+drawIconSize/2-x_offset+w/6,
+            y,
+            pingWheelTextSize*hintTextSize, "lovs")
+    glEndText()
+end
+
+local function drawDividers()
+    -- draw divider lines between slices
+    if not draw_dividers then return end
+    local function Lines()
+        for i = 1, #pingWheel do
+            local angle = (i - 1.5) * 2 * pi / #pingWheel
+            glVertex(pingWheelScreenLocation.x + pingWheelRadius * dividerInnerRatio * sin(angle),
+                pingWheelScreenLocation.y + pingWheelRadius * dividerInnerRatio * cos(angle))
+            glVertex(pingWheelScreenLocation.x + pingWheelRadius * dividerOuterRatio * sin(angle),
+                pingWheelScreenLocation.y + pingWheelRadius * dividerOuterRatio * cos(angle))
+        end
+    end
+
+    glColorDimmed(dividerColor)
+    glLineWidth(pingWheelThickness)
+    glBeginEnd(GL_LINES, Lines)
+end
+
 local function drawLabels()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
@@ -1011,6 +1069,23 @@ local function drawLabels()
     glEndText()
 end
 
+local function drawParts()
+    drawDividers()
+    drawLabels()
+    drawCloseHint()
+end
+
+local function initPartsDlist()
+     local oldGlColor = glColorDimmed
+     glColorDimmed = gl.Color
+
+     partsDlist = gl.CreateList(function()
+         drawParts()
+     end)
+
+     glColorDimmed = oldGlColor
+end
+
 local function drawWheelChoiceHelper()
     -- draw dot at mouse location
     local mx, my
@@ -1042,24 +1117,6 @@ local function drawBgTexture()
     end
 end
 
-local function drawDividers()
-    -- draw divider lines between slices
-    if not draw_dividers then return end
-    local function Lines()
-        for i = 1, #pingWheel do
-            local angle = (i - 1.5) * 2 * pi / #pingWheel
-            glVertex(pingWheelScreenLocation.x + pingWheelRadius * dividerInnerRatio * sin(angle),
-                pingWheelScreenLocation.y + pingWheelRadius * dividerInnerRatio * cos(angle))
-            glVertex(pingWheelScreenLocation.x + pingWheelRadius * dividerOuterRatio * sin(angle),
-                pingWheelScreenLocation.y + pingWheelRadius * dividerOuterRatio * cos(angle))
-        end
-    end
-
-    glColorDimmed(dividerColor)
-    glLineWidth(pingWheelThickness)
-    glBeginEnd(GL_LINES, Lines)
-end
-
 local function drawDeadZone()
     -- draw a smooth circle at the pingWheelScreenLocation with 64 vertices
     if not draw_circle then return end
@@ -1086,24 +1143,25 @@ local function drawCenterDot()
     glBeginEnd(GL_POINTS, glVertex, pingWheelScreenLocation.x, pingWheelScreenLocation.y)
 end
 
-local function drawCloseHint()
-    if pressReleaseMode then return end
+local function drawWheel()
+    -- we draw a wheel at the pingWheelScreenLocation divided into #pingWheel slices, with the first slice starting at the top
+    glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    drawBgTexture()
 
-    local x = pingWheelScreenLocation.x
-    local y = pingWheelScreenLocation.y-pingWheelRadius*1.7
-    local hintIconSize = 0.8
-    local hintTextSize = 0.9
-    local drawIconSize = pingWheelRadius * iconSize * hintIconSize
-    local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
-    x_offset = (w+drawIconSize)/2.0
-    drawIcon("icons/mouse/rclick_glow.png", {x-x_offset, y}, hintIconSize)
-    glColorDimmed({1, 1, 1, 0.7})
-    glBeginText()
-    glText("Cancel", x+drawIconSize/2-x_offset+w/6,
-            y,
-            pingWheelTextSize*hintTextSize, "lovs")
-    glEndText()
+    glStencilFunc(GL_ALWAYS, 1, 1)
 
+    drawDeadZone()
+    drawCenterDot()
+    drawDottedLine()
+
+    if flashing or globalDim ~=1 then
+        drawParts()
+    else
+        if not partsDlist then
+            initPartsDlist()
+        end
+        gl.CallList(partsDlist)
+    end
 end
 
 function widget:DrawScreen()
@@ -1115,20 +1173,9 @@ function widget:DrawScreen()
     if showLRHint and doubleWheel then
         drawWheelChoiceHelper()
     end
-    -- we draw a wheel at the pingWheelScreenLocation divided into #pingWheel slices, with the first slice starting at the top
+
     if displayPingWheel and pingWheelScreenLocation then
-        glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        drawBgTexture()
-
-        glStencilFunc(GL_ALWAYS, 1, 1)
-
-        drawDeadZone()
-        drawCenterDot()
-        drawDottedLine()
-        drawDividers()
-
-        drawLabels()
-        drawCloseHint()
+	drawWheel()
     end
 
     glPopMatrix()
