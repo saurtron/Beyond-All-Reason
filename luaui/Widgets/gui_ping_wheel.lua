@@ -27,6 +27,7 @@ end
 -- NEW: LOTS OF PRETTY COLORS!
 -----------------------------------------------------------------------------------------------
 local iconDir = 'anims/icexuick_75/'
+local configDir = 'luaui/configs/pingwheel/'
 local pingCommands = {                             -- the options in the ping wheel, displayed clockwise from 12 o'clock
     { name = "ui.wheel.attack",  color = { 1, 0.5, 0.3, 1 }, icon = iconDir..'cursorattack_2.png' }, -- color is optional, if no color is chosen it will be white
     { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 }, icon = iconDir..'cursorfight_11.png', icon_offset={7, -8} },
@@ -144,6 +145,38 @@ local selectedScaleFactor = 1.3         -- how much bigger to draw selected item
 ---------------------------------------------------------------
 -- End of params
 --
+
+-- Load custom wheel options from commands.json and messages.json
+
+local function loadPingWheelMessages(fileName, destArray)
+    local fullPath = configDir .. fileName
+    if not VFS.FileExists(fullPath) then return end
+    local jsonData = VFS.LoadFile(fullPath)
+    local final = {}
+    -- filter out lines starting with #
+    for _, line in ipairs(jsonData:lines()) do
+        if string.sub(line:trim(), 1, 1) ~= '#' then
+            final[#final+1] = line
+        end
+    end
+    final = table.concat(final, "\n")
+
+    local success, data = pcall(Json.decode, final)
+    if not success then
+        Spring.Log("Ping Wheel", LOG.ERROR, "Can't load " .. fullPath)
+	return
+    end
+
+    if destArray == 'commands' then
+        pingCommands = data
+    else
+        pingMessages = data
+    end
+end
+
+loadPingWheelMessages('commands.json', 'commands')
+loadPingWheelMessages('messages.json', 'messages')
+
 
 -- Internal switches
 local doDividers = true
