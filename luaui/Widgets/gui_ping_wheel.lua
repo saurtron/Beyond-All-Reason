@@ -253,6 +253,9 @@ local function dimmed(color)
     return {r, g, b, a}
 end
 
+-- Display lists
+local dividerDlist
+
 -- GL speedups
 local glColor                = gl.Color
 local glLineWidth            = gl.LineWidth
@@ -426,16 +429,22 @@ local function drawGl4Dividers(r, width)
     if not width then width = 1.0 end
     glLineWidth(dividerLineWidth * lineScale * width)
     circleShader:SetUniform("circleradius", r*pingWheelGl4Radius)
-    local function Lines()
-        for i = 1, #pingWheel do
-            local angle2 = (i - 1.5) * 2 * pi / #pingWheel
-            glVertex(0.0, 0.0, 1.0, 1.0)
-            glVertex(sin(angle2), cos(angle2), 1.0, 1.0)
-        end
-    end
-
-    glBeginEnd(GL_LINES, Lines)
+    gl.CallList(dividerDlist)
 end
+
+local function createLists()
+    dividerDlist = gl.CreateList(function()
+        local function Lines()
+            for i = 1, #pingWheel do
+                local angle2 = (i - 1.5) * 2 * pi / #pingWheel
+                glVertex(0.0, 0.0, 1.0, 1.0)
+                glVertex(sin(angle2), cos(angle2), 1.0, 1.0)
+            end
+        end
+        glBeginEnd(GL_LINES, Lines)
+    end)
+end
+
 
 local function resetDrawState()
     -- restore gl state
@@ -657,9 +666,11 @@ function widget:Initialize()
     end
     -- set the style from config
     applyStyle()
+    createLists()
 end
 
 function widget:Shutdown()
+    gl.DeleteList(dividerDlist)
 end
 
 function widget:ViewResize(vsx, vsy)
