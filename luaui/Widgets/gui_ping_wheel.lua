@@ -555,8 +555,8 @@ local function applyStyle()
     textAlignRadiusRatio = style.textAlignRadiusRatio or defaults.textAlignRadiusRatio
     dividerColor = style.dividerColor or defaults.dividerColor
     pingWheelTextBaseSize = style.textSize or defaults.textSize
-    pingWheelSelTextAlpha = style.selTextOpacity
-    pingWheelBaseTextAlpha = style.baseTextOpacity
+    pingWheelSelTextAlpha = style.selTextOpacity or defaults.selTextOpacity
+    pingWheelBaseTextAlpha = style.baseTextOpacity or defaults.baseTextOpacity
 
     gl4Style = style.gl4
     if gl4Style and not gl4Available then
