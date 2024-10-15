@@ -29,7 +29,7 @@ end
 local iconDir = 'anims/icexuick_75/'
 local configDir = 'luaui/configs/pingwheel/'
 local pingCommands = {                             -- the options in the ping wheel, displayed clockwise from 12 o'clock
-    { name = "ui.wheel.attack",  color = { 1, 0.5, 0.3, 1 }, icon = iconDir..'cursorattack_2.png' }, -- color is optional, if no color is chosen it will be white
+    { name = "ui.wheel.attack",  color = { 1, 0.3, 0.3, 1 }, icon = iconDir..'cursorattack_2.png' }, -- color is optional, if no color is chosen it will be white
     { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 }, icon = iconDir..'cursorfight_11.png', icon_offset={7, -8} },
     { name = "Defend",  color = { 0.7, 0.9, 1, 1 }, icon = iconDir..'cursordefend_59.png', size=0.8 },
     { name = "ui.wheel.retreat", color = { 0.9, 0.7, 1, 1 } },
@@ -520,7 +520,7 @@ local function drawWheelGl4()
         circleShader:SetUniform("circleradius", 0.9*pingWheelGl4Radius)
         circleShader:SetUniform("color", unpack(dimmed(pingWheelSelColor)))
         glStencilMask(1)
-        drawPortion(1, #pingWheel, pingWheelSelection)
+        drawPortion(1.5, #pingWheel, pingWheelSelection)
         glStencilMask(0)
     end
 
