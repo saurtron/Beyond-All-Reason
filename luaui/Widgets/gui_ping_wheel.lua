@@ -148,6 +148,7 @@ local selectedScaleFactor = 1.3         -- how much bigger to draw selected item
 
 -- Internal switches
 local doDividers = true
+local showLRHint = false
 
 local pressReleaseMode = false
 local doubleWheel = false
@@ -664,6 +665,7 @@ end
 local function TurnOn(reason)
     -- set pingwheel to display
     displayPingWheel = true
+    showLRHint = false
     if not pingWorldLocation then
         SetPingLocation()
     end
@@ -714,6 +716,8 @@ local function checkRelease()
             --TurnOff("Selection 0")
             FadeOut()
         end
+        -- make sure left/right hint is not shown
+        showLRHint = false
     else
         --TurnOff("mouse release")
         FadeOut()
@@ -722,10 +726,11 @@ end
 
 function widget:KeyRelease(key)
     keyDown = false
+    showLRHint = false
     if not pressReleaseMode and displayPingWheel and key == 27 then -- could include KEYSIMS but not sure it's worth it
         -- click mode: allow closing with esc.
         FadeOut()
-    elseif pressReleaseMode and displayPingWheel and not doubleWheel then
+    elseif pressReleaseMode and displayPingWheel then
         -- release mode, single wheel: allow activating on key release.
         checkRelease()
     end
@@ -734,6 +739,12 @@ end
 function PingWheelAction(_, _, _, args)
     if args[1] then
         keyDown = true
+        if doubleWheel then
+            showLRHint = true
+        end
+        if not displayPingWheel and doubleWheel and pressReleaseMode then
+            SetPingLocation()
+        end
         if not displayPingWheel and not doubleWheel then
             TurnOn("Single press")
         end
@@ -756,21 +767,19 @@ function widget:MousePress(mx, my, button)
             -- should be right click, but any button other than left seems more intuitive
             FadeOut()
         end
-    elseif displayPingWheel and pressReleaseMode and not doubleWheel then
-        -- release mode: if single wheel allow click as well as release.
+    elseif displayPingWheel and pressReleaseMode then
+        -- release mode: allow click as well as release.
          if button == 1 then
             checkRelease()
-            keyDown = false
         elseif button == 3 then
             FadeOut()
-            keyDown = false
         end
-    elseif keyDown or button == 4 or button == 5 then
+    elseif showLRHint or button == 4 or button == 5 then
         -- release mode.
         local alt, ctrl, meta, shift = spGetModKeyState()
         -- If any modifier is pressed we let other widgets handle this
         -- unless on our keydown event.
-        if keyDown or not (alt or ctrl or meta or shift) then
+        if showLRHint or not (alt or ctrl or meta or shift) then
             local chosenWheel = false
             if button == 1 or button == 4 then
                 chosenWheel = pingCommands
@@ -869,6 +878,24 @@ function widget:Update(dt)
         if spamControl > 0 then
             spamControl = (spamControl == 0) and 0 or (spamControl - 1)
         end
+    elseif (sec2 > 0.03) and keyDown and not displayPingWheel and doubleWheel and pressReleaseMode then
+        -- gesture left or right to select primary or secondary wheel on pressRelaseMode
+        if not pingWheelScreenLocation then
+            return
+        end
+        local mx, my = spGetMouseState()
+        local dx = mx - pingWheelScreenLocation.x
+        local dy = my - pingWheelScreenLocation.y
+        local chosenWheel = false
+        if dx < -5 then
+            chosenWheel = pingCommands
+        elseif dx > 5 then
+            chosenWheel = pingMessages
+        end
+        if chosenWheel then
+            pingWheel = chosenWheel
+            TurnOn("gesture")
+        end
     end
 end
 
@@ -929,7 +956,13 @@ end
 
 local function drawWheelChoiceHelper()
     -- draw dot at mouse location
-    local mx, my = spGetMouseState()
+    local mx, my
+    if pressReleaseMode and pingWheelScreenLocation then
+        mx = pingWheelScreenLocation.x
+        my = pingWheelScreenLocation.y
+    else
+        mx, my = spGetMouseState()
+    end
     glColor(pingWheelColor)
     glPointSize(centerDotSize)
     glBeginEnd(GL_POINTS, glVertex, mx, my)
@@ -988,6 +1021,7 @@ local function drawDeadZone()
 end
 
 local function drawCenterDot()
+    if flashing then return end
     -- draw the center dot
     glColorDimmed(pingWheelColor)
     glPointSize(centerDotSize)
@@ -1020,7 +1054,7 @@ function widget:DrawScreen()
     end
     glPushMatrix()
     -- if keyDown then draw a dot at where mouse is
-    if keyDown and not displayPingWheel and doubleWheel then
+    if showLRHint and doubleWheel then
         drawWheelChoiceHelper()
     end
     -- we draw a wheel at the pingWheelScreenLocation divided into #pingWheel slices, with the first slice starting at the top
