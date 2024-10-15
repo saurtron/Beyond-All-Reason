@@ -12,6 +12,9 @@ function widget:GetInfo()
     }
 end
 
+local PACKET_HEADER = "mppnt:"
+local PACKET_HEADER_LENGTH = string.len(PACKET_HEADER)
+
 -- On/Off switches
 local use_colors = false -- set to false to use player color instead of custom ping color (controlled from options ui)
 
@@ -38,7 +41,7 @@ local function getTranslatedText(text)
     return text
 end
 
-function MapPointEvent(playerID, str)
+local function mapPointEvent(playerID, str)
     local data = Json.decode(str)
     local text = getTranslatedText(data['text'])
     -- Send a local ping since each user will see it in their own language
@@ -47,6 +50,12 @@ function MapPointEvent(playerID, str)
     end
     Spring.MarkerAddPoint(data['x'], data['y'], data['z'],
         text, true, playerID)
+end
+
+function widget:RecvLuaMsg(msg, playerID)
+    if string.sub(msg, 1, PACKET_HEADER_LENGTH) == PACKET_HEADER then
+        mapPointEvent(playerID, string.sub(msg, PACKET_HEADER_LENGTH+1))
+    end
 end
 
 function widget:GetConfigData()
@@ -70,9 +79,7 @@ function widget:Initialize()
     WG['pingwheel'].setUseColors = function(value)
         use_colors = value
     end
-    widgetHandler:RegisterGlobal('MapPointEvent', MapPointEvent)
 end
 
 function widget:Shutdown()
-    widgetHandler:DeregisterGlobal('MapPointEvent')
 end
