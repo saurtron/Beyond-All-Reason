@@ -36,7 +36,12 @@ end
 
 local function getTranslatedText(text)
     if string.sub(text, 1, 3) == 'ui.' then
-        text = Spring.I18N(text)
+        local newText = Spring.I18N(text)
+        if text == newText then
+            local splitText = string.split(text, ".")
+            newText = splitText[#splitText]:gsub("^%l", string.upper)
+        end
+        return newText
     end
     return text
 end
