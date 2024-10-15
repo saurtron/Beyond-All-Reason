@@ -29,7 +29,7 @@ end
 local iconDir = 'anims/icexuick_75/'
 local pingCommands = {                             -- the options in the ping wheel, displayed clockwise from 12 o'clock
     { name = "ui.wheel.attack",  color = { 1, 0.5, 0.3, 1 }, icon = iconDir..'cursorattack_2.png' }, -- color is optional, if no color is chosen it will be white
-    { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 }, icon = iconDir..'cursorfight_11.png', icon_offset={x=7, y=-8} },
+    { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 }, icon = iconDir..'cursorfight_11.png', icon_offset={7, -8} },
     { name = "Defend",  color = { 0.7, 0.9, 1, 1 }, icon = iconDir..'cursordefend_59.png', size=0.8 },
     { name = "ui.wheel.retreat", color = { 0.9, 0.7, 1, 1 } },
     { name = "Alert",   color = { 1, 1, 0.5, 1 } },
@@ -46,7 +46,7 @@ local pingMessages = {
     { name = "Sorry!",   color = { 0, 1, 0, 1 } },
     { name = "LOL",      color = { 0, 1, 1, 1 } },
     { name = "No",       color = { 0, 0, 1, 1 } },
-    { name = "ui.wheel.omw",  color = { 0.5, 0, 1, 1 }, icon = iconDir..'cursormove_24.png', icon_offset={x=7, y=-8} },
+    { name = "ui.wheel.omw",  color = { 0.5, 0, 1, 1 }, icon = iconDir..'cursormove_24.png', icon_offset={7, -8} },
     { name = "ui.wheel.paid", color = { 1, 0, 1, 1 } },
     -- add (possibly longer) msg attribute to have separate text on the wheel (name) and ping/chat (msg). as follows:
     -- { name = "Shop Open", msg = "shop open; 440m per each (paying is mandatory)", color = { 0.5, 0, 1, 1 } },
@@ -108,7 +108,6 @@ local use_gl4 = true        -- set to false to not use the new gl4 wheel style
 local draw_dividers = true  -- set to false to disable the dividers between options (the colored ones in non gl4 mode)
 local draw_line = false     -- set to true to draw a line from the center to the cursor during selection
 local draw_circle = false   -- set to false to disable the circle around the ping wheel
-local draw_icons = true     -- set to false to not draw item icons
 
 -- Fade and spam frames (set to 0 to disable)
 -- NOTE: these are now game frames, not display frames, so always 30 fps
@@ -255,14 +254,8 @@ local GL_REPLACE = GL.REPLACE
 local GL_TRIANGLE_FAN = GL.TRIANGLE_FAN
 local GL_TRIANGLES = GL.TRIANGLES
 
-local function MyGLColor(r, g, b, a)
-    if type(r) == "table" then
-        r, g, b, a = r[1], r[2], r[3], r[4]
-    end
-    if not r or not g or not b or not a then
-        return
-    end
-    glColor(dimmed({r, g, b, a}))
+local function MyGLColor(color)
+    glColor(dimmed(color))
 end
 local glColorDimmed          = MyGLColor
 
@@ -360,7 +353,7 @@ local lineScale = 1
 
 local function drawPortion(r, n, i)
     -- draw a triangle at the right angle for selection
-    local function Triangles(r, a1, a2)
+    local function Triangles(a1, a2)
         glVertex(0.0, 0.0)
         glVertex(sin(a1), cos(a1))
         glVertex(sin(a2), cos(a2))
@@ -368,7 +361,7 @@ local function drawPortion(r, n, i)
     local angle1 = (i - 1.5) * 2 * pi / n
     local angle2 = (i - 0.5) * 2 * pi / n
     circleShader:SetUniform("circleradius", r*pingWheelGl4Radius)
-    glBeginEnd(GL_TRIANGLES, Triangles, r, angle1, angle2)
+    glBeginEnd(GL_TRIANGLES, Triangles, angle1, angle2)
 end
 
 local function drawSquare(r)
@@ -383,20 +376,18 @@ local function drawSquare(r)
 
 end
 
-local function drawIcon(img, x, y, size, offset)
+local function drawIcon(img, pos, size, offset)
     glColorDimmed(pingWheelTextHighlightColor)
     glTexture(img)
     if not size then size = 1.0 end
-    if not offset then offset = {x=0, y=0} end
+
+    if offset then pos = {pos[1]+offset[1], pos[2]+offset[2]} end
     local halfSize = pingWheelRadius * iconSize * size
 
-    local pos = {x=x+offset.x, y=y+offset.y}
-
-    glTexRect(pos.x - halfSize, pos.y - halfSize,
-        pos.x + halfSize, pos.y + halfSize)
+    glTexRect(pos[1] - halfSize, pos[2] - halfSize,
+        pos[1] + halfSize, pos[2] + halfSize)
     glTexture(false)
 end
-
 
 local function drawGl4Dividers(r, width)
     if not width then width = 1.0 end
@@ -832,6 +823,12 @@ function widget:Update(dt)
             end
             globalDim = globalFadeOut / numFadeOutFrames
         end
+        -- directly use gl.Color when globalDim is 1
+        if globalDim == 1 then
+            glColorDimmed = gl.Color
+        else
+            glColorDimmed = MyGLColor
+        end
     end
 
     sec2 = sec2 + dt
@@ -845,7 +842,7 @@ function widget:Update(dt)
             -- calculate where the mouse is relative to the pingWheelScreenLocation, remember top is the first selection
             local dx = mx - pingWheelScreenLocation.x
             local dy = my - pingWheelScreenLocation.y
-            local angle = math.atan2(dx, dy)
+            local angle = atan2(dx, dy)
             local angleDeg = floor(angle * 180 / pi + 0.5)
             if angleDeg < 0 then
                 angleDeg = angleDeg + 360
@@ -906,7 +903,7 @@ local function drawDottedLine()
     end
     -- draw a dotted line connecting from center of wheel to the mouse location
     if draw_line and pingWheelSelection > 0 then
-        glColorDimmed(1, 1, 1, 0.5)
+        glColorDimmed({1, 1, 1, 0.5})
         glLineWidth(pingWheelThickness / 4)
         local mx, my = spGetMouseState()
         glBeginEnd(GL_LINES, line, pingWheelScreenLocation.x, pingWheelScreenLocation.y, mx, my)
@@ -923,27 +920,26 @@ local function drawLabels()
 
     glBeginText()
 
-    if spamControl > 0 then
-        glColorDimmed(pingWheelTextSpamColor)
-    end
-
     for i = 1, #pingWheel do
         local isSelected = pingWheelSelection == i
+        local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        local text = getTranslatedText(pingWheel[i].name)
-        local color = (WG['pingwheel'].getUseColors() and pingWheel[i].color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
-        color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
+        local text = getTranslatedText(selItem.name)
+        local color = (WG['pingwheel'].getUseColors() and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
         if isSelected and flashBlack then
             color = { 0, 0, 0, 0 }
         elseif spamControl > 0 and not flashing then
             color = pingWheelTextSpamColor
+        else
+            -- TODO: this is modifying in place
+            color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
         end
         local x = pingWheelScreenLocation.x + pingWheelRadius * textAlignRadiusRatio * sin(angle)
         local y = pingWheelScreenLocation.y + pingWheelRadius * textAlignRadiusRatio * cos(angle)
-        local icon = pingWheel[i].icon
+        local icon = selItem.icon
         local textScale = isSelected and selectedScaleFactor or 1.0
-        if icon and draw_icons and useIcons then
-            drawIcon(icon, x, y+0.2*pingWheelRadius, pingWheel[i].size, pingWheel[i].icon_offset)
+        if icon and useIcons then
+            drawIcon(icon, {x, y+0.2*pingWheelRadius}, selItem.size, selItem.icon_offset)
             y = y-0.05*pingWheelRadius
         end
         glColorDimmed(color)
@@ -966,6 +962,7 @@ local function drawWheelChoiceHelper()
     glColor(pingWheelColor)
     glPointSize(centerDotSize)
     glBeginEnd(GL_POINTS, glVertex, mx, my)
+
     -- draw two hints at the top left and right of the location
     glColor(1, 1, 1, 1)
     glText("R-click\nMsgs", mx + 15, my + 11, 12, "os")
@@ -1006,7 +1003,7 @@ local function drawDeadZone()
     -- draw a smooth circle at the pingWheelScreenLocation with 64 vertices
     if not draw_circle then return end
     --glColor(pingWheelColor)
-    glColorDimmed(1, 1, 1, 0.25)
+    glColorDimmed({1, 1, 1, 0.25})
     glLineWidth(pingWheelThickness)
 
     local function Circle(r)
@@ -1038,8 +1035,8 @@ local function drawCloseHint()
     local drawIconSize = pingWheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
     x_offset = (w+drawIconSize)/2.0
-    drawIcon("icons/mouse/rclick_glow.png", x-x_offset, y, hintIconSize)
-    glColorDimmed(1, 1, 1, 0.7)
+    drawIcon("icons/mouse/rclick_glow.png", {x-x_offset, y}, hintIconSize)
+    glColorDimmed({1, 1, 1, 0.7})
     glBeginText()
     glText("Cancel", x+drawIconSize/2-x_offset+w/6,
             y,
