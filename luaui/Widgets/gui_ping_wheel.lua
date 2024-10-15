@@ -506,8 +506,8 @@ local function getTranslatedText(text)
     return text
 end
 
-local function createMapPing(playerID, text, x, y, z, r, g, b)
-    data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b}
+local function createMapPing(playerID, text, x, y, z, r, g, b, icon)
+    data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
     msg = Json.encode(data)
     Spring.SendLuaRulesMsg('ping:' .. msg)
 end
@@ -695,7 +695,7 @@ local function checkRelease()
             local color = pingWheel[pingWheelSelection].color or pingWheelColor
 
             createMapPing(Spring.GetMyPlayerID(), pingWheel[pingWheelSelection].name, pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
-                color[1], color[2], color[3])
+                color[1], color[2], color[3], pingWheel[pingWheelSelection].icon)
 
             -- Spam control is necessary!
             spamControl = spamControlFrames
