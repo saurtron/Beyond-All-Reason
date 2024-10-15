@@ -255,6 +255,7 @@ end
 
 -- Display lists
 local dividerDlist
+local squareDlist
 
 -- GL speedups
 local glColor                = gl.Color
@@ -401,15 +402,8 @@ local function drawPortion(r, n, i)
 end
 
 local function drawSquare(r)
-    local function Square(r)
-        glVertex(1.0, 1.0)
-        glVertex(1.0, -1.0)
-        glVertex(-1.0, -1.0)
-        glVertex(-1.0, 1.0)
-    end
     circleShader:SetUniform("circleradius", r*pingWheelGl4Radius)
-    glBeginEnd(GL_TRIANGLE_FAN, Square, r)
-
+    gl.CallList(squareDlist)
 end
 
 local function drawIcon(img, pos, size, offset)
@@ -442,6 +436,15 @@ local function createLists()
             end
         end
         glBeginEnd(GL_LINES, Lines)
+    end)
+    squareDlist = gl.CreateList(function()
+        local function Square()
+            glVertex(1.0, 1.0)
+            glVertex(1.0, -1.0)
+            glVertex(-1.0, -1.0)
+            glVertex(-1.0, 1.0)
+        end
+        glBeginEnd(GL_TRIANGLE_FAN, Square)
     end)
 end
 
@@ -671,6 +674,7 @@ end
 
 function widget:Shutdown()
     gl.DeleteList(dividerDlist)
+    gl.DeleteList(squareDlist)
 end
 
 function widget:ViewResize(vsx, vsy)
