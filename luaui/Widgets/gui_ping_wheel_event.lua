@@ -38,7 +38,7 @@ local function getTranslatedText(text)
     return text
 end
 
-function MapPingEvent(playerID, str)
+function MapPointEvent(playerID, str)
     local data = Json.decode(str)
     local text = getTranslatedText(data['text'])
     -- Send a local ping since each user will see it in their own language
@@ -70,9 +70,9 @@ function widget:Initialize()
     WG['pingwheel'].setUseColors = function(value)
         use_colors = value
     end
-    widgetHandler:RegisterGlobal('MapPingEvent', MapPingEvent)
+    widgetHandler:RegisterGlobal('MapPointEvent', MapPointEvent)
 end
 
 function widget:Shutdown()
-    widgetHandler:DeregisterGlobal('MapPingEvent')
+    widgetHandler:DeregisterGlobal('MapPointEvent')
 end
