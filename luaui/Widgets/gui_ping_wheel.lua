@@ -325,11 +325,6 @@ local GL_EQUAL = GL.EQUAL
 local GL_KEEP = 0x1E00 --GL.KEEP
 local GL_REPLACE = GL.REPLACE
 
-local function MyGLColor(color)
-    glColor(dimmed(color))
-end
-local glColorDimmed          = MyGLColor
-
 ------------------------
 --- Translations and sending of messages
 ---
@@ -792,12 +787,6 @@ function widget:Update(dt)
             end
             globalDim = globalFadeOut / numFadeOutFrames
         end
-        -- directly use gl.Color when globalDim is 1
-        if globalDim == 1 then
-            glColorDimmed = gl.Color
-        else
-            glColorDimmed = MyGLColor
-        end
     end
 
     sec2 = sec2 + dt
@@ -987,7 +976,7 @@ local function drawAreaOutline(n, i, r1, r2, spacing, arr)
 end
 
 local function drawIcon(img, pos, size, offset)
-    glColorDimmed(pingWheelTextHighlightColor)
+    glColor(pingWheelTextHighlightColor)
     glTexture(img)
     if not size then size = 1.0 end
 
@@ -1003,7 +992,7 @@ local function drawWheel()
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
     -- a ring around the wheel
-    glColorDimmed(pingWheelRingColor)
+    glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale * 1.0)
     local hole = (selOuterRadius>0.92) and pingWheelSelection or 0
     drawCircleOutline(0.92, arr, hole)
@@ -1019,26 +1008,26 @@ local function drawWheel()
     end
 
     -- item area backgrounds
-    glColorDimmed(pingWheelBaseColor)
+    glColor(pingWheelBaseColor)
     local r1, r2, spacing = 0.3, baseOuterRadius, 0.008 -- hardcoded for now
     for i=1, #pingWheel do
         if i~=pingWheelSelection then
-            glColorDimmed(pingWheelBaseColor)
+            glColor(pingWheelBaseColor)
             drawArea(areaVertexNumber, #pingWheel, i, r1, r2, spacing, arr)
-            glColorDimmed(pingWheelAreaOutlineColor)
+            glColor(pingWheelAreaOutlineColor)
             drawAreaOutline(#pingWheel, i, r1, r2, spacing, arr)
         end
     end
     -- selected part
     if pingWheelSelection ~= 0 then
         r2 = selOuterRadius
-        glColorDimmed(pingWheelSelColor)
+        glColor(pingWheelSelColor)
         drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, r1, r2, spacing, arr)
         drawAreaOutline(#pingWheel, pingWheelSelection, r1, r2, spacing, arr)
     end
 
     --center hotzone
-    --glColorDimmed(pingWheelBaseColor)
+    --glColor(pingWheelBaseColor)
     --drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, 0.12, 0.3, 0.0, arr)
 
     -- from now on don't update stencil mask
@@ -1054,7 +1043,7 @@ local function drawDottedLine()
     end
     -- draw a dotted line connecting from center of wheel to the mouse location
     if draw_line and pingWheelSelection > 0 then
-        glColorDimmed({1, 1, 1, 0.5})
+        glColor({1, 1, 1, 0.5})
         glLineWidth(pingWheelThickness / 4)
         local mx, my = spGetMouseState()
         glBeginEnd(GL_LINES, line, 0, 0, mx, my)
@@ -1072,7 +1061,7 @@ local function drawCloseHint()
     local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
     x_offset = (w+drawIconSize)/2.0
     drawIcon("icons/mouse/rclick_glow.png", {x-x_offset, y}, hintIconSize)
-    glColorDimmed({1, 1, 1, 0.7})
+    glColor({1, 1, 1, 0.7})
     glBeginText()
     glText("Cancel", pingWheelScreenLocation.x+drawIconSize/2-x_offset+w/6,
             pingWheelScreenLocation.y+y,
@@ -1093,7 +1082,7 @@ local function drawDividers()
         end
     end
 
-    glColorDimmed(dividerColor)
+    glColor(dividerColor)
     glLineWidth(pingWheelThickness)
     glBeginEnd(GL_LINES, Lines)
 end
@@ -1130,7 +1119,7 @@ local function drawItems()
             drawIcon(icon, {x, y+0.2*pingWheelRadius}, selItem.size, selItem.icon_offset)
             y = y-0.05*pingWheelRadius
         end
-        glColorDimmed(color)
+        glColor(color)
         glText(text, pingWheelScreenLocation.x+x,
             pingWheelScreenLocation.y+y,
             pingWheelTextSize*textScale, "cvosN")
@@ -1165,7 +1154,7 @@ end
 local function drawBgTexture()
     if bgTexture then
         glStencilFunc(GL_NOTEQUAL, 1, 1)
-        glColorDimmed(bgTextureColor)
+        glColor(bgTextureColor)
         glTexture(bgTexture)
         -- use pingWheelRadius as the size of the background texture
         local halfSize = pingWheelRadius * bgTextureSizeRatio
@@ -1182,7 +1171,7 @@ local function drawDeadZone()
     if not draw_deadzone then return end
     --glColor(pingWheelColor)
 
-    glColorDimmed({1, 1, 1, 0.25})
+    glColor({1, 1, 1, 0.25})
     glLineWidth(pingWheelThickness)
 
     local function Circle(r)
@@ -1199,7 +1188,7 @@ end
 local function drawCenterDot()
     if flashing then return end
     -- draw the center dot
-    glColorDimmed(pingWheelColor)
+    glColor(pingWheelColor)
     glPointSize(centerDotSize)
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
 end
@@ -1215,36 +1204,9 @@ local function drawDecorations()
     drawDividers()
 end
 
-local function initItemsDlist()
-     local oldGlColor = glColorDimmed
-     glColorDimmed = gl.Color
-
-     itemsDlist = gl.CreateList(drawItems)
-
-     glColorDimmed = oldGlColor
-end
-
-local function initDecorationsDlist()
-     local oldGlColor = glColorDimmed
-     glColorDimmed = gl.Color
-
-     decorationsDlist = gl.CreateList(drawDecorations)
-
-     glColorDimmed = oldGlColor
-end
-
-local function initBaseDlist()
-     local oldGlColor = glColorDimmed
-     glColorDimmed = gl.Color
-
-     baseDlist = gl.CreateList(drawWheel)
-
-     glColorDimmed = oldGlColor
-end
-
 local function drawWheelBase()
     if not baseDlist then
-        initBaseDlist()
+        baseDlist = gl.CreateList(drawWheel)
     end
     glCallList(baseDlist)
 end
@@ -1257,7 +1219,7 @@ local function drawWheelForeground()
         drawItems()
     else
         if not itemsDlist then
-            initItemsDlist()
+            itemsDlist = gl.CreateList(drawItems)
         end
         shader:SetUniform("useTex", 1)
         glCallList(itemsDlist)
@@ -1279,7 +1241,6 @@ function widget:DrawScreen()
         local scale1 = (vsy/vsx)*baseWheelSize -- for items in -1, 1
         local scale2 = 2/vsx           -- for items in screen space
 
-        glColorDimmed = gl.Color             -- no need for dimming if using shader
         shader:Activate()
         shader:SetUniform("scale", scale1)
         shader:SetUniform("useTex", 0)
@@ -1297,7 +1258,7 @@ function widget:DrawScreen()
         drawBgTexture()
         shader:SetUniform("useTex", 0)
         if not decorationsDlist then
-            initDecorationsDlist()
+            decorationsDlist = gl.CreateList(drawDecorations)
         end
         glCallList(decorationsDlist)
 
