@@ -54,6 +54,7 @@ local pingMessages = {
 }
 
 local styleChoice = 1 -- 1 = circle, 2 = ring, 3 = custom
+local baseWheelSize = 0.355 -- ~1/3 screen
 
 -- Available styles
 local styleConfig = {
@@ -82,8 +83,8 @@ local styleConfig = {
         name = "Ring Light",
         bgTexture = "LuaUI/images/enemyspotter.dds",
         bgTextureSizeRatio = 1.15,
-        dividerInnerRatio = 0.6,
-        dividerOuterRatio = 1.2,
+        dividerInnerRatio = 0.34,
+        dividerOuterRatio = 0.68,
         textSize = 22,
         drawBase = false,
     },
@@ -96,8 +97,8 @@ local defaults = {
     bgTextureColor = { 0, 0, 0, 0.66 },
     bgTextureSizeRatio = 1.10,
     dividerColor = { 1, 1, 1, 0.15 },
-    dividerInnerRatio = 0.45,
-    dividerOuterRatio = 1.1,
+    dividerInnerRatio = 0.25,
+    dividerOuterRatio = 0.62,
     textSize = 16,
     textAlignRadiusRatio = 1.1,
     wheelBaseColor = {0.0, 0.0, 0.0, 0.3},
@@ -129,7 +130,7 @@ local outerCircleBaseWidth = 2          -- width of the outer circle line
 local centerDotBaseSize = 20            -- size of the center dot
 local linesBaseWidth = 2		-- thickness of the ping wheel line drawing
 local deadZoneRadiusRatio = 0.3         -- the center "no selection" area as a ratio of the ping wheel radius
-local outerLimitRadiusRatio = 5         -- the outer limit ratio where "no selection" is active
+local outerLimitRadiusRatio = 1.5       -- the outer limit ratio where "no selection" is active
 
 pingWheelSelTextAlpha = defaults.selSelTextOpacity
 pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
@@ -819,9 +820,14 @@ function widget:Update(dt)
             local selection = (floor((360 + angleDeg + offset) / 360 * #pingWheel)) % #pingWheel + 1
             -- deadzone is no selection
             local dist = dx * dx + dy * dy
+            local vsx, vsy = Spring.GetViewGeometry()
 
-            if (dist < deadZoneRadiusRatio * pingWheelRadius * deadZoneRadiusRatio * pingWheelRadius)
-                or (dist > outerLimitRadiusRatio * pingWheelRadius * outerLimitRadiusRatio * pingWheelRadius)
+            local wheelSize = (math.min(vsy, vsx)*baseWheelSize)/2
+            local dzSize = deadZoneRadiusRatio*wheelSize
+            local oSize = outerLimitRadiusRatio*wheelSize
+
+            if (dist < dzSize*dzSize)
+                or (dist > oSize*oSize)
             then
                 setSelection(0)
                 --Spring.SetMouseCursor("cursornormal")
@@ -1080,10 +1086,10 @@ local function drawDividers()
     local function Lines()
         for i = 1, #pingWheel do
             local angle = (i - 1.5) * 2 * pi / #pingWheel
-            glVertex(pingWheelRadius * dividerInnerRatio * sin(angle),
-                pingWheelRadius * dividerInnerRatio * cos(angle))
-            glVertex(pingWheelRadius * dividerOuterRatio * sin(angle),
-                pingWheelRadius * dividerOuterRatio * cos(angle))
+            glVertex(dividerInnerRatio * sin(angle),
+                dividerInnerRatio * cos(angle))
+            glVertex(dividerOuterRatio * sin(angle),
+                dividerOuterRatio * cos(angle))
         end
     end
 
@@ -1187,7 +1193,7 @@ local function drawDeadZone()
     end
 
     -- draw the dead zone circle
-    glBeginEnd(GL_LINE_LOOP, Circle, pingWheelRadius * deadZoneRadiusRatio)
+    glBeginEnd(GL_LINE_LOOP, Circle, deadZoneRadiusRatio)
 end
 
 local function drawCenterDot()
@@ -1244,11 +1250,6 @@ local function drawWheelBase()
 end
 
 local function drawWheelForeground()
-    if not decorationsDlist then
-        initDecorationsDlist()
-    end
-    glCallList(decorationsDlist)
-
     drawDottedLine() -- Dotted line to mouse needs to be updated all the time so no cooking
 
     shader:SetUniform("useTex", 1)
@@ -1275,7 +1276,7 @@ function widget:DrawScreen()
         local mmx = pingWheelScreenLocation.x*2 - vsx
         local mmy = pingWheelScreenLocation.y*2 - vsy
 
-        local scale1 = (vsy/vsx)*0.355 -- for items in -1, 1
+        local scale1 = (vsy/vsx)*baseWheelSize -- for items in -1, 1
         local scale2 = 2/vsx           -- for items in screen space
 
         glColorDimmed = gl.Color             -- no need for dimming if using shader
@@ -1295,6 +1296,10 @@ function widget:DrawScreen()
         shader:SetUniform("useTex", 1)
         drawBgTexture()
         shader:SetUniform("useTex", 0)
+        if not decorationsDlist then
+            initDecorationsDlist()
+        end
+        glCallList(decorationsDlist)
 
         -- Other details
         shader:SetUniform("scale", scale2)
