@@ -61,14 +61,14 @@ local styleConfig = {
         name = "White",
         baseTextOpacity = 1.0,
         wheelBaseColor = {0.0, 0.0, 0.0, 0.3},
-        selOuterRadius = 1.0,
+        selOuterRadius = 1,
     },
     [2] = {
         name = "Black",
         wheelSelColor = {0.0, 0.0, 0.0, 0.7},
         wheelRingColor = {0.0, 0.0, 0.0, 0.7},
         baseTextOpacity = 1.0,
-        selOuterRadius = 1.0,
+        selOuterRadius = 1,
     },
     [3] = {
         name = "Circle Light",
@@ -933,13 +933,21 @@ local function drawArea(vertices, n, i, r1, r2, spacing, arr)
     glBeginEnd(GL.QUADS, Area, n, i, vertices, r1, r2, arr)
 end
 
-local function drawCircleOutline(r, arr)
+local function drawCircleOutline(r, arr, hole)
     local function Circle()
-        for i=1, #arr-1 do
+        local vn = areaVertexNumber-1
+	local holeStart = (hole-1)*vn+1
+	local holeEnd = hole*vn
+        for i=1+holeEnd, #arr do
             glVertex(arr[i][1]*r, arr[i][2]*r)
         end
+        if hole ~=0 then
+            for i=1, holeStart do
+                glVertex(arr[i][1]*r, arr[i][2]*r)
+            end
+        end
     end
-    glBeginEnd(GL_LINE_LOOP, Circle)
+    glBeginEnd(GL.LINE_STRIP, Circle)
 end
 
 local function drawAreaOutline(n, i, r1, r2, spacing, arr)
@@ -988,11 +996,11 @@ end
 local function drawWheel()
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
-
     -- a ring around the wheel
     glColorDimmed(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale * 1.0)
-    drawCircleOutline(0.92, arr)
+    local hole = (selOuterRadius>0.92) and pingWheelSelection or 0
+    drawCircleOutline(0.92, arr, hole)
 
     -- setup stencil buffer to mask areas
     if bgTexture then
