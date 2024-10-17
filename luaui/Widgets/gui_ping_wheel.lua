@@ -61,27 +61,30 @@ local styleConfig = {
         name = "White",
         baseTextOpacity = 1.0,
         wheelBaseColor = {0.0, 0.0, 0.0, 0.3},
+        selOuterRadius = 1.0,
     },
     [2] = {
         name = "Black",
         wheelSelColor = {0.0, 0.0, 0.0, 0.7},
         wheelRingColor = {0.0, 0.0, 0.0, 0.7},
         baseTextOpacity = 1.0,
+        selOuterRadius = 1.0,
     },
     [3] = {
         name = "Circle Light",
         bgTexture = "LuaUI/images/glow.dds",
-        bgTextureSizeRatio = 2.2,
+        bgTextureSizeRatio = 1.2,
         bgTextureColor = { 0, 0, 0, 0.9 },
-        textSize = 24,
+        textSize = 22,
         drawBase = false,
     },
     [4] = {
         name = "Ring Light",
         bgTexture = "LuaUI/images/enemyspotter.dds",
+        bgTextureSizeRatio = 1.15,
         dividerInnerRatio = 0.6,
         dividerOuterRatio = 1.2,
-        textSize = 24,
+        textSize = 22,
         drawBase = false,
     },
 }
@@ -91,7 +94,7 @@ local defaults = {
     drawBase = true,
     iconSize = 0.16,
     bgTextureColor = { 0, 0, 0, 0.66 },
-    bgTextureSizeRatio = 1.9,
+    bgTextureSizeRatio = 1.10,
     dividerColor = { 1, 1, 1, 0.15 },
     dividerInnerRatio = 0.45,
     dividerOuterRatio = 1.1,
@@ -100,8 +103,11 @@ local defaults = {
     wheelBaseColor = {0.0, 0.0, 0.0, 0.3},
     wheelSelColor = {1.0, 1.0, 1.0, 0.5},
     wheelRingColor = {1.0, 1.0, 1.0, 0.5},
+    wheelAreaOutlineColor = {0.5, 0.5, 0.5, 0.5},
     selTextOpacity = 1.0,
     baseTextOpacity = 0.75,
+    selOuterRadius = 0.9,
+    baseOuterRadius = 0.9,
 }
 
 -- On/Off switches
@@ -132,12 +138,14 @@ local pingWheelTextBaseSize = defaults.textSize
 local pingWheelTextColor = { 1, 1, 1, 0.7 }
 local pingWheelTextHighlightColor = { 1, 1, 1, 1 }
 local pingWheelTextSpamColor = { 0.9, 0.9, 0.9, 0.4 }
-local pingWheelPlayerColor = { 0.9, 0.8, 0.5, 0.8 }
 
-local pingWheelColor = { 0.9, 0.8, 0.5, 0.6 }
+local pingWheelPlayerColor = { 0.9, 0.8, 0.5, 0.8 } -- will be loaded externally
+local pingWheelColor = { 0.9, 0.8, 0.5, 0.6 } -- will be overriden with playerColor for now
+
 local pingWheelBaseColor = defaults.wheelBaseColor
 local pingWheelSelColor = defaults.wheelSelColor
 local pingWheelRingColor = defaults.wheelRingColor
+local pingWheelAreaOutlineColor = defaults.wheelAreaOutlineColor
 local pingWheelDrawBase = defaults.drawBase
 
 local selectedScaleFactor = 1.3         -- how much bigger to draw selected item text
@@ -164,7 +172,7 @@ local function loadPingWheelMessages(fileName, destArray)
     local success, data = pcall(Json.decode, final)
     if not success then
         Spring.Log("Ping Wheel", LOG.ERROR, "Can't load " .. fullPath)
-	return
+        return
     end
 
     if destArray == 'commands' then
@@ -197,6 +205,9 @@ local centerDotSize = centerDotBaseSize * sizeRatio
 local dividerLineWidth = dividerLineBaseWidth * sizeRatio
 local pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
 local pingWheelRingWidth = outerCircleBaseWidth * sizeRatio
+local selOuterRadius = defaults.selOuterRadius
+local baseOuterRadius = defaults.baseOuterRadius
+local areaVertexNumber = 10
 
 --- Other file variables
 local globalDim = 1     -- this controls global alpha of all gl.Color calls
@@ -274,6 +285,11 @@ local function destroyDecorationsDlist()
     gl.DeleteList(decorationsDlist)
     decorationsDlist = nil
 end
+
+-- Shader globals
+local shader
+local luaShaderDir = "LuaUI/Widgets/Include/"
+local LuaShader = VFS.Include(luaShaderDir.."LuaShader.lua")
 
 -- GL speedups
 local glCallList             = gl.CallList
@@ -382,12 +398,18 @@ local function applyStyle()
     pingWheelTextBaseSize = style.textSize or defaults.textSize
     pingWheelSelTextAlpha = style.selTextOpacity or defaults.selTextOpacity
     pingWheelBaseTextAlpha = style.baseTextOpacity or defaults.baseTextOpacity
-    pingWheelDrawBase = style.drawBase or defaults.drawBase
+    pingWheelDrawBase = style.drawBase
+    if pingWheelDrawBase == nil then
+        pingWheelDrawBase = defaults.drawBase
+    end
 
     if pingWheelDrawBase then
         pingWheelSelColor = style.wheelSelColor or defaults.wheelSelColor
         pingWheelRingColor = style.wheelRingColor or defaults.wheelRingColor
+        pingWheelAreaOutlineColor = style.wheelAreaOutlineColor or defaults.wheelAreaOutlineColor
         pingWheelBaseColor = style.wheelBaseColor or defaults.wheelBaseColor
+        selOuterRadius = style.selOuterRadius or defaults.selOuterRadius
+        baseOuterRadius = style.baseOuterRadius or defaults.baseOuterRadius
         doDividers = false
     else
         doDividers = draw_dividers
@@ -403,10 +425,87 @@ local function applyStyle()
 end
 
 ------------------------
+--- Shaders
+---
+
+local vsSrc = [[
+	#version 150 compatibility
+	#extension GL_ARB_shading_language_420pack: require // for engine defs
+	#line 10000
+
+	uniform float scale;
+	uniform vec4 mousePosition;
+
+	out vec2 texCoord;
+
+	//__ENGINEUNIFORMBUFFERDEFS__
+
+	#line 11000
+
+	void main() {
+		vec4 vertPos = gl_Vertex;
+
+		float viewratio = viewGeometry.x / viewGeometry.y;
+
+		vec2 stretched = vec2(vertPos.x , vertPos.y * viewratio);
+		stretched.xy *= scale;
+
+		vec4 screenPos = mousePosition;
+		screenPos.y *= viewratio;
+		screenPos.xy += stretched.xy;
+
+		// outputs
+		gl_Position = screenPos;
+		gl_FrontColor = gl_Color;
+		texCoord = gl_MultiTexCoord0.st;
+	}
+]]
+
+local fsSrc = [[
+	#version 150 compatibility
+	#extension GL_ARB_shading_language_420pack: require // for engine defs
+	#line 20000
+
+	uniform sampler2D tex0;
+	uniform float alpha;
+	uniform float useTex;
+
+	in vec2 texCoord;
+
+        //__ENGINEUNIFORMBUFFERDEFS__
+	void main(void) {
+		if (useTex > 0.5) {
+			gl_FragColor = texture2D(tex0, texCoord);
+			gl_FragColor *= gl_Color;
+		} else {
+			gl_FragColor = gl_Color;
+		}
+		gl_FragColor.a *= alpha;
+	}
+]]
+
+local function loadShaders()
+    local engineUniformBufferDefs = LuaShader.GetEngineUniformBufferDefs()
+    vsSrc = vsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
+    fsSrc = fsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
+
+    shader = LuaShader({vertex=vsSrc, fragment=fsSrc}, "ping wheel")
+    shaderCompiled = shader:Initialize()
+    if not shaderCompiled then
+        shader:ShowError(shader.shLog)
+    end
+end
+
+local function destroyShaders()
+    gl.DeleteShader(shader)
+end
+
+------------------------
 --- Init/shutdown and maintenance
 ---
 
 function widget:Initialize()
+    loadShaders()
     WG['pingwheel_gui'] = {}
     WG['pingwheel_gui'].getWheelStyle = function()
         return styleChoice
@@ -453,6 +552,7 @@ function widget:Shutdown()
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
+    destroyShaders()
 end
 
 function widget:ViewResize(vsx, vsy)
@@ -514,9 +614,9 @@ end
 local function TurnOff(reason)
     if displayPingWheel then
         if pingWheelSelection ~= 0 then
-            destroyItemsDlist()
             destroyBaseDlist()
         end
+        destroyItemsDlist()
         displayPingWheel = false
         pingWorldLocation = nil
         pingWheelScreenLocation = nil
@@ -719,6 +819,7 @@ function widget:Update(dt)
             local selection = (floor((360 + angleDeg + offset) / 360 * #pingWheel)) % #pingWheel + 1
             -- deadzone is no selection
             local dist = dx * dx + dy * dy
+
             if (dist < deadZoneRadiusRatio * pingWheelRadius * deadZoneRadiusRatio * pingWheelRadius)
                 or (dist > outerLimitRadiusRatio * pingWheelRadius * outerLimitRadiusRatio * pingWheelRadius)
             then
@@ -779,9 +880,9 @@ local function circleArray(items, itemverts, r)
 end
 
 -- Initialize circle vector arrays for both wheel's number of vectors
-baseCircleArrays[#pingCommands] = circleArray(#pingCommands, 10, 1)
+baseCircleArrays[#pingCommands] = circleArray(#pingCommands, areaVertexNumber, 1)
 if #pingCommands ~= #pingMessages then
-    baseCircleArrays[#pingMessages] = circleArray(#pingMessages, 10, 1)
+    baseCircleArrays[#pingMessages] = circleArray(#pingMessages, areaVertexNumber, 1)
 end
 
 local function resetDrawState()
@@ -809,7 +910,7 @@ local function dVector(x1, x2, y1, y2, ff)
     return dx*z, dy*z
 end
 
-local function drawArea(n, i, r1, r2, spacing, arr)
+local function drawArea(vertices, n, i, r1, r2, spacing, arr)
     -- draw a donut portion with spacer space
     local function Area(n, i, p, r1, r2, arr)
         local o1, o2, o3, o4
@@ -829,7 +930,7 @@ local function drawArea(n, i, r1, r2, spacing, arr)
             glVertex(sin2*r1+o3, cos2*r1+o4)
         end
     end
-    glBeginEnd(GL.QUADS, Area, n, i, 10, r1, r2, arr)
+    glBeginEnd(GL.QUADS, Area, n, i, vertices, r1, r2, arr)
 end
 
 local function drawCircleOutline(r, arr)
@@ -868,7 +969,7 @@ local function drawAreaOutline(n, i, r1, r2, spacing, arr)
         CirclePart(n, i, p, r1, -1, arr)
     end
     glLineWidth(dividerLineWidth * lineScale * 0.4)
-    glBeginEnd(GL_LINE_LOOP, AreaOutline, n, i, 10, r1, r2, arr)
+    glBeginEnd(GL_LINE_LOOP, AreaOutline, n, i, areaVertexNumber, r1, r2, arr)
 end
 
 local function drawIcon(img, pos, size, offset)
@@ -905,19 +1006,26 @@ local function drawWheel()
 
     -- item area backgrounds
     glColorDimmed(pingWheelBaseColor)
-    local r1, r2, spacing = 0.33, 0.9, 0.008 -- hardcoded for now
+    local r1, r2, spacing = 0.3, baseOuterRadius, 0.008 -- hardcoded for now
     for i=1, #pingWheel do
         if i~=pingWheelSelection then
-            drawArea(#pingWheel, i, r1, r2, spacing, arr)
+            glColorDimmed(pingWheelBaseColor)
+            drawArea(areaVertexNumber, #pingWheel, i, r1, r2, spacing, arr)
+            glColorDimmed(pingWheelAreaOutlineColor)
             drawAreaOutline(#pingWheel, i, r1, r2, spacing, arr)
         end
     end
     -- selected part
     if pingWheelSelection ~= 0 then
+        r2 = selOuterRadius
         glColorDimmed(pingWheelSelColor)
-        drawArea(#pingWheel, pingWheelSelection, r1, r2, spacing, arr)
+        drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, r1, r2, spacing, arr)
         drawAreaOutline(#pingWheel, pingWheelSelection, r1, r2, spacing, arr)
     end
+
+    --center hotzone
+    --glColorDimmed(pingWheelBaseColor)
+    --drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, 0.12, 0.3, 0.0, arr)
 
     -- from now on don't update stencil mask
     if bgTexture then
@@ -952,8 +1060,8 @@ local function drawCloseHint()
     drawIcon("icons/mouse/rclick_glow.png", {x-x_offset, y}, hintIconSize)
     glColorDimmed({1, 1, 1, 0.7})
     glBeginText()
-    glText("Cancel", x+drawIconSize/2-x_offset+w/6,
-            y,
+    glText("Cancel", pingWheelScreenLocation.x+drawIconSize/2-x_offset+w/6,
+            pingWheelScreenLocation.y+y,
             pingWheelTextSize*hintTextSize, "lovs")
     glEndText()
 end
@@ -1009,11 +1117,14 @@ local function drawItems()
             y = y-0.05*pingWheelRadius
         end
         glColorDimmed(color)
-        glText(text, x,
-            y,
-            pingWheelTextSize*textScale, "cvos")
+        glText(text, pingWheelScreenLocation.x+x,
+            pingWheelScreenLocation.y+y,
+            pingWheelTextSize*textScale, "cvosN")
     end
     glEndText()
+
+    -- Close hint at the bottom
+    drawCloseHint()
 end
 
 local function drawWheelChoiceHelper()
@@ -1044,6 +1155,7 @@ local function drawBgTexture()
         glTexture(bgTexture)
         -- use pingWheelRadius as the size of the background texture
         local halfSize = pingWheelRadius * bgTextureSizeRatio
+        local halfSize = bgTextureSizeRatio
         glTexRect(-halfSize, -halfSize,
             halfSize, halfSize)
         glTexture(false)
@@ -1055,6 +1167,7 @@ local function drawDeadZone()
     -- draw a smooth circle with 64 vertices
     if not draw_deadzone then return end
     --glColor(pingWheelColor)
+
     glColorDimmed({1, 1, 1, 0.25})
     glLineWidth(pingWheelThickness)
 
@@ -1078,9 +1191,6 @@ local function drawCenterDot()
 end
 
 local function drawDecorations()
-    -- background texture, can be overlayed over the new base
-    drawBgTexture()
-
     -- deadzone radius
     drawDeadZone()
 
@@ -1089,9 +1199,6 @@ local function drawDecorations()
 
     -- draw dividers between zones for styles with no base
     drawDividers()
-
-    -- Close hint at the bottom
-    drawCloseHint()
 end
 
 local function initItemsDlist()
@@ -1122,40 +1229,28 @@ local function initBaseDlist()
 end
 
 local function drawWheelBase()
-    local scale = pingWheelRadius*1.8
-    glPushMatrix()
-    gl.Scale(scale, scale, scale)
-
-    if flashing or globalDim ~=1 then
-        -- If flashing or fading out draw in immediate mode
-        drawWheel()
-    else
-        -- Else draw using baked lists
-        if not baseDlist then
-            initBaseDlist()
-        end
-        glCallList(baseDlist)
+    if not baseDlist then
+        initBaseDlist()
     end
-
-    glPopMatrix()
+    glCallList(baseDlist)
 end
 
 local function drawWheelForeground()
-    if flashing or globalDim ~=1 then
-        -- If flashing or fading out draw in immediate mode
-        drawDecorations()
-        drawDottedLine()
+    if not decorationsDlist then
+        initDecorationsDlist()
+    end
+    glCallList(decorationsDlist)
+
+    drawDottedLine() -- Dotted line to mouse needs to be updated all the time so no cooking
+
+    shader:SetUniform("useTex", 1)
+    if flashing then
         drawItems()
     else
-        -- Else draw using baked lists
-        if not decorationsDlist then
-            initDecorationsDlist()
-        end
-        glCallList(decorationsDlist)
-        drawDottedLine() -- Dotted line to mouse needs to be updated all the time so no cooking
         if not itemsDlist then
             initItemsDlist()
         end
+        shader:SetUniform("useTex", 1)
         glCallList(itemsDlist)
     end
 end
@@ -1168,17 +1263,38 @@ function widget:DrawScreen()
 
     -- Main wheel
     if displayPingWheel and pingWheelScreenLocation then
-        glPushMatrix()
-        glTranslate(pingWheelScreenLocation.x, pingWheelScreenLocation.y, 0)
+        local vsx, vsy, vpx, vpy = Spring.GetViewGeometry()
+        local mmx = pingWheelScreenLocation.x*2 - vsx
+        local mmy = pingWheelScreenLocation.y*2 - vsy
+
+        local scale1 = (vsy/vsx)*0.355 -- for items in -1, 1
+        local scale2 = 2/vsx           -- for items in screen space
+
+        glColorDimmed = gl.Color             -- no need for dimming if using shader
+        shader:Activate()
+        shader:SetUniform("scale", scale1)
+        shader:SetUniform("useTex", 0)
+        shader:SetUniform("alpha", globalDim)
+        shader:SetUniform("mousePosition", mmx/vsx, mmy/vsx, 1.0, 1.0)
+
         glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         -- The new style base
         if pingWheelDrawBase then
             drawWheelBase()
         end
+
+        -- background texture, can be overlayed over the new base
+        shader:SetUniform("useTex", 1)
+        drawBgTexture()
+        shader:SetUniform("useTex", 0)
+
         -- Other details
+        shader:SetUniform("scale", scale2)
+
         drawWheelForeground()
-        glPopMatrix()
+
         -- Reset state
+        shader:Deactivate()
         resetDrawState()
     end
 end
