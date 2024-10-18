@@ -127,10 +127,12 @@ local spamControlFrames = 8 -- how many frames to wait before allowing another p
 local pingWheelBaseRadius = 0.1         -- base radius for whole wheel size (10% of the screen size)
 local dividerLineBaseWidth = 3.5        -- width of the divider empty space between sections
 local outerCircleBaseWidth = 2          -- width of the outer circle line
-local centerDotBaseSize = 20            -- size of the center dot
+local centerDotBaseSize = 15            -- size of the center dot
 local linesBaseWidth = 2		-- thickness of the ping wheel line drawing
-local deadZoneRadiusRatio = 0.3         -- the center "no selection" area as a ratio of the ping wheel radius
+local deadZoneBaseRadius = 0.12         -- the center "no selection" area as a ratio of the ping wheel radius
+local centerAreaRadiusRatio = 0.3
 local outerLimitRadiusRatio = 1.5       -- the outer limit ratio where "no selection" is active
+local deadZoneRadiusRatio = deadZoneBaseRadius
 
 pingWheelSelTextAlpha = defaults.selSelTextOpacity
 pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
@@ -194,13 +196,15 @@ local showLRHint = false
 local pressReleaseMode = false
 local doubleWheel = false
 local useIcons = true
+local hasCenterAction = true
 
 -- Calculated sizes
 local iconSize = defaults.iconSize
-local viewSizeX, viewSizeY = Spring.GetViewGeometry()
+local vsx, vsy = Spring.GetViewGeometry()
 
-local pingWheelRadius = pingWheelBaseRadius * math.min(viewSizeX, viewSizeY)
-local sizeRatio = math.min(viewSizeX, viewSizeY)/1080.0
+local wheelRadius = (math.min(vsx, vsy)*baseWheelSize)/2 -- should be exact radius
+local pingWheelRadius = pingWheelBaseRadius * math.min(vsx, vsy)
+local sizeRatio = math.min(vsx, vsy)/1080.0
 local pingWheelThickness = linesBaseWidth * sizeRatio
 local centerDotSize = centerDotBaseSize * sizeRatio
 local dividerLineWidth = dividerLineBaseWidth * sizeRatio
@@ -230,6 +234,7 @@ local displayPingWheel = false
 local pingWorldLocation
 local pingWheelScreenLocation
 local pingWheelSelection = 0
+local centerSelected = false
 local spamControl = 0
 --local gameFrame = 0
 local flashFrame = 0
@@ -347,8 +352,13 @@ local function getTranslatedText(text)
     return text
 end
 
-local function createMapPoint(playerID, text, x, y, z, r, g, b, icon)
+local function createMapPoint(playerID, text, x, y, z, color, icon)
     data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
+    if color then
+        data.r = color[1]
+        data.g = color[2]
+        data.b = color[3]
+    end
     msg = Json.encode(data)
     Spring.SendLuaUIMsg('mppnt:' .. msg)
 end
@@ -407,8 +417,12 @@ local function applyStyle()
         selOuterRadius = style.selOuterRadius or defaults.selOuterRadius
         baseOuterRadius = style.baseOuterRadius or defaults.baseOuterRadius
         doDividers = false
+        deadZoneRadiusRatio = deadZoneBaseRadius
+        hasCenterAction = true
     else
         doDividers = draw_dividers
+        deadZoneRadiusRatio = centerAreaRadiusRatio
+        hasCenterAction = false
     end
     local vx, vy = Spring.GetViewGeometry()
 
@@ -552,6 +566,7 @@ function widget:Shutdown()
 end
 
 function widget:ViewResize(vsx, vsy)
+    wheelRadius = (math.min(vsx, vsy)*baseWheelSize)/2
     pingWheelRadius = pingWheelBaseRadius * math.min(vsx, vsy)
     local f = math.min(vsx, vsy) / 1080.0
     pingWheelTextSize = pingWheelTextBaseSize * f
@@ -609,7 +624,7 @@ end
 
 local function TurnOff(reason)
     if displayPingWheel then
-        if pingWheelSelection ~= 0 then
+        if pingWheelSelection ~= 0 or centerSelected then
             destroyBaseDlist()
         end
         destroyItemsDlist()
@@ -617,6 +632,7 @@ local function TurnOff(reason)
         pingWorldLocation = nil
         pingWheelScreenLocation = nil
         pingWheelSelection = 0
+        centerSelected = false
         --Spring.Echo("Turned off: " .. reason)
         return true
     end
@@ -635,12 +651,15 @@ local function checkRelease()
         and pingWorldLocation
         and spamControl == 0
     then
-        if pingWheelSelection > 0 and not flashing then
-            local pingText = pingWheel[pingWheelSelection].msg or pingWheel[pingWheelSelection].name
-            local color = pingWheel[pingWheelSelection].color or pingWheelColor
-
-            createMapPoint(Spring.GetMyPlayerID(), pingWheel[pingWheelSelection].name, pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
-                color[1], color[2], color[3], pingWheel[pingWheelSelection].icon)
+        if (pingWheelSelection > 0 or centerSelected) and not flashing then
+            local pingText, color, icon
+            if pingWheelSelection > 0 then
+                pingText = pingWheel[pingWheelSelection].msg or pingWheel[pingWheelSelection].name
+                color = pingWheel[pingWheelSelection].color or pingWheelColor
+                icon = pingWheel[pingWheelSelection].icon
+            end
+            createMapPoint(Spring.GetMyPlayerID(), pingText, pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
+                color, icon)
 
             -- Spam control is necessary!
             spamControl = spamControlFrames
@@ -664,12 +683,13 @@ end
 ------------------------
 --- Key/Mouse Interaction
 
-local function setSelection(selected)
-    if selected ~= pingWheelSelection then
+local function setSelection(selected, centersel)
+    if selected ~= pingWheelSelection or centersel ~= centerSelected then
         destroyItemsDlist()
         destroyBaseDlist()
     end
     pingWheelSelection = selected
+    centerSelected = centersel
 end
 
 local function setWheel(selected)
@@ -778,8 +798,7 @@ function widget:Update(dt)
             globalFadeIn = globalFadeIn - 1
             if globalFadeIn < 0 then globalFadeIn = 0 end
             globalDim = 1 - globalFadeIn / numFadeInFrames
-        end
-        if globalFadeOut > 0 then
+        elseif globalFadeOut > 0 then
             globalFadeOut = globalFadeOut - 1
             if globalFadeOut <= 0 then
                 globalFadeOut = 0
@@ -792,14 +811,37 @@ function widget:Update(dt)
     sec2 = sec2 + dt
     if (sec2 > 0.03) and displayPingWheel then
         sec2 = 0
+        if spamControl > 0 then
+            spamControl = (spamControl == 0) and 0 or (spamControl - 1)
+        end
         if globalFadeOut == 0 and not flashing then -- if not flashing and not fading out
-            local mx, my = spGetMouseState()
             if not pingWheelScreenLocation then
                 return
             end
+            local mx, my = spGetMouseState()
             -- calculate where the mouse is relative to the pingWheelScreenLocation, remember top is the first selection
             local dx = mx - pingWheelScreenLocation.x
             local dy = my - pingWheelScreenLocation.y
+            -- deadzone is no selection
+            local dist = dx * dx + dy * dy
+
+            local dzSize = deadZoneRadiusRatio*wheelRadius
+            local oSize = outerLimitRadiusRatio*wheelRadius
+            if hasCenterAction then
+                local cSize = centerAreaRadiusRatio*wheelRadius
+
+                if (dist > dzSize*dzSize and dist < cSize*cSize) then
+                    setSelection(0, true)
+                    return
+                end
+            end
+            if (dist < dzSize*dzSize)
+                or (dist > oSize*oSize)
+            then
+                setSelection(0, false)
+                return
+                --Spring.SetMouseCursor("cursornormal")
+            end
             local angle = atan2(dx, dy)
             local angleDeg = floor(angle * 180 / pi + 0.5)
             if angleDeg < 0 then
@@ -807,37 +849,20 @@ function widget:Update(dt)
             end
             local offset = 360 / #pingWheel / 2
             local selection = (floor((360 + angleDeg + offset) / 360 * #pingWheel)) % #pingWheel + 1
-            -- deadzone is no selection
-            local dist = dx * dx + dy * dy
-            local vsx, vsy = Spring.GetViewGeometry()
 
-            local wheelSize = (math.min(vsy, vsx)*baseWheelSize)/2
-            local dzSize = deadZoneRadiusRatio*wheelSize
-            local oSize = outerLimitRadiusRatio*wheelSize
-
-            if (dist < dzSize*dzSize)
-                or (dist > oSize*oSize)
-            then
-                setSelection(0)
-                --Spring.SetMouseCursor("cursornormal")
-            elseif selection ~= pingWheelSelection then
-                setSelection(selection)
+            if selection ~= pingWheelSelection then
+                setSelection(selection, false)
                 Spring.PlaySoundFile(soundDefaultSelect, 0.3, 'ui')
                 --Spring.SetMouseCursor("cursorjump")
+                return
             end
-
-            --Spring.Echo("pingWheelSelection: " .. pingWheel[pingWheelSelection].name)
-        end
-        if flashing and displayPingWheel then
+        elseif flashing then
             if flashFrame > 0 then
                 flashFrame = flashFrame - 1
             else
                 flashing = false
                 FadeOut()
             end
-        end
-        if spamControl > 0 then
-            spamControl = (spamControl == 0) and 0 or (spamControl - 1)
         end
     elseif (sec2 > 0.03) and keyDown and not displayPingWheel and doubleWheel and pressReleaseMode then
         -- gesture left or right to select primary or secondary wheel on pressRelaseMode
@@ -1027,8 +1052,14 @@ local function drawWheel()
     end
 
     --center hotzone
-    --glColor(pingWheelBaseColor)
-    --drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, 0.12, 0.3, 0.0, arr)
+    if hasCenterAction then
+        if centerSelected then
+            glColor(pingWheelSelColor)
+        else
+            glColor(pingWheelBaseColor)
+        end
+        drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, centerAreaRadiusRatio, 0.0, arr)
+    end
 
     -- from now on don't update stencil mask
     if bgTexture then
@@ -1042,7 +1073,7 @@ local function drawDottedLine()
         glVertex(x2, y2)
     end
     -- draw a dotted line connecting from center of wheel to the mouse location
-    if draw_line and pingWheelSelection > 0 then
+    if draw_line and (pingWheelSelection > 0 or centerSelected) then
         glColor({1, 1, 1, 0.5})
         glLineWidth(pingWheelThickness / 4)
         local mx, my = spGetMouseState()
@@ -1090,19 +1121,19 @@ end
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
+    local useColors = WG['pingwheel'] and WG['pingwheel'].getUseColors()
     local flashBlack = false
     if flashing and (flashFrame % 2 == 0) then
         flashBlack = true
     end
 
     glBeginText()
-
     for i = 1, #pingWheel do
         local isSelected = pingWheelSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
         local text = getTranslatedText(selItem.name)
-        local color = (WG['pingwheel'] and WG['pingwheel'].getUseColors() and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
+        local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
         if isSelected and flashBlack then
             color = { 0, 0, 0, 0 }
         elseif spamControl > 0 and not flashing then
@@ -1122,7 +1153,20 @@ local function drawItems()
         glColor(color)
         glText(text, pingWheelScreenLocation.x+x,
             pingWheelScreenLocation.y+y,
-            pingWheelTextSize*textScale, "cvosN")
+            pingWheelTextSize*textScale, "cvos")
+    end
+
+    if hasCenterAction then
+        local v = (deadZoneRadiusRatio+centerAreaRadiusRatio)/2
+        if centerSelected and flashBlack then
+            glColor({ 0, 0, 0, 0 })
+        else
+            glColor(pingWheelTextColor)
+        end
+        local centerSize = centerSelected and selectedScaleFactor or 1
+        glText('Ping', pingWheelScreenLocation.x,
+            pingWheelScreenLocation.y-v*wheelRadius,
+            pingWheelTextSize*centerSize*0.8, "cvos")
     end
     glEndText()
 
@@ -1188,8 +1232,11 @@ end
 local function drawCenterDot()
     if flashing then return end
     -- draw the center dot
-    glColor(pingWheelColor)
+    glColor({0,0,0,0.8})
     glPointSize(centerDotSize)
+    glBeginEnd(GL_POINTS, glVertex, 0, 0)
+    glColor(pingWheelColor)
+    glPointSize(centerDotSize*0.8)
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
 end
 
@@ -1214,10 +1261,16 @@ end
 local function drawWheelForeground()
     drawDottedLine() -- Dotted line to mouse needs to be updated all the time so no cooking
 
-    shader:SetUniform("useTex", 1)
     if flashing then
+        drawDecorations()
+        shader:SetUniform("useTex", 1)
         drawItems()
     else
+        if not decorationsDlist then
+            decorationsDlist = gl.CreateList(drawDecorations)
+        end
+        glCallList(decorationsDlist)
+
         if not itemsDlist then
             itemsDlist = gl.CreateList(drawItems)
         end
@@ -1257,10 +1310,6 @@ function widget:DrawScreen()
         shader:SetUniform("useTex", 1)
         drawBgTexture()
         shader:SetUniform("useTex", 0)
-        if not decorationsDlist then
-            decorationsDlist = gl.CreateList(drawDecorations)
-        end
-        glCallList(decorationsDlist)
 
         -- Other details
         shader:SetUniform("scale", scale2)

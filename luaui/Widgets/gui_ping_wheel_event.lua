@@ -48,11 +48,14 @@ end
 
 local function mapPointEvent(playerID, str)
     local data = Json.decode(str)
-    local text = getTranslatedText(data['text'])
-    -- Send a local ping since each user will see it in their own language
-    if use_colors and data['r'] and data['g'] and data['b'] then
-        text = colourNames(data['r'], data['g'], data['b']) .. text
+    local text
+    if data['text'] then
+        text = getTranslatedText(data['text'])
+        if use_colors and data['r'] and data['g'] and data['b'] then
+            text = colourNames(data['r'], data['g'], data['b']) .. text
+        end
     end
+    -- Send a local ping since each user will see it in their own language
     Spring.MarkerAddPoint(data['x'], data['y'], data['z'],
         text, true, playerID)
 end
