@@ -92,14 +92,14 @@ local styleConfig = {
 -- Style defaults
 local defaults = {
     drawBase = true,
-    iconSize = 0.16,
+    iconSize = 0.09,
     bgTextureColor = { 0, 0, 0, 0.5 },
     bgTextureSizeRatio = 1.15,
     dividerColor = { 1, 1, 1, 0.15 },
     dividerInnerRatio = 0.25,
     dividerOuterRatio = 0.62,
     textSize = 16,
-    textAlignRadiusRatio = 1.1,
+    textAlignRadiusRatio = 0.62,
     wheelBaseColor = {0.0, 0.0, 0.0, 0.3},
     wheelSelColor = {1.0, 1.0, 1.0, 0.5},
     wheelRingColor = {1.0, 1.0, 1.0, 0.5},
@@ -123,7 +123,6 @@ local numFlashFrames = 7    -- how many frames to flash when spamming
 local spamControlFrames = 8 -- how many frames to wait before allowing another ping
 
 -- Sizes and colors
-local pingWheelBaseRadius = 0.1         -- base radius for whole wheel size (10% of the screen size)
 local dividerLineBaseWidth = 3.5        -- width of the divider empty space between sections
 local outerCircleBaseWidth = 2          -- width of the outer circle line
 local centerDotBaseSize = 15            -- size of the center dot
@@ -202,7 +201,6 @@ local iconSize = defaults.iconSize
 local vsx, vsy = Spring.GetViewGeometry()
 
 local wheelRadius = (math.min(vsx, vsy)*baseWheelSize)/2 -- should be exact radius
-local pingWheelRadius = pingWheelBaseRadius * math.min(vsx, vsy)
 local sizeRatio = math.min(vsx, vsy)/1080.0
 local pingWheelThickness = linesBaseWidth * sizeRatio
 local centerDotSize = centerDotBaseSize * sizeRatio
@@ -566,7 +564,6 @@ end
 
 function widget:ViewResize(vsx, vsy)
     wheelRadius = (math.min(vsx, vsy)*baseWheelSize)/2
-    pingWheelRadius = pingWheelBaseRadius * math.min(vsx, vsy)
     local f = math.min(vsx, vsy) / 1080.0
     pingWheelTextSize = pingWheelTextBaseSize * f
     centerDotSize = centerDotBaseSize * f
@@ -1007,7 +1004,7 @@ local function drawIcon(img, pos, size, offset)
     if not size then size = 1.0 end
 
     if offset then pos = {pos[1]+offset[1], pos[2]+offset[2]} end
-    local halfSize = pingWheelRadius * iconSize * size
+    local halfSize = wheelRadius * iconSize * size
 
     glTexRect(pos[1] - halfSize, pos[2] - halfSize,
         pos[1] + halfSize, pos[2] + halfSize)
@@ -1089,7 +1086,7 @@ local function drawCloseHint()
     local y = -wheelRadius*0.95
     local hintIconSize = 0.8
     local hintTextSize = 0.9
-    local drawIconSize = pingWheelRadius * iconSize * hintIconSize
+    local drawIconSize = wheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
     x_offset = (w+drawIconSize)/2.0
     drawIcon("icons/mouse/rclick_glow.png", {x-x_offset, y}, hintIconSize)
@@ -1143,13 +1140,13 @@ local function drawItems()
             -- TODO: this is modifying in place
             color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
         end
-        local x = pingWheelRadius * textAlignRadiusRatio * sin(angle)
-        local y = pingWheelRadius * textAlignRadiusRatio * cos(angle)
+        local x = wheelRadius * textAlignRadiusRatio * sin(angle)
+        local y = wheelRadius * textAlignRadiusRatio * cos(angle)
         local icon = selItem.icon
         local textScale = isSelected and selectedScaleFactor or 1.0
         if icon and useIcons then
-            drawIcon(icon, {x, y+0.2*pingWheelRadius}, selItem.size, selItem.icon_offset)
-            y = y-0.05*pingWheelRadius
+            drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.size, selItem.icon_offset)
+            y = y-0.028*wheelRadius
         end
         glColor(color)
         glText(text, pingWheelScreenLocation.x+x,
@@ -1164,10 +1161,10 @@ local function drawItems()
         else
             glColor(pingWheelTextColor)
         end
-        local centerSize = centerSelected and selectedScaleFactor or 1
+        local textScale = centerSelected and selectedScaleFactor or 1
         glText('Ping', pingWheelScreenLocation.x,
             pingWheelScreenLocation.y-v*wheelRadius,
-            pingWheelTextSize*centerSize*0.8, "cvos")
+            pingWheelTextSize*textScale*0.8, "cvos")
     end
     glEndText()
 
@@ -1201,8 +1198,6 @@ local function drawBgTexture()
         glStencilFunc(GL_NOTEQUAL, 1, 1)
         glColor(bgTextureColor)
         glTexture(bgTexture)
-        -- use pingWheelRadius as the size of the background texture
-        local halfSize = pingWheelRadius * bgTextureSizeRatio
         local halfSize = bgTextureSizeRatio
         glTexRect(-halfSize, -halfSize,
             halfSize, halfSize)
