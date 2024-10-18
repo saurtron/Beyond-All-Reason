@@ -75,14 +75,13 @@ local styleConfig = {
         name = "Circle Light",
         bgTexture = "LuaUI/images/glow.dds",
         bgTextureSizeRatio = 1.2,
-        bgTextureColor = { 0, 0, 0, 0.9 },
+        bgTextureColor = { 0, 0, 0, 0.7 },
         textSize = 22,
         drawBase = false,
     },
     [4] = {
         name = "Ring Light",
         bgTexture = "LuaUI/images/enemyspotter.dds",
-        bgTextureSizeRatio = 1.15,
         dividerInnerRatio = 0.34,
         dividerOuterRatio = 0.68,
         textSize = 22,
@@ -94,8 +93,8 @@ local styleConfig = {
 local defaults = {
     drawBase = true,
     iconSize = 0.16,
-    bgTextureColor = { 0, 0, 0, 0.66 },
-    bgTextureSizeRatio = 1.10,
+    bgTextureColor = { 0, 0, 0, 0.5 },
+    bgTextureSizeRatio = 1.15,
     dividerColor = { 1, 1, 1, 0.15 },
     dividerInnerRatio = 0.25,
     dividerOuterRatio = 0.62,
@@ -104,7 +103,7 @@ local defaults = {
     wheelBaseColor = {0.0, 0.0, 0.0, 0.3},
     wheelSelColor = {1.0, 1.0, 1.0, 0.5},
     wheelRingColor = {1.0, 1.0, 1.0, 0.5},
-    wheelAreaOutlineColor = {0.5, 0.5, 0.5, 0.5},
+    wheelAreaOutlineColor = {0.0, 0.0, 0.0, 0.7},
     selTextOpacity = 1.0,
     baseTextOpacity = 0.75,
     selOuterRadius = 0.9,
@@ -130,7 +129,7 @@ local outerCircleBaseWidth = 2          -- width of the outer circle line
 local centerDotBaseSize = 15            -- size of the center dot
 local linesBaseWidth = 2		-- thickness of the ping wheel line drawing
 local deadZoneBaseRadius = 0.12         -- the center "no selection" area as a ratio of the ping wheel radius
-local centerAreaRadiusRatio = 0.3
+local centerAreaRadiusRatio = 0.29
 local outerLimitRadiusRatio = 1.5       -- the outer limit ratio where "no selection" is active
 local deadZoneRadiusRatio = deadZoneBaseRadius
 
@@ -687,6 +686,11 @@ local function setSelection(selected, centersel)
     if selected ~= pingWheelSelection or centersel ~= centerSelected then
         destroyItemsDlist()
         destroyBaseDlist()
+        if selected ~=0 or centersel then
+            Spring.PlaySoundFile(soundDefaultSelect, 0.3, 'ui')
+            --Spring.SetMouseCursor("cursorjump")
+            --Spring.SetMouseCursor("cursornormal")
+        end
     end
     pingWheelSelection = selected
     centerSelected = centersel
@@ -840,7 +844,6 @@ function widget:Update(dt)
             then
                 setSelection(0, false)
                 return
-                --Spring.SetMouseCursor("cursornormal")
             end
             local angle = atan2(dx, dy)
             local angleDeg = floor(angle * 180 / pi + 0.5)
@@ -852,8 +855,6 @@ function widget:Update(dt)
 
             if selection ~= pingWheelSelection then
                 setSelection(selection, false)
-                Spring.PlaySoundFile(soundDefaultSelect, 0.3, 'ui')
-                --Spring.SetMouseCursor("cursorjump")
                 return
             end
         elseif flashing then
@@ -1085,7 +1086,7 @@ local function drawCloseHint()
     if pressReleaseMode then return end
 
     local x = 0
-    local y = -pingWheelRadius*1.7
+    local y = -wheelRadius*0.95
     local hintIconSize = 0.8
     local hintTextSize = 0.9
     local drawIconSize = pingWheelRadius * iconSize * hintIconSize
@@ -1261,20 +1262,13 @@ end
 local function drawWheelForeground()
     drawDottedLine() -- Dotted line to mouse needs to be updated all the time so no cooking
 
+    shader:SetUniform("useTex", 1)
     if flashing then
-        drawDecorations()
-        shader:SetUniform("useTex", 1)
         drawItems()
     else
-        if not decorationsDlist then
-            decorationsDlist = gl.CreateList(drawDecorations)
-        end
-        glCallList(decorationsDlist)
-
         if not itemsDlist then
             itemsDlist = gl.CreateList(drawItems)
         end
-        shader:SetUniform("useTex", 1)
         glCallList(itemsDlist)
     end
 end
@@ -1312,8 +1306,16 @@ function widget:DrawScreen()
         shader:SetUniform("useTex", 0)
 
         -- Other details
-        shader:SetUniform("scale", scale2)
+        if flashing then
+            drawDecorations()
+        else
+            if not decorationsDlist then
+                decorationsDlist = gl.CreateList(drawDecorations)
+            end
+            glCallList(decorationsDlist)
+        end
 
+        shader:SetUniform("scale", scale2)
         drawWheelForeground()
 
         -- Reset state
