@@ -128,7 +128,7 @@ local defaults = {
 
 -- On/Off switches
 local draw_line = false     -- set to true to draw a line from the center to the cursor during selection
-local draw_deadzone = false -- set to false to draw a circle around the dead zone
+local draw_deadzone = false -- set to true to draw a circle around the dead zone (for debugging purposes)
 local do_blur = true        -- set to false to avoid doing blur
 
 -- Fade and spam frames (set to 0 to disable)
