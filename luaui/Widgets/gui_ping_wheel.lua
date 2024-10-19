@@ -114,6 +114,7 @@ local defaults = {
 local draw_dividers = true  -- set to false to disable the dividers on drawBase=false styles
 local draw_line = false     -- set to true to draw a line from the center to the cursor during selection
 local draw_deadzone = false -- set to false to draw a circle around the dead zone
+local do_blur = true        -- set to false to avoid doing blur
 
 -- Fade and spam frames (set to 0 to disable)
 -- NOTE: these are now game frames, not display frames, so always 30 fps
@@ -272,6 +273,8 @@ local cachedTexts = {}
 local itemsDlist
 local baseDlist
 local decorationsDlist
+local blurDlist
+local recreateBlurDlist
 
 local function destroyItemsDlist()
     if not itemsDlist then return end
@@ -287,6 +290,13 @@ local function destroyDecorationsDlist()
     if not decorationsDlist then return end
     gl.DeleteList(decorationsDlist)
     decorationsDlist = nil
+end
+local function destroyBlurDlist()
+    if not blurDlist then return end
+    WG['guishader'].RemoveDlist('pingwheel')
+    gl.DeleteList(blurDlist)
+
+    blurDlist = nil
 end
 
 -- Shader globals
@@ -559,6 +569,7 @@ function widget:Shutdown()
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
+    destroyBlurDlist()
     destroyShaders()
 end
 
@@ -624,6 +635,7 @@ local function TurnOff(reason)
             destroyBaseDlist()
         end
         destroyItemsDlist()
+        destroyBlurDlist()
         displayPingWheel = false
         pingWorldLocation = nil
         pingWheelScreenLocation = nil
@@ -683,6 +695,10 @@ local function setSelection(selected, centersel)
     if selected ~= pingWheelSelection or centersel ~= centerSelected then
         destroyItemsDlist()
         destroyBaseDlist()
+        if selected ~= pingWheelSelection then
+            -- avoid blur 'blinking' if we destroy the list here
+            recreateBlurDlist = true
+        end
         if selected ~=0 or centersel then
             Spring.PlaySoundFile(soundDefaultSelect, 0.3, 'ui')
             --Spring.SetMouseCursor("cursorjump")
@@ -1247,10 +1263,33 @@ local function drawDecorations()
     drawDividers()
 end
 
+local function prepareBlur()
+    if recreateBlurDlist then
+        destroyBlurDlist()
+        recreateBlurDlist = false
+    end
+    if not blurDlist and do_blur and WG['guishader'] then
+        blurDlist = gl.CreateList(function()
+            glPushMatrix()
+            gl.Translate(pingWheelScreenLocation.x, pingWheelScreenLocation.y, 0)
+            gl.Scale(wheelRadius, wheelRadius, wheelRadius)
+            local arr = baseCircleArrays[#pingWheel]
+            local spacing = 0.003
+            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, 0.92, 0.0, arr)
+            if pingWheelSelection ~= 0 and selOuterRadius > 0.92 then
+                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRadius, spacing, arr)
+            end
+            glPopMatrix()
+        end)
+        WG['guishader'].InsertDlist(blurDlist, 'pingwheel')
+    end
+end
+
 local function drawWheelBase()
     if not baseDlist then
         baseDlist = gl.CreateList(drawWheel)
     end
+
     glCallList(baseDlist)
 end
 
@@ -1292,6 +1331,7 @@ function widget:DrawScreen()
         glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         -- The new style base
         if pingWheelDrawBase then
+            prepareBlur()
             drawWheelBase()
         end
 
