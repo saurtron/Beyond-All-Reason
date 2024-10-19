@@ -9,7 +9,6 @@ function widget:GetInfo()
         version = "3.0 alpha1",
         layer   = -1,
         enabled = true,
-        handler = true,
     }
 end
 
@@ -567,7 +566,7 @@ function widget:Initialize()
     end
 
     -- add the action handler with argument for press and release using the same function call
-    widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { true }, "p") --pR do we actually want Repeat?
+    widgetHandler:AddAction("ping_wheel_on", PingWheelAction, { true }, "p") --pR do we actually want Repeat?
     -- widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { false }, "r") -- can't trust release event since releasing modified first makes it fail detection
     pingWheelPlayerColor = { Spring.GetTeamColor(Spring.GetMyTeamID()) }
     pingWheelColor = pingWheelPlayerColor
