@@ -266,6 +266,7 @@ local sqrt = math.sqrt
 
 local soundDefaultSelect = "sounds/commands/cmd-default-select.wav"
 local soundSetTarget = "sounds/commands/cmd-settarget.wav"
+local rclickIcon = "icons/mouse/rclick_glow.png"
 
 local function dimmed(color)
     local r, g, b, a = unpack(color)
@@ -1113,7 +1114,7 @@ local function drawCloseHint()
     local drawIconSize = wheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
     x_offset = (w+drawIconSize)/2.0
-    drawIcon("icons/mouse/rclick_glow.png", {x-x_offset, y}, hintIconSize)
+    drawIcon(rclickIcon, {x-x_offset, y}, hintIconSize)
     glColor({1, 1, 1, 0.7})
     glBeginText()
     glText("Cancel", pingWheelScreenLocation.x+drawIconSize/2-x_offset+w/6,
