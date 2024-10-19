@@ -524,7 +524,7 @@ local function loadShaders()
 end
 
 local function destroyShaders()
-    gl.DeleteShader(shader)
+    if shader then shader:Finalize() end
 end
 
 ------------------------
