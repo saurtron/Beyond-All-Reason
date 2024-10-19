@@ -921,8 +921,6 @@ end
 
 local function resetDrawState()
     -- restore gl state
-    glBlending(false)
-
     gl.Texture(0, false)
     glColor(1.0, 1.0, 1.0, 1.0)
     glLineWidth(1.0)
