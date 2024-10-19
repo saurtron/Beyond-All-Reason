@@ -502,7 +502,6 @@ local fsSrc = [[
 
 	in vec2 texCoord;
 
-        //__ENGINEUNIFORMBUFFERDEFS__
 	void main(void) {
 		if (useTex > 0.5) {
 			gl_FragColor = texture2D(tex0, texCoord);
@@ -517,7 +516,6 @@ local fsSrc = [[
 local function loadShaders()
     local engineUniformBufferDefs = LuaShader.GetEngineUniformBufferDefs()
     vsSrc = vsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
-    fsSrc = fsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
 
     shader = LuaShader({vertex=vsSrc, fragment=fsSrc}, "ping wheel")
     shaderCompiled = shader:Initialize()
