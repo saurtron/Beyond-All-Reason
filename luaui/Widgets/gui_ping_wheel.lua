@@ -75,7 +75,7 @@ local styleConfig = {
         name = "White",
         baseTextOpacity = 1.0,
         wheelBaseColor = {0.0, 0.0, 0.0, 0.3},
-        selOuterRadius = 1,
+        selOuterRadius = 0.94,
     },
     [2] = {
         name = "Black",
@@ -920,8 +920,10 @@ end
 
 -- Initialize circle vector arrays for both wheel's number of vectors
 baseCircleArrays[#pingCommands] = circleArray(#pingCommands, areaVertexNumber, 1)
+baseCircleArrays[#pingCommands*2] = circleArray(#pingCommands*2, areaVertexNumber, 1)
 if #pingCommands ~= #pingMessages then
     baseCircleArrays[#pingMessages] = circleArray(#pingMessages, areaVertexNumber, 1)
+    baseCircleArrays[#pingMessages*2] = circleArray(#pingMessages*2, areaVertexNumber, 1)
 end
 
 local function resetDrawState()
@@ -970,16 +972,32 @@ local function drawArea(vertices, n, i, r1, r2, spacing, arr)
     glBeginEnd(GL.QUADS, Area, n, i, vertices, r1, r2, arr)
 end
 
-local function drawCircleOutline(r, arr, hole)
+local function drawCircleOutline(r, arr, hole, holeEnd)
     local function Circle()
         local vn = areaVertexNumber-1
-        local holeStart = (hole-1)*vn+1
-        local holeEnd = hole*vn
+        holeStart = holeEnd and hole or (hole-1)*vn+1
+        holeEnd = holeEnd and holeEnd or hole*vn
         for i=1+holeEnd, #arr do
             glVertex(arr[i][1]*r, arr[i][2]*r)
         end
         if hole ~=0 then
             for i=1, holeStart do
+                glVertex(arr[i][1]*r, arr[i][2]*r)
+            end
+        end
+    end
+    glBeginEnd(GL.LINE_STRIP, Circle)
+end
+
+local function drawArc(r, arr, arcStart, arcEnd)
+    local function Circle()
+        local vn = areaVertexNumber-1
+        local loopEnd = arcEnd <= #arr and arcEnd or #arr
+        for i=arcStart, loopEnd do
+            glVertex(arr[i][1]*r, arr[i][2]*r)
+        end
+        if loopEnd ~= arcEnd then
+            for i=1, arcEnd-#arr do
                 glVertex(arr[i][1]*r, arr[i][2]*r)
             end
         end
@@ -1031,12 +1049,36 @@ local function drawIcon(img, pos, size, offset)
 end
 
 local function drawWheel()
+    local r1, r2, spacing = 0.3, baseOuterRadius, 0.008 -- hardcoded for now
+
+    if pingWheelSelection ~= 0 then
+        arr = baseCircleArrays[#pingWheel*2]
+        s3 = pingWheelSelection*2
+        s2 = s3-1
+        s1 = pingWheelSelection == 1 and #pingWheel*2 or s3-2
+        glColor(pingWheelSelColor)
+        drawArea(areaVertexNumber, #pingWheel*2, s1, 0.93, 1.4, spacing, arr)
+        glColor(pingWheelBaseColor)
+        drawArea(areaVertexNumber, #pingWheel*2, s2, 0.93, 1.4, spacing, arr)
+        drawArea(areaVertexNumber, #pingWheel*2, s3, 0.93, 1.4, spacing, arr)
+        glColor(pingWheelAreaOutlineColor)
+        drawAreaOutline(#pingWheel*2, s1, 0.93, 1.4, spacing, arr)
+        drawAreaOutline(#pingWheel*2, s2, 0.93, 1.4, spacing, arr)
+        drawAreaOutline(#pingWheel*2, s3, 0.93, 1.4, spacing, arr)
+        glColor(pingWheelRingColor)
+        glLineWidth(pingWheelRingWidth * lineScale * 1.0)
+        local vn = areaVertexNumber-1
+        local start = (pingWheelSelection-1)*2-1
+        start = start > 0 and start or hole+#pingWheel*2
+        drawArc(1.41, arr, start*vn+1, (start+3)*vn+1)
+    end
+
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale * 1.0)
-    local hole = (selOuterRadius>0.92) and pingWheelSelection or 0
+    local hole = (selOuterRadius>=0.92) and pingWheelSelection or 0
     drawCircleOutline(0.92, arr, hole)
 
     -- setup stencil buffer to mask areas
@@ -1051,7 +1093,6 @@ local function drawWheel()
 
     -- item area backgrounds
     glColor(pingWheelBaseColor)
-    local r1, r2, spacing = 0.3, baseOuterRadius, 0.008 -- hardcoded for now
     for i=1, #pingWheel do
         if i~=pingWheelSelection then
             glColor(pingWheelBaseColor)
@@ -1068,6 +1109,7 @@ local function drawWheel()
         drawAreaOutline(#pingWheel, pingWheelSelection, r1, r2, spacing, arr)
     end
 
+    arr = baseCircleArrays[#pingWheel]
     --center hotzone
     if hasCenterAction then
         if centerSelected then
@@ -1135,6 +1177,31 @@ local function drawDividers()
     glBeginEnd(GL_LINES, Lines)
 end
 
+local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBlack)
+    local text = getTranslatedText(selItem.name)
+    local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
+    if isSelected and flashBlack then
+        color = { 0, 0, 0, 0 }
+    elseif spamControl > 0 and not flashing then
+        color = pingWheelTextSpamColor
+    else
+        -- TODO: this is modifying in place
+        color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
+    end
+    local x = wheelRadius * posRatio * sin(angle)
+    local y = wheelRadius * posRatio * cos(angle)
+    local icon = selItem.icon
+    local textScale = isSelected and selectedScaleFactor or 1.0
+    if icon and useIcons then
+        drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.icon_size, selItem.icon_offset)
+        y = y-0.028*wheelRadius
+    end
+    glColor(color)
+    glText(text, pingWheelScreenLocation.x+x,
+        pingWheelScreenLocation.y+y,
+        pingWheelTextSize*textScale, "cvos")
+end
+
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
@@ -1149,30 +1216,8 @@ local function drawItems()
         local isSelected = pingWheelSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        local text = getTranslatedText(selItem.name)
-        local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
-        if isSelected and flashBlack then
-            color = { 0, 0, 0, 0 }
-        elseif spamControl > 0 and not flashing then
-            color = pingWheelTextSpamColor
-        else
-            -- TODO: this is modifying in place
-            color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
-        end
-        local x = wheelRadius * textAlignRadiusRatio * sin(angle)
-        local y = wheelRadius * textAlignRadiusRatio * cos(angle)
-        local icon = selItem.icon
-        local textScale = isSelected and selectedScaleFactor or 1.0
-        if icon and useIcons then
-            drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.icon_size, selItem.icon_offset)
-            y = y-0.028*wheelRadius
-        end
-        glColor(color)
-        glText(text, pingWheelScreenLocation.x+x,
-            pingWheelScreenLocation.y+y,
-            pingWheelTextSize*textScale, "cvos")
+        drawItem(selItem, textAlignRadiusRatio, angle, isSelected, useColors, flashBlack)
     end
-
     if hasCenterAction then
         local v = (deadZoneRadiusRatio+centerAreaRadiusRatio)/2
         if centerSelected and flashBlack then
@@ -1184,6 +1229,15 @@ local function drawItems()
         glText('Ping', pingWheelScreenLocation.x,
             pingWheelScreenLocation.y-v*wheelRadius,
             pingWheelTextSize*textScale*0.8, "cvos")
+    end
+    if pingWheelSelection ~= 0 then
+        for i = 1, 3 do
+            local idx = pingWheelSelection*2+i-3
+            local isSelected = i == 1 and true or false
+            local selItem = pingMessages[i]
+            local angle = (idx - 1) * pi / #pingWheel
+            drawItem(selItem, 1.15, angle, isSelected, useColors)
+        end
     end
     glEndText()
 
@@ -1281,6 +1335,15 @@ local function prepareBlur()
             drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, 0.92, 0.0, arr)
             if pingWheelSelection ~= 0 and selOuterRadius > 0.92 then
                 drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRadius, spacing, arr)
+            end
+            if pingWheelSelection ~= 0 then
+                arr = baseCircleArrays[#pingWheel*2]
+                s3 = pingWheelSelection*2
+                s2 = s3-1
+                s1 = pingWheelSelection == 1 and #pingWheel*2 or s3-2
+                drawArea(areaVertexNumber, #pingWheel*2, s1, 0.93, 1.4, 0, arr)
+                drawArea(areaVertexNumber, #pingWheel*2, s2, 0.93, 1.4, 0, arr)
+                drawArea(areaVertexNumber, #pingWheel*2, s3, 0.93, 1.4, 0, arr)
             end
             glPopMatrix()
         end)
