@@ -1089,7 +1089,7 @@ local function drawDottedLine()
         glColor({1, 1, 1, 0.5})
         glLineWidth(pingWheelThickness / 4)
         local mx, my = spGetMouseState()
-        glBeginEnd(GL_LINES, line, 0, 0, mx, my)
+        glBeginEnd(GL_LINES, line, 0, 0, mx-pingWheelScreenLocation.x, my-pingWheelScreenLocation.y)
     end
 end
 
