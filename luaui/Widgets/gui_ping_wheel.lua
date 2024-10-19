@@ -2,11 +2,11 @@ function widget:GetInfo()
     return {
         name    = "Ping Wheel",
         desc    =
-        "Displays a ping wheel when a keybind is held down. Default keybind is 'alt-w', rebindable. Left click (or mouse 4) to bring up commands wheel, right click (or mouse 5) for messages wheel. \nNow with two wheel styles! (edit file param to change style)",
-        author  = "Errrrrrr",
+        "Displays a ping wheel when a keybind is held down. Default keybind is 'alt-w', rebindable. Left click (or mouse 4) to bring up commands wheel, right click (or mouse 5) for messages wheel.",
+        author  = "Errrrrrr, Saurtron",
         date    = "June 27, 2023",
         license = "GNU GPL, v2 or later",
-        version = "2.5",
+        version = "3.0 alpha1",
         layer   = -1,
         enabled = true,
         handler = true,
@@ -16,22 +16,36 @@ end
 -----------------------------------------------------------------------------------------------
 -- The wheel is opened by holding the keybind (default: alt-w), left click to select an option.
 --
+-- Also supports pressrelease interface meaning mouse press or keybind press makes wheel appear,
+-- and release selects the option.
+--
 -- Bindable action name: ping_wheel_on
 --
--- You can add or change the options in the pingWheel tables.
--- the two tables pingCommands and pingMessages are left and right click options respectively.
+-- Default is just one wheel, but two wheel mode can be activated through options gui.
 --
--- NEW: styleChoice determines the style of the wheel. 1 = circle, 2 = ring, 3 = custom
--- NEW: added fade in/out animation (can be turned off by setting both frames numbers to 0)
--- NEW: you can now use mouse 4 and 5 directly for the two wheels!
--- NEW: LOTS OF PRETTY COLORS!
+-- You can add or change the options in the pingWheel tables editing this or through json files.
+-- Files for custom items are: commands.json and/or messages.json (inside luaui/configs/pingwheel/).
+-- the two tables pingCommands and pingMessages are main (left) and secondary (right) click options respectively.
+--
+-- Other features: I18N support, configurable through gui, different styles, background blur.
 -----------------------------------------------------------------------------------------------
+
+
 local iconDir = 'anims/icexuick_75/'
 local configDir = 'luaui/configs/pingwheel/'
+
+-- Wheel item attributes for the pingCommands and pingMessages tables:
+-- * name: The item label and message.
+-- * msg: (optional) If set, will override the msg sent for that item.
+-- * color (optional): Color for the message, not it will only be displayed if use colors is activated in options gui.
+-- * icon (optional): Icon for the item, will also be sent on the ping message and can be displayed by ping renderer.
+-- * icon_offset (optional): Offset for the icon, for off-center icons.
+-- * icon_size (optional): Scale to icon (default is 1 meaning normal size).
+
 local pingCommands = {                             -- the options in the ping wheel, displayed clockwise from 12 o'clock
-    { name = "ui.wheel.attack",  color = { 1, 0.3, 0.3, 1 }, icon = iconDir..'cursorattack_2.png' }, -- color is optional, if no color is chosen it will be white
+    { name = "ui.wheel.attack",  color = { 1, 0.3, 0.3, 1 }, icon = iconDir..'cursorattack_2.png' },
     { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 }, icon = iconDir..'cursorfight_11.png', icon_offset={7, -8} },
-    { name = "Defend",  color = { 0.7, 0.9, 1, 1 }, icon = iconDir..'cursordefend_59.png', size=0.8 },
+    { name = "Defend",  color = { 0.7, 0.9, 1, 1 }, icon = iconDir..'cursordefend_59.png', icon_size=0.8 },
     { name = "ui.wheel.retreat", color = { 0.9, 0.7, 1, 1 } },
     { name = "Alert",   color = { 1, 1, 0.5, 1 } },
     { name = "Reclaim", color = { 0.7, 1, 0.7, 1 }, icon = iconDir..'cursorreclamate_55.png' },
@@ -46,14 +60,14 @@ local pingMessages = {
     { name = "DANGER!",  color = { 1, 1, 0, 1 } },
     { name = "Sorry!",   color = { 0, 1, 0, 1 } },
     { name = "LOL",      color = { 0, 1, 1, 1 } },
---    { name = "No",       color = { 0, 0, 1, 1 } },
+    { name = "No",       color = { 0, 0, 1, 1 } },
     { name = "ui.wheel.omw",  color = { 0.5, 0, 1, 1 }, icon = iconDir..'cursormove_24.png', icon_offset={7, -8} },
     { name = "ui.wheel.paid", color = { 1, 0, 1, 1 } },
-    -- add (possibly longer) msg attribute to have separate text on the wheel (name) and ping/chat (msg). as follows:
+    -- example using msg attribute:
     -- { name = "Shop Open", msg = "shop open; 440m per each (paying is mandatory)", color = { 0.5, 0, 1, 1 } },
 }
 
-local styleChoice = 1 -- 1 = circle, 2 = ring, 3 = custom
+local styleChoice = 1       -- change from options gui
 local baseWheelSize = 0.355 -- ~1/3 screen
 
 -- Available styles
@@ -117,7 +131,7 @@ local draw_deadzone = false -- set to false to draw a circle around the dead zon
 local do_blur = true        -- set to false to avoid doing blur
 
 -- Fade and spam frames (set to 0 to disable)
--- NOTE: these are now game frames, not display frames, so always 30 fps
+-- NOTE: these are game frames, not display frames, so always 30 fps
 local numFadeInFrames = 4   -- how many frames to fade in
 local numFadeOutFrames = 4  -- how many frames to fade out
 local numFlashFrames = 7    -- how many frames to flash when spamming
@@ -133,8 +147,8 @@ local centerAreaRadiusRatio = 0.29
 local outerLimitRadiusRatio = 1.5       -- the outer limit ratio where "no selection" is active
 local deadZoneRadiusRatio = deadZoneBaseRadius
 
-pingWheelSelTextAlpha = defaults.selSelTextOpacity
-pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
+local pingWheelSelTextAlpha = defaults.selSelTextOpacity
+local pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
 
 local pingWheelTextBaseSize = defaults.textSize
 local pingWheelTextColor = { 1, 1, 1, 0.7 }
@@ -480,7 +494,6 @@ local vsSrc = [[
 
 local fsSrc = [[
 	#version 150 compatibility
-	#extension GL_ARB_shading_language_420pack: require // for engine defs
 	#line 20000
 
 	uniform sampler2D tex0;
@@ -1159,7 +1172,7 @@ local function drawItems()
         local icon = selItem.icon
         local textScale = isSelected and selectedScaleFactor or 1.0
         if icon and useIcons then
-            drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.size, selItem.icon_offset)
+            drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.icon_size, selItem.icon_offset)
             y = y-0.028*wheelRadius
         end
         glColor(color)
