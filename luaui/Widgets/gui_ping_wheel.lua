@@ -91,6 +91,7 @@ local styleConfig = {
         bgTextureColor = { 0, 0, 0, 0.7 },
         textSize = 22,
         drawBase = false,
+        drawDividers = true,
     },
     [4] = {
         name = "Ring Light",
@@ -99,12 +100,14 @@ local styleConfig = {
         dividerOuterRatio = 0.68,
         textSize = 22,
         drawBase = false,
+        drawDividers = true,
     },
 }
 
 -- Style defaults
 local defaults = {
     drawBase = true,
+    drawDividers = false,
     iconSize = 0.09,
     bgTextureColor = { 0, 0, 0, 0.5 },
     bgTextureSizeRatio = 1.15,
@@ -441,7 +444,7 @@ local function applyStyle()
         deadZoneRadiusRatio = deadZoneBaseRadius
         hasCenterAction = true
     else
-        doDividers = draw_dividers
+        doDividers = style.drawDividers
         deadZoneRadiusRatio = centerAreaRadiusRatio
         hasCenterAction = false
     end
