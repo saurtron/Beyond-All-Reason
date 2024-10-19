@@ -216,7 +216,7 @@ local hasCenterAction = true
 local iconSize = defaults.iconSize
 local vsx, vsy = Spring.GetViewGeometry()
 
-local wheelRadius = (math.min(vsx, vsy)*baseWheelSize)/2 -- should be exact radius
+local wheelRadius = (math.min(vsx, vsy)*baseWheelSize)/2
 local sizeRatio = math.min(vsx, vsy)/1080.0
 local pingWheelThickness = linesBaseWidth * sizeRatio
 local centerDotSize = centerDotBaseSize * sizeRatio
@@ -228,7 +228,7 @@ local baseOuterRadius = defaults.baseOuterRadius
 local areaVertexNumber = 10
 
 --- Other file variables
-local globalDim = 1     -- this controls global alpha of all gl.Color calls
+local globalDim = 1     -- this controls global alpha for all wheel elements
 local globalFadeIn = 0  -- how many frames left to fade in
 local globalFadeOut = 0 -- how many frames left to fade out
 
@@ -637,7 +637,6 @@ local function TurnOn(reason)
         SetPingLocation()
     end
     --Spring.Echo("Turned on: " .. reason)
-    -- turn on fade in
     FadeIn()
     return true
 end
@@ -663,8 +662,6 @@ end
 local function FlashAndOff()
     flashing = true
     flashFrame = numFlashFrames
-    --FadeOut()
-    --Spring.Echo("Flashing off: " .. tostring(flashFrame))
 end
 
 local function checkRelease()
@@ -690,13 +687,11 @@ local function checkRelease()
             FlashAndOff()
             return true
         else
-            --TurnOff("Selection 0")
             FadeOut()
         end
         -- make sure left/right hint is not shown
         showLRHint = false
     else
-        --TurnOff("mouse release")
         FadeOut()
     end
 end
@@ -738,7 +733,7 @@ function widget:KeyRelease(key)
         -- click mode: allow closing with esc.
         FadeOut()
     elseif pressReleaseMode and displayPingWheel then
-        -- release mode, single wheel: allow activating on key release.
+        -- pressRelease mode: allow activating on key release.
         checkRelease()
     end
 end
@@ -761,7 +756,6 @@ function PingWheelAction(_, _, _, args)
         --if displayPingWheel and not doubleWheel then
         --    checkRelease()
         --end
-        --Spring.Echo("keyDown: " .. tostring(keyDown))
     end
 end
 
@@ -771,7 +765,7 @@ function widget:MousePress(mx, my, button)
         if button == 1 then
             return checkRelease()
         else
-            -- should be right click, but any button other than left seems more intuitive
+            -- technically right click, but any button other than left seems more intuitive
             FadeOut()
             return true
         end
@@ -784,7 +778,6 @@ function widget:MousePress(mx, my, button)
             return true
         end
     elseif showLRHint or button == 4 or button == 5 then
-        -- release mode.
         local alt, ctrl, meta, shift = spGetModKeyState()
         -- If any modifier is pressed we let other widgets handle this
         -- unless on our keydown event.
@@ -805,7 +798,6 @@ function widget:MousePress(mx, my, button)
         end
     else
         -- set pingwheel to not display
-        --TurnOff("mouse press")
         FadeOut()
     end
 end
