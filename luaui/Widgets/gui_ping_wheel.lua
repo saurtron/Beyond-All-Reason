@@ -1003,12 +1003,9 @@ function widget:Update(dt)
                 return
             end
             local angle = atan2(dx, dy)
-            local angleDeg = floor(angle * 180 / pi + 0.5)
-            if angleDeg < 0 then
-                angleDeg = angleDeg + 360
-            end
-            local offset = 360 / #pingWheel / 2
-            local selection = (floor((360 + angleDeg + offset) / 360 * #pingWheel)) % #pingWheel + 1
+            local areahalf = pi/#pingWheel
+            angle = angle < -areahalf and (2*pi+angle) or angle
+            local selection = floor((angle+areahalf) / (2*areahalf)) + 1
 
             if selection ~= pingWheelSelection then
                 setSelection(selection, false)
