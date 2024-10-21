@@ -410,7 +410,7 @@ function widget:SetConfigData(data)
         styleChoice = data.wheelStyle
     end
     if data.interactionMode ~= nil then
-        pressReleaseMode = data.interactionMode == 2
+        pressReleaseMode = data.interactionMode and 2 or 1
     end
     if data.useIcons ~= nil then
         useIcons = data.useIcons
@@ -487,37 +487,36 @@ local mapSetting = function(setting)
         id = 'pingwheel_'..setting.id,
         widgetname = widgetName,
         name = getTranslatedText(i18nPrefix .. setting.id),
-        onchange = function(i, value) WG['pingwheel_gui'][setting.onchange](value) end,
+        onchange = function(i, value) WG['pingwheel_gui']['set'..setting.cb](value) end,
         description = getTranslatedText(i18nPrefix .. setting.id .. '_descr'),
         type = setting.options and 'select' or 'bool',
         options = setting.options and table.map(setting.options, mapOption),
-        value = setting.value or 1,
+        value = WG['pingwheel_gui']['get'..setting.cb](),
     }
 end
 
 local standaloneSettings = {
     {
         id = 'style',
-        onchange = 'setWheelStyle',
+        cb = 'WheelStyle',
         options = { 'style_white', 'style_black', 'style_circle', 'style_ring' },
     },
     {
         id = 'interaction',
-        onchange = 'setInteractionMode',
+        cb = 'InteractionMode',
         options = { 'interaction_click', 'interaction_release' },
     },
     {
         id = 'icons',
-        onchange = 'setUseIcons',
+        cb = 'UseIcons',
     },
      {
         id = 'doublewheel',
-        onchange = 'setDoubleWheel',
+        cb = 'DoubleWheel',
     },
     {
         id = 'colors',
-        onchange = 'setUseColors',
-        value = 0,
+        cb = 'UseColors',
     },
 }
 
