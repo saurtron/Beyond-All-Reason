@@ -256,7 +256,7 @@ local pingWheelBorderWidth = areaOutlineBaseWidth * sizeRatio
 local selOuterRatio = defaults.selOuterRadius
 local baseOuterRatio = defaults.baseOuterRadius
 local areaVertexNumber = 10
-local secondaryOuterRadius = 1.4
+local secondaryOuterRatio = 1.4
 
 --- Other file variables
 local globalDim = 1     -- this controls global alpha for all wheel elements
@@ -906,8 +906,8 @@ function widget:Update(dt)
                 setSelection(0, 0, false)
                 return
             end
-            local bSize = baseOuterRadius*wheelRadius
-            local sSize = secondaryOuterRadius*wheelRadius
+            local bSize = baseOuterRatio*wheelRadius
+            local sSize = secondaryOuterRatio*wheelRadius
 
             local angle = atan2(dx, dy)
             local areahalf = pi/#pingWheel
@@ -1107,7 +1107,7 @@ local function drawIcon(img, pos, size, offset)
 end
 
 local function drawWheel()
-    local r1, r2, spacing = 0.3, baseOuterRadius, 0.008 -- hardcoded for now
+    local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     local borderWidth = pingWheelBorderWidth * lineScale
     local borderMargin = borderWidth/(wheelRadius*2)
 
@@ -1120,18 +1120,18 @@ local function drawWheel()
             else
                 glColor(pingWheelBaseColor)
             end
-            drawArea(areaVertexNumber, #pingWheel*2, s, 0.93, secondaryOuterRadius, spacing, arr)
+            drawArea(areaVertexNumber, #pingWheel*2, s, 0.93, secondaryOuterRatio, spacing, arr)
             glColor(pingWheelAreaOutlineColor)
-            drawAreaOutline(#pingWheel*2, s, 0.93, secondaryOuterRadius, spacing, arr)
+            drawAreaOutline(#pingWheel*2, s, 0.93, secondaryOuterRatio, spacing, arr)
             glColor(pingWheelAreaInlineColor)
-            drawAreaOutline(#pingWheel, s, 0.93+borderMargin, secondaryOuterRadius-borderMargin, spacing+borderMargin, arr)
+            drawAreaOutline(#pingWheel, s, 0.93+borderMargin, secondaryOuterRatio-borderMargin, spacing+borderMargin, arr)
         end
         glColor(pingWheelRingColor)
         glLineWidth(pingWheelRingWidth * lineScale)
         local vn = areaVertexNumber-1
         local start = (pingWheelSelection-1)*2-1
         start = start > 0 and start or start+#pingWheel*2
-        drawArc(secondaryOuterRadius+0.01, arr, start*vn+1, (start+3)*vn+1)
+        drawArc(secondaryOuterRatio+0.01, arr, start*vn+1, (start+3)*vn+1)
     end
 
     -- circle positions cache
@@ -1406,7 +1406,7 @@ local function prepareBlur()
                 arr = baseCircleArrays[#pingWheel*2]
                 for i=1, 3 do
                     s = (pingWheelSelection == 1 and i == 1) and #pingWheel*2 or (pingWheelSelection*2+i-3)
-                    drawArea(areaVertexNumber, #pingWheel*2, s, 0.93, secondaryOuterRadius, 0, arr)
+                    drawArea(areaVertexNumber, #pingWheel*2, s, 0.93, secondaryOuterRatio, 0, arr)
                 end
             end
             glPopMatrix()
