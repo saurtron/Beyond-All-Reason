@@ -913,7 +913,7 @@ function widget:Update(dt)
             local areahalf = pi/#pingWheel
             angle = angle < -areahalf and (2*pi+angle) or angle
 
-            if (dist < sSize*sSize and pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children)
+            if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children and (dist < sSize*sSize)
                 and (dist > bSize*bSize) then
                 local nelmts = #pingWheel[pingWheelSelection].children
                 local areaSize = nelmts*areahalf   -- for now area size is hardcoded to area/2 slots
