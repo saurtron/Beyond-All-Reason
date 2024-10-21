@@ -171,10 +171,10 @@ local outerCircleBaseWidth = 2.5          -- width of the outer circle line
 local areaOutlineBaseWidth = 2.1          -- width of the outer circle line
 local centerDotBaseSize = 15            -- size of the center dot
 local linesBaseWidth = 2.1		-- thickness of the ping wheel line drawing
-local deadZoneBaseRadius = 0.12         -- the center "no selection" area as a ratio of the ping wheel radius
-local centerAreaRadiusRatio = 0.29
-local outerLimitRadiusRatio = 1.5       -- the outer limit ratio where "no selection" is active
-local deadZoneRadiusRatio = deadZoneBaseRadius
+local deadZoneBaseRatio = 0.12         -- the center "no selection" area as a ratio of the ping wheel radius
+local centerAreaRatio = 0.29
+local outerLimitRatio = 1.5       -- the outer limit ratio where "no selection" is active
+local deadZoneRatio = deadZoneBaseRatio
 
 local pingWheelSelTextAlpha = defaults.selSelTextOpacity
 local pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
@@ -268,7 +268,7 @@ local bgTextureSizeRatio = defaults.bgTextureSizeRatio
 local bgTextureColor = defaults.bgTextureColor
 local dividerInnerRatio = defaults.dividerInnerRatio
 local dividerOuterRatio = defaults.dividerOuterRatio
-local textAlignRadiusRatio = defaults.textAlignRadiusRatio
+local textAlignRatio = defaults.textAlignRadiusRatio
 local dividerColor = defaults.dividerColor
 
 local pingWheel = pingCommands
@@ -454,7 +454,7 @@ local function applyStyle()
     pingWheelIconSize = style.iconSize or defaults.iconSize
     dividerInnerRatio = style.dividerInnerRatio or defaults.dividerInnerRatio
     dividerOuterRatio = style.dividerOuterRatio or defaults.dividerOuterRatio
-    textAlignRadiusRatio = style.textAlignRadiusRatio or defaults.textAlignRadiusRatio
+    textAlignRatio = style.textAlignRadiusRatio or defaults.textAlignRadiusRatio
     dividerColor = style.dividerColor or defaults.dividerColor
     pingWheelTextBaseSize = style.textSize or defaults.textSize
     pingWheelSelTextAlpha = style.selTextOpacity or defaults.selTextOpacity
@@ -472,11 +472,11 @@ local function applyStyle()
         selOuterRatio = style.selOuterRadius or defaults.selOuterRadius
         baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
         doDividers = false
-        deadZoneRadiusRatio = deadZoneBaseRadius
+        deadZoneRatio = deadZoneBaseRatio
         hasCenterAction = true
     else
         doDividers = style.drawDividers
-        deadZoneRadiusRatio = centerAreaRadiusRatio
+        deadZoneRatio = centerAreaRatio
         hasCenterAction = false
     end
     local vx, vy = Spring.GetViewGeometry()
@@ -890,10 +890,10 @@ function widget:Update(dt)
             -- deadzone is no selection
             local dist = dx * dx + dy * dy
 
-            local dzSize = deadZoneRadiusRatio*wheelRadius
-            local oSize = outerLimitRadiusRatio*wheelRadius
+            local dzSize = deadZoneRatio*wheelRadius
+            local oSize = outerLimitRatio*wheelRadius
             if hasCenterAction then
-                local cSize = centerAreaRadiusRatio*wheelRadius
+                local cSize = centerAreaRatio*wheelRadius
 
                 if (dist > dzSize*dzSize and dist < cSize*cSize) then
                     setSelection(0, 0, true)
@@ -1181,9 +1181,9 @@ local function drawWheel()
         else
             glColor(pingWheelBaseColor)
         end
-        drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, centerAreaRadiusRatio, 0.0, arr)
+        drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, centerAreaRatio, 0.0, arr)
         glColor(pingWheelAreaInlineColor)
-        drawCircleOutline(deadZoneRadiusRatio, arr, 0)
+        drawCircleOutline(deadZoneRatio, arr, 0)
     end
 
     -- from now on don't update stencil mask
@@ -1282,10 +1282,10 @@ local function drawItems()
         local isSelected = pingWheelSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        drawItem(selItem, textAlignRadiusRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
+        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
     end
     if hasCenterAction then
-        local v = (deadZoneRadiusRatio+centerAreaRadiusRatio)/2
+        local v = (deadZoneRatio+centerAreaRatio)/2
         if centerSelected and flashBlack then
             glColor({ 0, 0, 0, 0 })
         else
@@ -1361,7 +1361,7 @@ local function drawDeadZone()
     end
 
     -- draw the dead zone circle
-    glBeginEnd(GL_LINE_LOOP, Circle, deadZoneRadiusRatio)
+    glBeginEnd(GL_LINE_LOOP, Circle, deadZoneRatio)
 end
 
 local function drawCenterDot()
@@ -1398,7 +1398,7 @@ local function prepareBlur()
             gl.Scale(wheelRadius, wheelRadius, wheelRadius)
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
-            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, 0.92, 0.0, arr)
+            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, 0.92, 0.0, arr)
             if pingWheelSelection ~= 0 and selOuterRatio > 0.92 then
                 drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRatio, spacing, arr)
             end
