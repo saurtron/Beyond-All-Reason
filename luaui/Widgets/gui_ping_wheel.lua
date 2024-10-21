@@ -67,7 +67,6 @@ local pingMessages = {
 }
 
 local styleChoice = 1       -- change from options gui
-local baseWheelSize = 0.355 -- ~1/3 screen
 
 -- Available styles
 local styleConfig = {
@@ -124,6 +123,17 @@ local defaults = {
     baseTextOpacity = 0.75,
     selOuterRadius = 0.9,
     baseOuterRadius = 0.9,
+    -- next ones are not editable from style atm
+    baseWheelSize = 0.355,            -- ~1/3 screen
+    deadZoneBaseRatio = 0.12,         -- the center "no selection" area as a ratio of the ping wheel radius
+    areaOutlineBaseWidth = 2.1,       -- width of the outer circle line
+    dividerLineBaseWidth = 3.5,       -- width of the divider empty space between sections
+    centerDotBaseSize = 15,           -- size of the center dot
+    outerCircleBaseWidth = 2.5,       -- width of the outer circle line
+    linesBaseWidth = 2.1,             -- thickness of the ping wheel line drawing
+    soundDefaultSelect = "sounds/commands/cmd-default-select.wav",
+    soundSetTarget = "sounds/commands/cmd-settarget.wav",
+    rclickIcon = "icons/mouse/rclick_glow.png",
 }
 
 -- On/Off switches
@@ -139,15 +149,9 @@ local numFlashFrames = 7    -- how many frames to flash when spamming
 local spamControlFrames = 8 -- how many frames to wait before allowing another ping
 
 -- Sizes and colors
-local dividerLineBaseWidth = 3.5        -- width of the divider empty space between sections
-local outerCircleBaseWidth = 2.5          -- width of the outer circle line
-local areaOutlineBaseWidth = 2.1          -- width of the outer circle line
-local centerDotBaseSize = 15            -- size of the center dot
-local linesBaseWidth = 2.1		-- thickness of the ping wheel line drawing
-local deadZoneBaseRatio = 0.12         -- the center "no selection" area as a ratio of the ping wheel radius
 local centerAreaRatio = 0.29
 local outerLimitRatio = 1.5       -- the outer limit ratio where "no selection" is active
-local deadZoneRatio = deadZoneBaseRatio
+local deadZoneRatio = defaults.deadZoneBaseRatio
 
 local pingWheelSelTextAlpha = defaults.selSelTextOpacity
 local pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
@@ -216,19 +220,34 @@ local hasCenterAction = true
 
 -- Calculated sizes
 local iconSize = defaults.iconSize
-local vsx, vsy = Spring.GetViewGeometry()
 
-local wheelRadius = (math.min(vsx, vsy)*baseWheelSize)/2
-local sizeRatio = math.min(vsx, vsy)/1080.0
-local pingWheelThickness = linesBaseWidth * sizeRatio
-local centerDotSize = centerDotBaseSize * sizeRatio
-local dividerLineWidth = dividerLineBaseWidth * sizeRatio
-local pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
-local pingWheelRingWidth = outerCircleBaseWidth * sizeRatio
-local pingWheelBorderWidth = areaOutlineBaseWidth * sizeRatio
+local wheelRadius
+local pingWheelThickness
+local centerDotSize
+local dividerLineWidth
+local pingWheelTextSize
+local pingWheelRingWidth
+local pingWheelBorderWidth
 local selOuterRatio = defaults.selOuterRadius
 local baseOuterRatio = defaults.baseOuterRadius
 local areaVertexNumber = 10
+
+-- Calculated sizes
+local function updateSizes(vsx, vsy)
+    if not vsx then
+        vsx, vsy = Spring.GetViewGeometry()
+    end
+    local f = math.min(vsx, vsy) / 1080.0
+    wheelRadius = (math.min(vsx, vsy)*defaults.baseWheelSize)/2
+    pingWheelTextSize = pingWheelTextBaseSize * f
+    centerDotSize = defaults.centerDotBaseSize * f
+    dividerLineWidth = defaults.dividerLineBaseWidth * f
+    pingWheelThickness = defaults.linesBaseWidth * f
+    pingWheelRingWidth = defaults.outerCircleBaseWidth * f
+    pingWheelBorderWidth = defaults.areaOutlineBaseWidth * f
+end
+
+updateSizes()
 
 -- Squared variables
 local deadZoneRadiusSq
@@ -266,37 +285,19 @@ local pingWheelScreenLocation
 local pingWheelSelection = 0
 local centerSelected = false
 local spamControl = 0
---local gameFrame = 0
 local flashFrame = 0
 local flashing = false
-local gameFrame = 0
 local lineScale = 1
 
 -- Speedups
 local spGetMouseState = Spring.GetMouseState
 local spGetModKeyState = Spring.GetModKeyState
-local spTraceScreenRay = Spring.TraceScreenRay
 local atan2 = math.atan2
 local floor = math.floor
 local pi = math.pi
 local sin = math.sin
 local cos = math.cos
 local sqrt = math.sqrt
-
-local soundDefaultSelect = "sounds/commands/cmd-default-select.wav"
-local soundSetTarget = "sounds/commands/cmd-settarget.wav"
-local rclickIcon = "icons/mouse/rclick_glow.png"
-
-local function dimmed(color)
-    local r, g, b, a = unpack(color)
-
-    -- new alpha is globalDim * a, clamped between 0 and 1
-    a = a * globalDim
-    if a > 1 then a = 1 end
-    if a < 0 then a = 0 end
-
-    return {r, g, b, a}
-end
 
 -- caches
 local baseCircleArrays = {}
@@ -457,7 +458,7 @@ local function applyStyle()
         selOuterRatio = style.selOuterRadius or defaults.selOuterRadius
         baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
         doDividers = false
-        deadZoneRatio = deadZoneBaseRatio
+        deadZoneRatio = defaults.deadZoneBaseRatio
         hasCenterAction = true
     else
         doDividers = style.drawDividers
@@ -605,14 +606,7 @@ function widget:Shutdown()
 end
 
 function widget:ViewResize(vsx, vsy)
-    wheelRadius = (math.min(vsx, vsy)*baseWheelSize)/2
-    local f = math.min(vsx, vsy) / 1080.0
-    pingWheelTextSize = pingWheelTextBaseSize * f
-    centerDotSize = centerDotBaseSize * f
-    dividerLineWidth = dividerLineBaseWidth * f
-    pingWheelThickness = linesBaseWidth * f
-    pingWheelRingWidth = outerCircleBaseWidth * f
-    pingWheelBorderWidth = areaOutlineBaseWidth * f
+    updateSizes(vsx, vsy)
     setSizedVariables()
     destroyItemsDlist()
     destroyDecorationsDlist()
@@ -626,13 +620,13 @@ end
 -- Store the ping location in pingWorldLocation
 local function SetPingLocation()
     local mx, my = spGetMouseState()
-    local _, pos = spTraceScreenRay(mx, my, true)
+    local _, pos = Spring.TraceScreenRay(mx, my, true)
     if pos then
         pingWorldLocation = { pos[1], pos[2], pos[3] }
         pingWheelScreenLocation = { x = mx, y = my }
 
         -- play a UI sound to indicate wheel is open
-        Spring.PlaySoundFile(soundSetTarget, 0.1, 'ui')
+        Spring.PlaySoundFile(defaults.soundSetTarget, 0.1, 'ui')
     end
 end
 
@@ -728,7 +722,7 @@ local function setSelection(selected, centersel)
             recreateBlurDlist = true
         end
         if selected ~=0 or centersel then
-            Spring.PlaySoundFile(soundDefaultSelect, 0.3, 'ui')
+            Spring.PlaySoundFile(defaults.soundDefaultSelect, 0.3, 'ui')
         end
     end
     if selected ~=0 or centersel then
@@ -1128,7 +1122,7 @@ local function drawCloseHint()
     local drawIconSize = wheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
     x_offset = (w+drawIconSize)/2.0
-    drawIcon(rclickIcon, {x-x_offset, y}, hintIconSize)
+    drawIcon(defaults.rclickIcon, {x-x_offset, y}, hintIconSize)
     glColor({1, 1, 1, 0.7})
     glBeginText()
     glText("Cancel", pingWheelScreenLocation.x+drawIconSize/2-x_offset+w/6,
@@ -1342,7 +1336,7 @@ function widget:DrawScreen()
         local mmx = pingWheelScreenLocation.x*2 - vsx
         local mmy = pingWheelScreenLocation.y*2 - vsy
 
-        local scale1 = (vsy/vsx)*baseWheelSize -- for items in -1, 1
+        local scale1 = (vsy/vsx)*defaults.baseWheelSize -- for items in -1, 1
         local scale2 = 2/vsx           -- for items in screen space
 
         shader:Activate()
