@@ -164,6 +164,8 @@ local defaults = {
 }
 
 -- On/Off switches
+local standaloneMode = true -- adds settings inside custom tab, does non-local (and non i18n) mapmarkers
+local use_colors = false    -- only for standalone mode, otherwise controlled elsewhere
 local draw_line = false     -- set to true to draw a line from the center to the cursor during selection
 local draw_deadzone = false -- set to true to draw a circle around the dead zone (for debugging purposes)
 local do_blur = true        -- set to false to avoid doing blur
@@ -443,7 +445,8 @@ function widget:GetConfigData()
         wheelStyle = styleChoice,
         interactionMode = pressReleaseMode and 2 or 1,
         useIcons = useIcons,
-        doubleWheel = doubleWheel
+        doubleWheel = doubleWheel,
+        useColors = use_colors,
     }
 end
 
@@ -452,13 +455,16 @@ function widget:SetConfigData(data)
         styleChoice = data.wheelStyle
     end
     if data.interactionMode ~= nil then
-        pressReleaseMode = data.interactionMode == 2
+        pressReleaseMode = data.interactionMode and 2 or 1
     end
     if data.useIcons ~= nil then
         useIcons = data.useIcons
     end
     if data.doubleWheel ~= nil then
         doubleWheel = data.doubleWheel
+    end
+    if data.useColors ~= nil then
+        use_colors = data.useColors
     end
 end
 
@@ -505,6 +511,104 @@ local function applyStyle()
     destroyDecorationsDlist()
     destroyBaseDlist()
 end
+
+------------------------
+--- Standalone mode
+---
+--- For use outside of BAR package. In this situation we won't have translations or gui_options
+--- so we load them here.
+--- Also will do normal pings for now instead of new i18n ones since we need everyone using new
+--- i18n ping support, otherwise they wouldn't see our pings.
+---
+
+local widgetName = 'Ping Wheel'
+local i18nPrefix = 'ui.settings.option.pingwheel_'
+
+local mapOption = function(option)
+    return getTranslatedText(i18nPrefix .. option)
+end
+
+local mapSetting = function(setting)
+    return {
+        id = 'pingwheel_'..setting.id,
+        widgetname = widgetName,
+        name = getTranslatedText(i18nPrefix .. setting.id),
+        onchange = function(i, value) WG['pingwheel_gui']['set'..setting.cb](value) end,
+        description = getTranslatedText(i18nPrefix .. setting.id .. '_descr'),
+        type = setting.options and 'select' or 'bool',
+        options = setting.options and table.map(setting.options, mapOption),
+        value = WG['pingwheel_gui']['get'..setting.cb](),
+    }
+end
+
+local standaloneSettings = {
+    {
+        id = 'style',
+        cb = 'WheelStyle',
+        options = { 'style_white', 'style_black', 'style_circle', 'style_ring' },
+    },
+    {
+        id = 'interaction',
+        cb = 'InteractionMode',
+        options = { 'interaction_click', 'interaction_release' },
+    },
+    {
+        id = 'icons',
+        cb = 'UseIcons',
+    },
+     {
+        id = 'doublewheel',
+        cb = 'DoubleWheel',
+    },
+    {
+        id = 'colors',
+        cb = 'UseColors',
+    },
+}
+
+local function colourNames(R, G, B)
+    local R255 = math.floor(R * 255) --the first \255 is just a tag (not colour setting) no part can end with a zero due to engine limitation (C)
+    local G255 = math.floor(G * 255)
+    local B255 = math.floor(B * 255)
+    if R255 % 10 == 0 then
+        R255 = R255 + 1
+    end
+    if G255 % 10 == 0 then
+        G255 = G255 + 1
+    end
+    if B255 % 10 == 0 then
+        B255 = B255 + 1
+    end
+    return "\255" .. string.char(R255) .. string.char(G255) .. string.char(B255) --works thanks to zwzsg
+end
+
+local function createStandaloneMapPoint(playerID, text, x, y, z, color, icon)
+    local text = getTranslatedText(text)
+    if color and use_colors then
+        text = colourNames(color[1], color[2], color[3]) .. text
+    end
+    Spring.MarkerAddPoint(x, y, z, text)
+end
+
+local function addStandaloneSettings()
+    if not standaloneMode then return end
+
+    -- global (engine -non i18n-) mappoints
+    createMapPoint = createStandaloneMapPoint
+
+    -- settings and translations
+    if WG['options'] then
+        local langFile = configDir..'language.json'
+        local data = VFS.LoadFile(langFile, VFS.RAW_FIRST)
+
+        if data then
+            Spring.I18N.load({ ['en'] = Json.decode(data) })
+        end
+        WG['options'].addOptions(table.map(standaloneSettings, mapSetting))
+    end
+    defaults['rclickIcon'] = configDir.."rclick_glow.png"
+end
+
 
 ------------------------
 --- Shaders
@@ -616,6 +720,15 @@ function widget:Initialize()
         destroyDecorationsDlist()
         destroyBaseDlist()
     end
+    WG['pingwheel_gui'].getUseColors = function()
+        return use_colors
+    end
+    WG['pingwheel_gui'].setUseColors = function(value)
+        use_colors = value
+        destroyItemsDlist()
+    end
+
+    addStandaloneSettings()
 
     -- add the action handler with argument for press and release using the same function call
     widgetHandler:AddAction("ping_wheel_on", PingWheelAction, { true }, "p") --pR do we actually want Repeat?
@@ -633,6 +746,9 @@ function widget:Shutdown()
     destroyBaseDlist()
     destroyBlurDlist()
     destroyShaders()
+    if standaloneMode and WG['options'] then
+        WG['options'].removeOptions(table.map(standaloneOptions, function(option) return 'pingwheel_'..option.id end))
+    end
 end
 
 function widget:ViewResize(vsx, vsy)
@@ -813,6 +929,14 @@ function PingWheelAction(_, _, _, args)
     end
 end
 
+function widget:KeyPress(key, mods, isRepeat)
+    -- Default behaviour when action map is not present.
+    local hasBinding = Spring.GetActionHotKeys('ping_wheel_on')[1] and true
+    if not hasBinding and key == 119 and mods.alt and not keyDown then -- alt + w
+        PingWheelAction(nil, nil, nil, {true})
+    end
+end
+
 function widget:MousePress(mx, my, button)
     if displayPingWheel and not pressReleaseMode then
         -- click mode: allow activating option with left and close with right.
@@ -833,6 +957,16 @@ function widget:MousePress(mx, my, button)
         end
     elseif showLRHint or button == 4 or button == 5 then
         local alt, ctrl, meta, shift = spGetModKeyState()
+        if standaloneMode and (button == 4 or button == 5) and (alt or ctrl or meta or shift) then
+            if button == 4 then
+                Spring.SendCommands("buildspacing inc")
+                return true
+            elseif button == 5 then
+                Spring.SendCommands("buildspacing dec")
+                return true
+            end
+            return
+        end
         -- If any modifier is pressed we let other widgets handle this
         -- unless on our keydown event.
         if showLRHint or not (alt or ctrl or meta or shift) then
@@ -1274,7 +1408,7 @@ end
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
-    local useColors = WG['pingwheel'] and WG['pingwheel'].getUseColors()
+    local useColors = (standaloneMode and use_colors) or (not standaloneMode and WG['pingwheel'] and WG['pingwheel'].getUseColors())
     local flashBlack = false
     if flashing and (flashFrame % 2 == 0) then
         flashBlack = true
