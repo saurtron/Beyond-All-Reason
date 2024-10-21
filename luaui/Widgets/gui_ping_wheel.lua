@@ -576,7 +576,7 @@ local function addStandaloneSettings()
         end
         WG['options'].addOptions(table.map(standaloneSettings, mapSetting))
     end
-    rclickIcon = configDir.."rclick_glow.png"
+    defaults['rclickIcon'] = configDir.."rclick_glow.png"
 end
 
 
