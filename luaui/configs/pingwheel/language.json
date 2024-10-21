@@ -1,0 +1,25 @@
+{
+	"ui": {
+		"settings": {
+			"option": {
+				"pingwheel": "Ping wheel",
+				"pingwheel_colors": "colors",
+				"pingwheel_colors_descr": "Whether to apply color to ping text locally",
+				"pingwheel_style": "style",
+				"pingwheel_style_descr": "Style for the ping wheel",
+				"pingwheel_style_white": "White",
+				"pingwheel_style_black": "Black",
+				"pingwheel_style_circle": "Black glow lite",
+				"pingwheel_style_ring": "Ring lite",
+				"pingwheel_interaction": "interaction",
+				"pingwheel_interaction_descr": "Interaction mode: Release: Activate on mouse release. Click: Activate with click",
+				"pingwheel_interaction_release": "Release mode",
+				"pingwheel_interaction_click": "Click mode",
+				"pingwheel_icons": "icons",
+				"pingwheel_icons_descr": "On: draw icons. Off: no icons",
+				"pingwheel_doublewheel": "two wheels",
+				"pingwheel_doublewheel_descr": "On: two wheels. Off: one wheel"
+			}
+		}
+	}
+}
