@@ -883,7 +883,7 @@ end
 function widget:KeyPress(key, mods, isRepeat)
     -- Default behaviour when action map is not present.
     local hasBinding = Spring.GetActionHotKeys('ping_wheel_on')[1] and true
-    if not hasBinding and key == 119 and mods.alt then -- alt + w
+    if not hasBinding and key == 119 and mods.alt and not keyDown then -- alt + w
         PingWheelAction(nil, nil, nil, {true})
     end
 end
