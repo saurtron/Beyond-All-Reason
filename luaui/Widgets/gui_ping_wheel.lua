@@ -881,6 +881,14 @@ function PingWheelAction(_, _, _, args)
     end
 end
 
+function widget:KeyPress(key, mods, isRepeat)
+    -- Default behaviour when action map is not present.
+    local hasBinding = Spring.GetActionHotKeys('ping_wheel_on')[1] and true
+    if not hasBinding and key == 119 and mods.alt then -- alt + w
+        PingWheelAction(nil, nil, nil, {true})
+    end
+end
+
 function widget:MousePress(mx, my, button)
     if displayPingWheel and not pressReleaseMode then
         -- click mode: allow activating option with left and close with right.
