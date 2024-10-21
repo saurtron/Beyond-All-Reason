@@ -144,10 +144,10 @@ local outerCircleBaseWidth = 2.5          -- width of the outer circle line
 local areaOutlineBaseWidth = 2.1          -- width of the outer circle line
 local centerDotBaseSize = 15            -- size of the center dot
 local linesBaseWidth = 2.1		-- thickness of the ping wheel line drawing
-local deadZoneBaseRadius = 0.12         -- the center "no selection" area as a ratio of the ping wheel radius
-local centerAreaRadiusRatio = 0.29
-local outerLimitRadiusRatio = 1.5       -- the outer limit ratio where "no selection" is active
-local deadZoneRadiusRatio = deadZoneBaseRadius
+local deadZoneBaseRatio = 0.12         -- the center "no selection" area as a ratio of the ping wheel radius
+local centerAreaRatio = 0.29
+local outerLimitRatio = 1.5       -- the outer limit ratio where "no selection" is active
+local deadZoneRatio = deadZoneBaseRatio
 
 local pingWheelSelTextAlpha = defaults.selSelTextOpacity
 local pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
@@ -226,9 +226,23 @@ local dividerLineWidth = dividerLineBaseWidth * sizeRatio
 local pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
 local pingWheelRingWidth = outerCircleBaseWidth * sizeRatio
 local pingWheelBorderWidth = areaOutlineBaseWidth * sizeRatio
-local selOuterRadius = defaults.selOuterRadius
-local baseOuterRadius = defaults.baseOuterRadius
+local selOuterRatio = defaults.selOuterRadius
+local baseOuterRatio = defaults.baseOuterRadius
 local areaVertexNumber = 10
+
+-- Squared variables
+local deadZoneRadiusSq
+local outerLimitRadiusSq
+local baseOuterRadiusSq
+local centerAreaRadiusSq
+
+local function setSizedVariables()
+    deadZoneRadiusSq = (deadZoneRatio*wheelRadius)^2
+    outerLimitRadiusSq = (outerLimitRatio*wheelRadius)^2
+    baseOuterRadiusSq = (baseOuterRatio*wheelRadius)^2
+    centerAreaRadiusSq = (centerAreaRatio*wheelRadius)^2
+end
+setSizedVariables()
 
 --- Other file variables
 local globalDim = 1     -- this controls global alpha for all wheel elements
@@ -240,7 +254,7 @@ local bgTextureSizeRatio = defaults.bgTextureSizeRatio
 local bgTextureColor = defaults.bgTextureColor
 local dividerInnerRatio = defaults.dividerInnerRatio
 local dividerOuterRatio = defaults.dividerOuterRatio
-local textAlignRadiusRatio = defaults.textAlignRadiusRatio
+local textAlignRatio = defaults.textAlignRadiusRatio
 local dividerColor = defaults.dividerColor
 
 local pingWheel = pingCommands
@@ -425,7 +439,7 @@ local function applyStyle()
     pingWheelIconSize = style.iconSize or defaults.iconSize
     dividerInnerRatio = style.dividerInnerRatio or defaults.dividerInnerRatio
     dividerOuterRatio = style.dividerOuterRatio or defaults.dividerOuterRatio
-    textAlignRadiusRatio = style.textAlignRadiusRatio or defaults.textAlignRadiusRatio
+    textAlignRatio = style.textAlignRadiusRatio or defaults.textAlignRadiusRatio
     dividerColor = style.dividerColor or defaults.dividerColor
     pingWheelTextBaseSize = style.textSize or defaults.textSize
     pingWheelSelTextAlpha = style.selTextOpacity or defaults.selTextOpacity
@@ -440,14 +454,14 @@ local function applyStyle()
         pingWheelRingColor = style.wheelRingColor or defaults.wheelRingColor
         pingWheelAreaOutlineColor = style.wheelAreaOutlineColor or defaults.wheelAreaOutlineColor
         pingWheelBaseColor = style.wheelBaseColor or defaults.wheelBaseColor
-        selOuterRadius = style.selOuterRadius or defaults.selOuterRadius
-        baseOuterRadius = style.baseOuterRadius or defaults.baseOuterRadius
+        selOuterRatio = style.selOuterRadius or defaults.selOuterRadius
+        baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
         doDividers = false
-        deadZoneRadiusRatio = deadZoneBaseRadius
+        deadZoneRatio = deadZoneBaseRatio
         hasCenterAction = true
     else
         doDividers = style.drawDividers
-        deadZoneRadiusRatio = centerAreaRadiusRatio
+        deadZoneRatio = centerAreaRatio
         hasCenterAction = false
     end
     local vx, vy = Spring.GetViewGeometry()
@@ -455,6 +469,7 @@ local function applyStyle()
     local sizeRatio = math.min(vx, vy)/1080.0
     pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
 
+    setSizedVariables()
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
@@ -598,6 +613,7 @@ function widget:ViewResize(vsx, vsy)
     pingWheelThickness = linesBaseWidth * f
     pingWheelRingWidth = outerCircleBaseWidth * f
     pingWheelBorderWidth = areaOutlineBaseWidth * f
+    setSizedVariables()
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
@@ -841,37 +857,35 @@ function widget:Update(dt)
         if spamControl > 0 then
             spamControl = (spamControl == 0) and 0 or (spamControl - 1)
         end
+        if not pingWheelScreenLocation then
+            return
+        end
         if globalFadeOut == 0 and not flashing then -- if not flashing and not fading out
-            if not pingWheelScreenLocation then
-                return
-            end
             local mx, my = spGetMouseState()
             -- calculate where the mouse is relative to the pingWheelScreenLocation, remember top is the first selection
             local dx = mx - pingWheelScreenLocation.x
             local dy = my - pingWheelScreenLocation.y
-            -- deadzone is no selection
             local dist = dx * dx + dy * dy
 
-            local dzSize = deadZoneRadiusRatio*wheelRadius
-            local oSize = outerLimitRadiusRatio*wheelRadius
-            if hasCenterAction then
-                local cSize = centerAreaRadiusRatio*wheelRadius
-
-                if (dist > dzSize*dzSize and dist < cSize*cSize) then
-                    setSelection(0, true)
-                    return
-                end
-            end
-            if (dist < dzSize*dzSize)
-                or (dist > oSize*oSize)
+            -- deadzone is no selection
+            if (dist < deadZoneRadiusSq)
+                or (dist > outerLimitRadiusSq)
             then
                 setSelection(0, false)
                 return
             end
+
+            -- center area
+            if hasCenterAction and dist < centerAreaRadiusSq then
+                setSelection(0, true)
+                return
+            end
+
+            -- selection
             local angle = atan2(dx, dy)
-            local areahalf = pi/#pingWheel
-            angle = angle < -areahalf and (2*pi+angle) or angle
-            local selection = floor((angle+areahalf) / (2*areahalf)) + 1
+            local areaHalf = pi/#pingWheel
+            angle = angle < -areaHalf and (2*pi+angle) or angle
+            local selection = floor((angle+areaHalf) / (2*areaHalf)) + 1
 
             if selection ~= pingWheelSelection then
                 setSelection(selection, false)
@@ -887,9 +901,6 @@ function widget:Update(dt)
         end
     elseif (sec2 > 0.03) and keyDown and not displayPingWheel and doubleWheel and pressReleaseMode then
         -- gesture left or right to select primary or secondary wheel on pressRelaseMode
-        if not pingWheelScreenLocation then
-            return
-        end
         local mx, my = spGetMouseState()
         local dx = mx - pingWheelScreenLocation.x
         local dy = my - pingWheelScreenLocation.y
@@ -1038,7 +1049,7 @@ local function drawWheel()
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale)
-    local hole = (selOuterRadius>0.92) and pingWheelSelection or 0
+    local hole = (selOuterRatio>0.92) and pingWheelSelection or 0
     drawCircleOutline(0.92, arr, hole)
 
     -- setup stencil buffer to mask areas
@@ -1056,7 +1067,7 @@ local function drawWheel()
     glLineWidth(borderWidth)
     -- item area backgrounds
     glColor(pingWheelBaseColor)
-    local r1, r2, spacing = 0.3, baseOuterRadius, 0.008 -- hardcoded for now
+    local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     for i=1, #pingWheel do
         if i~=pingWheelSelection then
             glColor(pingWheelBaseColor)
@@ -1069,7 +1080,7 @@ local function drawWheel()
     end
     -- selected part
     if pingWheelSelection ~= 0 then
-        r2 = selOuterRadius
+        r2 = selOuterRatio
         glColor(pingWheelSelColor)
         drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, r1, r2, spacing, arr)
         drawAreaOutline(#pingWheel, pingWheelSelection, r1, r2, spacing, arr)
@@ -1082,9 +1093,9 @@ local function drawWheel()
         else
             glColor(pingWheelBaseColor)
         end
-        drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, centerAreaRadiusRatio, 0.0, arr)
+        drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, centerAreaRatio, 0.0, arr)
         glColor(pingWheelAreaInlineColor)
-        drawCircleOutline(deadZoneRadiusRatio, arr, 0)
+        drawCircleOutline(deadZoneRatio, arr, 0)
     end
 
     -- from now on don't update stencil mask
@@ -1168,8 +1179,8 @@ local function drawItems()
             -- TODO: this is modifying in place
             color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
         end
-        local x = wheelRadius * textAlignRadiusRatio * sin(angle)
-        local y = wheelRadius * textAlignRadiusRatio * cos(angle)
+        local x = wheelRadius * textAlignRatio * sin(angle)
+        local y = wheelRadius * textAlignRatio * cos(angle)
         local icon = selItem.icon
         local textScale = isSelected and selectedScaleFactor or 1.0
         if icon and useIcons then
@@ -1183,7 +1194,7 @@ local function drawItems()
     end
 
     if hasCenterAction then
-        local v = (deadZoneRadiusRatio+centerAreaRadiusRatio)/2
+        local v = (deadZoneRatio+centerAreaRatio)/2
         if centerSelected and flashBlack then
             glColor({ 0, 0, 0, 0 })
         else
@@ -1250,7 +1261,7 @@ local function drawDeadZone()
     end
 
     -- draw the dead zone circle
-    glBeginEnd(GL_LINE_LOOP, Circle, deadZoneRadiusRatio)
+    glBeginEnd(GL_LINE_LOOP, Circle, deadZoneRatio)
 end
 
 local function drawCenterDot()
@@ -1287,9 +1298,9 @@ local function prepareBlur()
             gl.Scale(wheelRadius, wheelRadius, wheelRadius)
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
-            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, 0.92, 0.0, arr)
-            if pingWheelSelection ~= 0 and selOuterRadius > 0.92 then
-                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRadius, spacing, arr)
+            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, 0.92, 0.0, arr)
+            if pingWheelSelection ~= 0 and selOuterRatio > 0.92 then
+                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRatio, spacing, arr)
             end
             glPopMatrix()
         end)
