@@ -258,6 +258,20 @@ local baseOuterRatio = defaults.baseOuterRadius
 local areaVertexNumber = 10
 local secondaryOuterRatio = 1.4
 
+-- Squared variables
+local deadZoneRadiusSq
+local outerLimitRadiusSq
+local baseOuterRadiusSq
+local centerAreaRadiusSq
+
+local function setSizedVariables()
+    deadZoneRadiusSq = (deadZoneBaseRatio*wheelRadius)^2
+    outerLimitRadiusSq = (outerLimitRatio*wheelRadius)^2
+    baseOuterRadiusSq = (baseOuterRatio*wheelRadius)^2
+    centerAreaRadiusSq = (centerAreaRatio*wheelRadius)^2
+end
+setSizedVariables()
+
 --- Other file variables
 local globalDim = 1     -- this controls global alpha for all wheel elements
 local globalFadeIn = 0  -- how many frames left to fade in
@@ -484,6 +498,7 @@ local function applyStyle()
     local sizeRatio = math.min(vx, vy)/1080.0
     pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
 
+    setSizedVariables()
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
@@ -627,6 +642,7 @@ function widget:ViewResize(vsx, vsy)
     pingWheelThickness = linesBaseWidth * f
     pingWheelRingWidth = outerCircleBaseWidth * f
     pingWheelBorderWidth = areaOutlineBaseWidth * f
+    setSizedVariables()
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
@@ -890,18 +906,14 @@ function widget:Update(dt)
             -- deadzone is no selection
             local dist = dx * dx + dy * dy
 
-            local dzSize = deadZoneRatio*wheelRadius
-            local oSize = outerLimitRatio*wheelRadius
             if hasCenterAction then
-                local cSize = centerAreaRatio*wheelRadius
-
-                if (dist > dzSize*dzSize and dist < cSize*cSize) then
+                if (dist > deadZoneRadiusSq and dist < centerAreaRadiusSq) then
                     setSelection(0, 0, true)
                     return
                 end
             end
-            if (dist < dzSize*dzSize)
-                or (dist > oSize*oSize)
+            if (dist < deadZoneRadiusSq)
+                or (dist > outerLimitRadiusSq)
             then
                 setSelection(0, 0, false)
                 return
