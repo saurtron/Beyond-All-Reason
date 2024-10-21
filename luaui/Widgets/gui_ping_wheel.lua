@@ -253,8 +253,8 @@ local dividerLineWidth = dividerLineBaseWidth * sizeRatio
 local pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
 local pingWheelRingWidth = outerCircleBaseWidth * sizeRatio
 local pingWheelBorderWidth = areaOutlineBaseWidth * sizeRatio
-local selOuterRadius = defaults.selOuterRadius
-local baseOuterRadius = defaults.baseOuterRadius
+local selOuterRatio = defaults.selOuterRadius
+local baseOuterRatio = defaults.baseOuterRadius
 local areaVertexNumber = 10
 local secondaryOuterRadius = 1.4
 
@@ -469,8 +469,8 @@ local function applyStyle()
         pingWheelRingColor = style.wheelRingColor or defaults.wheelRingColor
         pingWheelAreaOutlineColor = style.wheelAreaOutlineColor or defaults.wheelAreaOutlineColor
         pingWheelBaseColor = style.wheelBaseColor or defaults.wheelBaseColor
-        selOuterRadius = style.selOuterRadius or defaults.selOuterRadius
-        baseOuterRadius = style.baseOuterRadius or defaults.baseOuterRadius
+        selOuterRatio = style.selOuterRadius or defaults.selOuterRadius
+        baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
         doDividers = false
         deadZoneRadiusRatio = deadZoneBaseRadius
         hasCenterAction = true
@@ -1139,7 +1139,7 @@ local function drawWheel()
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale)
-    local hole = (selOuterRadius>=0.92) and pingWheelSelection or 0
+    local hole = (selOuterRatio>=0.92) and pingWheelSelection or 0
     drawCircleOutline(0.92, arr, hole)
 
     -- setup stencil buffer to mask areas
@@ -1167,7 +1167,7 @@ local function drawWheel()
     end
     -- selected part
     if pingWheelSelection ~= 0 then
-        r2 = selOuterRadius
+        r2 = selOuterRatio
         glColor(pingWheelSelColor)
         drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, r1, r2, spacing, arr)
         drawAreaOutline(#pingWheel, pingWheelSelection, r1, r2, spacing, arr)
@@ -1399,8 +1399,8 @@ local function prepareBlur()
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
             drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, 0.92, 0.0, arr)
-            if pingWheelSelection ~= 0 and selOuterRadius > 0.92 then
-                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRadius, spacing, arr)
+            if pingWheelSelection ~= 0 and selOuterRatio > 0.92 then
+                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRatio, spacing, arr)
             end
             if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
                 arr = baseCircleArrays[#pingWheel*2]
