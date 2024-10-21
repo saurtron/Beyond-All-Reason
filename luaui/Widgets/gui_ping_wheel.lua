@@ -712,9 +712,10 @@ local function setSelection(selected, centersel)
         end
         if selected ~=0 or centersel then
             Spring.PlaySoundFile(soundDefaultSelect, 0.3, 'ui')
-            --Spring.SetMouseCursor("cursorjump")
-            --Spring.SetMouseCursor("cursornormal")
         end
+    end
+    if selected ~=0 or centersel then
+        Spring.SetMouseCursor("cursornormal")
     end
     pingWheelSelection = selected
     centerSelected = centersel
