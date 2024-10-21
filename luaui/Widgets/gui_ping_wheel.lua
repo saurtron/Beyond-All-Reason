@@ -41,15 +41,42 @@ local configDir = 'LuaUI/Config/pingwheel/'
 -- * icon_offset (optional): Offset for the icon, for off-center icons.
 -- * icon_size (optional): Scale to icon (default is 1 meaning normal size).
 
+local attackCommands = {
+    { name = "All-in", icon = iconDir..'cursordgun_4.png' },
+    { name = "Push", icon = iconDir..'cursorcapture_7.png' },
+    { name = "Pressure", icon = iconDir..'cursorattack_15.png' },
+}
+local defendCommands = {
+    { name = "ui.wheel.retreat" },
+    { name = "Protect", icon = iconDir..'cursordefend_55.png' },
+    { name = "Hold", icon = iconDir..'cursorcentroid_0.png' },
+}
+local paidCommands = {
+    { name = "T1 con", msg = "T1 con pls" },
+    { name = "Transport", msg = "Transport pls" },
+    { name = "Scout", msg = "Scout pls" },
+}
+local alertCommands = {
+    { name = "Danger", icon = iconDir..'cursorsettarget_57.png' },
+    { name = "Caution", icon = iconDir..'cursorsettarget_38.png' },
+    { name = "T3", icon = iconDir..'cursorselfd_11.png' },
+}
+local helpCommands = {
+    { name = "Air", icon = iconDir..'cursorunload_31.png' },
+    { name = "Vision", icon = iconDir..'cursordwatch_0.png' },
+    { name = "Support", icon = iconDir..'cursorrepair_44.png' },
+}
+
 local pingCommands = {                             -- the options in the ping wheel, displayed clockwise from 12 o'clock
-    { name = "ui.wheel.attack",  color = { 1, 0.3, 0.3, 1 }, icon = iconDir..'cursorattack_2.png' },
-    { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 }, icon = iconDir..'cursorfight_11.png', icon_offset={7, -8} },
-    { name = "Defend",  color = { 0.7, 0.9, 1, 1 }, icon = iconDir..'cursordefend_59.png', icon_size=0.8 },
-    { name = "ui.wheel.retreat", color = { 0.9, 0.7, 1, 1 } },
-    { name = "Alert",   color = { 1, 1, 0.5, 1 } },
+    { name = "ui.wheel.attack",  color = { 1, 0.3, 0.3, 1 }, icon = iconDir..'cursorattack_2.png', children=attackCommands },
+    --{ name = "Rally",   color = { 0.4, 0.8, 0.4, 1 }, icon = iconDir..'cursorfight_11.png', icon_offset={7, -8} },
+    { name = "Defend",  color = { 0.7, 0.9, 1, 1 }, icon = iconDir..'cursordefend_59.png', icon_size=0.8, children=defendCommands },
+    { name = "Help",    color = { 0.9, 0.7, 1, 1 }, children=helpCommands, icon=iconDir..'cursorgather_0.png' },
+    { name = "Alert",   color = { 1, 1, 0.5, 1 }, children=alertCommands, icon=iconDir..'cursorsettarget_0.png' },
     { name = "Reclaim", color = { 0.7, 1, 0.7, 1 }, icon = iconDir..'cursorreclamate_55.png' },
-    { name = "Stop",    color = { 1, 0.2, 0.2, 1 } },
-    { name = "Wait",    color = { 0.7, 0.6, 0.3, 1 }, icon = iconDir..'cursorwait_31.png' },
+    { name = "On my way",  color = { 0.5, 0, 1, 1 }, icon = iconDir..'cursormove_24.png', icon_offset={7, -8} },
+    { name = "Paid",    color = { 1, 0.2, 0.2, 1 }, children=paidCommands, icon=iconDir..'cursorpurchase_0.png', icon_size=0.6 },
+    --{ name = "Wait",    color = { 0.7, 0.6, 0.3, 1 }, icon = iconDir..'cursorwait_31.png' },
 }
 
 local pingMessages = {
@@ -229,6 +256,7 @@ local pingWheelBorderWidth = areaOutlineBaseWidth * sizeRatio
 local selOuterRadius = defaults.selOuterRadius
 local baseOuterRadius = defaults.baseOuterRadius
 local areaVertexNumber = 10
+local secondaryOuterRadius = 1.4
 
 --- Other file variables
 local globalDim = 1     -- this controls global alpha for all wheel elements
@@ -250,6 +278,7 @@ local displayPingWheel = false
 local pingWorldLocation
 local pingWheelScreenLocation
 local pingWheelSelection = 0
+local secondarySelection = 0
 local centerSelected = false
 local spamControl = 0
 --local gameFrame = 0
@@ -675,10 +704,18 @@ local function checkRelease()
     then
         if (pingWheelSelection > 0 or centerSelected) and not flashing then
             local pingText, color, icon
-            if pingWheelSelection > 0 then
-                pingText = pingWheel[pingWheelSelection].msg or pingWheel[pingWheelSelection].name
-                color = pingWheel[pingWheelSelection].color or pingWheelColor
-                icon = pingWheel[pingWheelSelection].icon
+            local selWheel, sel
+            if secondarySelection > 0 then
+                selWheel = pingWheel[pingWheelSelection].children
+                sel = secondarySelection
+            elseif pingWheelSelection > 0 then
+                selWheel = pingWheel
+                sel = pingWheelSelection
+            end
+            if selWheel then
+                pingText = selWheel[sel].msg or selWheel[sel].name
+                color = selWheel[sel].color or pingWheel[pingWheelSelection].color or pingWheelColor
+                icon = selWheel[sel].icon or pingWheel[pingWheelSelection].icon
             end
             createMapPoint(Spring.GetMyPlayerID(), pingText, pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
                 color, icon)
@@ -703,22 +740,23 @@ end
 ------------------------
 --- Key/Mouse Interaction
 
-local function setSelection(selected, centersel)
-    if selected ~= pingWheelSelection or centersel ~= centerSelected then
+local function setSelection(selected, secondary, centersel)
+    if selected ~= pingWheelSelection or centersel ~= centerSelected or secondary ~= secondarySelection then
         destroyItemsDlist()
         destroyBaseDlist()
         if selected ~= pingWheelSelection then
             -- avoid blur 'blinking' if we destroy the list here
             recreateBlurDlist = true
         end
-        if selected ~=0 or centersel then
+        if selected ~=0 or centersel or secondary ~=0 then
             Spring.PlaySoundFile(soundDefaultSelect, 0.3, 'ui')
         end
     end
-    if selected ~=0 or centersel then
+    if selected ~=0 or centersel or secondary ~= 0 then
         Spring.SetMouseCursor("cursornormal")
     end
     pingWheelSelection = selected
+    secondarySelection = secondary
     centerSelected = centersel
 end
 
@@ -858,14 +896,14 @@ function widget:Update(dt)
                 local cSize = centerAreaRadiusRatio*wheelRadius
 
                 if (dist > dzSize*dzSize and dist < cSize*cSize) then
-                    setSelection(0, true)
+                    setSelection(0, 0, true)
                     return
                 end
             end
             if (dist < dzSize*dzSize)
                 or (dist > oSize*oSize)
             then
-                setSelection(0, false)
+                setSelection(0, 0, false)
                 return
             end
             local angle = atan2(dx, dy)
@@ -873,11 +911,26 @@ function widget:Update(dt)
             if angleDeg < 0 then
                 angleDeg = angleDeg + 360
             end
+            local bSize = baseOuterRadius*wheelRadius
+            local sSize = secondaryOuterRadius*wheelRadius
+            if (dist < sSize*sSize and pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children)
+                and (dist > bSize*bSize) then
+                local offset = 360 / (#pingWheel*2) / 2
+                local selection = (floor((360 + angleDeg + offset) / 360 * (#pingWheel*2))) % (#pingWheel*2) + 1
+                -- next line instead of 1 should be 3 when pingWheelSelection is last
+                selection2 = selection == (#pingWheel*2) and 1 or selection-(pingWheelSelection-1)*2+1
+                Spring.Echo("Secondary "..tostring(selection2).." "..tostring(selection).." "..pingWheelSelection)
+                if secondarySelection ~= selection2 then
+                    setSelection(pingWheelSelection, selection2, false)
+                end
+                return
+            end
+
             local offset = 360 / #pingWheel / 2
             local selection = (floor((360 + angleDeg + offset) / 360 * #pingWheel)) % #pingWheel + 1
 
-            if selection ~= pingWheelSelection then
-                setSelection(selection, false)
+            if selection ~= pingWheelSelection or secondarySelection ~= 0 then
+                setSelection(selection, 0, false)
                 return
             end
         elseif flashing then
@@ -1002,7 +1055,7 @@ local function drawArc(r, arr, arcStart, arcEnd)
             glVertex(arr[i][1]*r, arr[i][2]*r)
         end
         if loopEnd ~= arcEnd then
-            for i=1, arcEnd-#arr do
+            for i=1, arcEnd-#arr+1 do
                 glVertex(arr[i][1]*r, arr[i][2]*r)
             end
         end
@@ -1055,27 +1108,30 @@ end
 
 local function drawWheel()
     local r1, r2, spacing = 0.3, baseOuterRadius, 0.008 -- hardcoded for now
+    local borderWidth = pingWheelBorderWidth * lineScale
+    local borderMargin = borderWidth/(wheelRadius*2)
 
-    if pingWheelSelection ~= 0 then
+    if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
         arr = baseCircleArrays[#pingWheel*2]
-        s3 = pingWheelSelection*2
-        s2 = s3-1
-        s1 = pingWheelSelection == 1 and #pingWheel*2 or s3-2
-        glColor(pingWheelSelColor)
-        drawArea(areaVertexNumber, #pingWheel*2, s1, 0.93, 1.4, spacing, arr)
-        glColor(pingWheelBaseColor)
-        drawArea(areaVertexNumber, #pingWheel*2, s2, 0.93, 1.4, spacing, arr)
-        drawArea(areaVertexNumber, #pingWheel*2, s3, 0.93, 1.4, spacing, arr)
-        glColor(pingWheelAreaOutlineColor)
-        drawAreaOutline(#pingWheel*2, s1, 0.93, 1.4, spacing, arr)
-        drawAreaOutline(#pingWheel*2, s2, 0.93, 1.4, spacing, arr)
-        drawAreaOutline(#pingWheel*2, s3, 0.93, 1.4, spacing, arr)
+        for i=1, 3 do
+            s = (pingWheelSelection == 1 and i == 1) and #pingWheel*2 or (pingWheelSelection*2+i-3)
+            if i == secondarySelection then
+                glColor(pingWheelSelColor)
+            else
+                glColor(pingWheelBaseColor)
+            end
+            drawArea(areaVertexNumber, #pingWheel*2, s, 0.93, secondaryOuterRadius, spacing, arr)
+            glColor(pingWheelAreaOutlineColor)
+            drawAreaOutline(#pingWheel*2, s, 0.93, secondaryOuterRadius, spacing, arr)
+            glColor(pingWheelAreaInlineColor)
+            drawAreaOutline(#pingWheel, s, 0.93+borderMargin, secondaryOuterRadius-borderMargin, spacing+borderMargin, arr)
+        end
         glColor(pingWheelRingColor)
-        glLineWidth(pingWheelRingWidth * lineScale * 1.0)
+        glLineWidth(pingWheelRingWidth * lineScale)
         local vn = areaVertexNumber-1
         local start = (pingWheelSelection-1)*2-1
-        start = start > 0 and start or hole+#pingWheel*2
-        drawArc(1.41, arr, start*vn+1, (start+3)*vn+1)
+        start = start > 0 and start or start+#pingWheel*2
+        drawArc(secondaryOuterRadius+0.01, arr, start*vn+1, (start+3)*vn+1)
     end
 
     -- circle positions cache
@@ -1096,8 +1152,6 @@ local function drawWheel()
         glStencilMask(0xff)
     end
 
-    local borderWidth = pingWheelBorderWidth * lineScale
-    local borderMargin = borderWidth/(wheelRadius*2)
     glLineWidth(borderWidth)
     -- item area backgrounds
     glColor(pingWheelBaseColor)
@@ -1228,7 +1282,7 @@ local function drawItems()
         local isSelected = pingWheelSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        drawItem(selItem, textAlignRadiusRatio, angle, isSelected, useColors, flashBlack)
+        drawItem(selItem, textAlignRadiusRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
     end
     if hasCenterAction then
         local v = (deadZoneRadiusRatio+centerAreaRadiusRatio)/2
@@ -1242,13 +1296,13 @@ local function drawItems()
             pingWheelScreenLocation.y-v*wheelRadius,
             pingWheelTextSize*textScale*0.8, "cvos")
     end
-    if pingWheelSelection ~= 0 then
+    if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
         for i = 1, 3 do
             local idx = pingWheelSelection*2+i-3
-            local isSelected = i == 1 and true or false
-            local selItem = pingMessages[i]
+            local isSelected = secondarySelection == i
+            local selItem = pingWheel[pingWheelSelection].children[i]
             local angle = (idx - 1) * pi / #pingWheel
-            drawItem(selItem, 1.15, angle, isSelected, useColors)
+            drawItem(selItem, 1.15, angle, isSelected, useColors, flashBlack)
         end
     end
     glEndText()
@@ -1348,14 +1402,12 @@ local function prepareBlur()
             if pingWheelSelection ~= 0 and selOuterRadius > 0.92 then
                 drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRadius, spacing, arr)
             end
-            if pingWheelSelection ~= 0 then
+            if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
                 arr = baseCircleArrays[#pingWheel*2]
-                s3 = pingWheelSelection*2
-                s2 = s3-1
-                s1 = pingWheelSelection == 1 and #pingWheel*2 or s3-2
-                drawArea(areaVertexNumber, #pingWheel*2, s1, 0.93, 1.4, 0, arr)
-                drawArea(areaVertexNumber, #pingWheel*2, s2, 0.93, 1.4, 0, arr)
-                drawArea(areaVertexNumber, #pingWheel*2, s3, 0.93, 1.4, 0, arr)
+                for i=1, 3 do
+                    s = (pingWheelSelection == 1 and i == 1) and #pingWheel*2 or (pingWheelSelection*2+i-3)
+                    drawArea(areaVertexNumber, #pingWheel*2, s, 0.93, secondaryOuterRadius, 0, arr)
+                end
             end
             glPopMatrix()
         end)
