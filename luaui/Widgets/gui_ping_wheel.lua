@@ -926,8 +926,9 @@ function widget:Update(dt)
                 return
             end
 
-            local offset = 360 / #pingWheel / 2
-            local selection = (floor((360 + angleDeg + offset) / 360 * #pingWheel)) % #pingWheel + 1
+            local areahalf = pi/#pingWheel
+            angle = angle < -areahalf and (2*pi+angle) or angle
+            local selection = floor((angle+areahalf) / (2*areahalf)) + 1
 
             if selection ~= pingWheelSelection or secondarySelection ~= 0 then
                 setSelection(selection, 0, false)
