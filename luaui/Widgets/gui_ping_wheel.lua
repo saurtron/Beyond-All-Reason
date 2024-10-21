@@ -127,6 +127,8 @@ local defaults = {
 }
 
 -- On/Off switches
+local standaloneMode = true -- adds settings inside custom tab, does non-local (and non i18n) mapmarkers
+local use_colors = false    -- only for standalone mode, otherwise controlled elsewhere
 local draw_line = false     -- set to true to draw a line from the center to the cursor during selection
 local draw_deadzone = false -- set to true to draw a circle around the dead zone (for debugging purposes)
 local do_blur = true        -- set to false to avoid doing blur
@@ -379,6 +381,10 @@ local function getTranslatedText(text)
 end
 
 local function createMapPoint(playerID, text, x, y, z, color, icon)
+    if standaloneMode then
+        Spring.MarkerAddPoint(x, y, z, getTranslatedText(text))
+        return
+    end
     data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
     if color then
         data.r = color[1]
@@ -398,7 +404,8 @@ function widget:GetConfigData()
         wheelStyle = styleChoice,
         interactionMode = pressReleaseMode and 2 or 1,
         useIcons = useIcons,
-        doubleWheel = doubleWheel
+        doubleWheel = doubleWheel,
+        useColors = use_colors,
     }
 end
 
@@ -414,6 +421,9 @@ function widget:SetConfigData(data)
     end
     if data.doubleWheel ~= nil then
         doubleWheel = data.doubleWheel
+    end
+    if data.useColors ~= nil then
+        use_colors = data.useColors
     end
 end
 
@@ -459,6 +469,75 @@ local function applyStyle()
     destroyDecorationsDlist()
     destroyBaseDlist()
 end
+
+------------------------
+--- Standalone mode
+---
+--- For use outside of BAR package. In this situation we won't have translations or gui_options
+--- so we load them here.
+--- Also will do normal pings for now instead of new i18n ones since we need everyone using new
+--- i18n ping support, otherwise they wouldn't see our pings.
+---
+
+local widgetName = 'Ping Wheel'
+local i18nPrefix = 'ui.settings.option.pingwheel_'
+
+local mapOption = function(option)
+    return getTranslatedText(i18nPrefix .. option)
+end
+
+local mapSetting = function(setting)
+    return {
+        id = 'pingwheel_'..setting.id,
+        widgetname = widgetName,
+        name = getTranslatedText(i18nPrefix .. setting.id),
+        onchange = function(i, value) WG['pingwheel_gui'][setting.onchange](value) end,
+        description = getTranslatedText(i18nPrefix .. setting.id .. '_descr'),
+        type = setting.options and 'select' or 'bool',
+        options = setting.options and table.map(setting.options, mapOption),
+        value = setting.value or 1,
+    }
+end
+
+local standaloneSettings = {
+    {
+        id = 'style',
+        onchange = 'setWheelStyle',
+        options = { 'style_white', 'style_black', 'style_circle', 'style_ring' },
+    },
+    {
+        id = 'interaction',
+        onchange = 'setInteractionMode',
+        options = { 'interaction_click', 'interaction_release' },
+    },
+    {
+        id = 'icons',
+        onchange = 'setUseIcons',
+    },
+     {
+        id = 'doublewheel',
+        onchange = 'setDoubleWheel',
+    },
+    {
+        id = 'colors',
+        onchange = 'setUseColors',
+        value = 0,
+    },
+}
+
+local function addStandaloneSettings()
+    if standaloneMode and WG['options'] then
+        local langFile = configDir..'language.json'
+        local data = VFS.LoadFile(langFile, VFS.RAW_FIRST)
+
+        if data then
+            Spring.I18N.load({ ['en'] = Json.decode(data) })
+        end
+
+        WG['options'].addOptions(table.map(standaloneSettings, mapSetting))
+    end
+end
+
 
 ------------------------
 --- Shaders
@@ -570,6 +649,15 @@ function widget:Initialize()
         destroyDecorationsDlist()
         destroyBaseDlist()
     end
+    WG['pingwheel_gui'].getUseColors = function()
+        return use_colors
+    end
+    WG['pingwheel_gui'].setUseColors = function(value)
+        use_colors = value
+        destroyItemsDlist()
+    end
+
+    addStandaloneSettings()
 
     -- add the action handler with argument for press and release using the same function call
     widgetHandler:AddAction("ping_wheel_on", PingWheelAction, { true }, "p") --pR do we actually want Repeat?
@@ -587,6 +675,9 @@ function widget:Shutdown()
     destroyBaseDlist()
     destroyBlurDlist()
     destroyShaders()
+    if standaloneMode and WG['options'] then
+        WG['options'].removeOptions(table.map(standaloneOptions, function(option) return 'pingwheel_'..option.id end))
+    end
 end
 
 function widget:ViewResize(vsx, vsy)
@@ -1150,7 +1241,7 @@ end
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
-    local useColors = WG['pingwheel'] and WG['pingwheel'].getUseColors()
+    local useColors = (standaloneMode and use_colors) or (not standaloneMode and WG['pingwheel'] and WG['pingwheel'].getUseColors())
     local flashBlack = false
     if flashing and (flashFrame % 2 == 0) then
         flashBlack = true
