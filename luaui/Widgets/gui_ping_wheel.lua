@@ -31,7 +31,7 @@ end
 
 
 local iconDir = 'anims/icexuick_75/'
-local configDir = 'luaui/configs/pingwheel/'
+local configDir = 'LuaUI/Config/pingwheel/'
 
 -- Wheel item attributes for the pingCommands and pingMessages tables:
 -- * name: The item label and message.
