@@ -6,3 +6,4 @@ Final location for lang file should be: <datadir>/LuaUI/Config/pingwheel/languag
 
 Widget itself needs to be placed inside LuaUI/Widgets/ as usual.
 
+Icons need to be placed here as well, for now take: icons/mouse/rclick_glow.png.
