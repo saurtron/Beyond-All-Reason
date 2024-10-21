@@ -857,33 +857,35 @@ function widget:Update(dt)
         if spamControl > 0 then
             spamControl = (spamControl == 0) and 0 or (spamControl - 1)
         end
+        if not pingWheelScreenLocation then
+            return
+        end
         if globalFadeOut == 0 and not flashing then -- if not flashing and not fading out
-            if not pingWheelScreenLocation then
-                return
-            end
             local mx, my = spGetMouseState()
             -- calculate where the mouse is relative to the pingWheelScreenLocation, remember top is the first selection
             local dx = mx - pingWheelScreenLocation.x
             local dy = my - pingWheelScreenLocation.y
-            -- deadzone is no selection
             local dist = dx * dx + dy * dy
 
-            if hasCenterAction then
-                if (dist > deadZoneRadiusSq and dist < centerAreaRadiusSq) then
-                    setSelection(0, true)
-                    return
-                end
-            end
+            -- deadzone is no selection
             if (dist < deadZoneRadiusSq)
                 or (dist > outerLimitRadiusSq)
             then
                 setSelection(0, false)
                 return
             end
+
+            -- center area
+            if hasCenterAction and dist < centerAreaRadiusSq then
+                setSelection(0, true)
+                return
+            end
+
+            -- selection
             local angle = atan2(dx, dy)
-            local areahalf = pi/#pingWheel
-            angle = angle < -areahalf and (2*pi+angle) or angle
-            local selection = floor((angle+areahalf) / (2*areahalf)) + 1
+            local areaHalf = pi/#pingWheel
+            angle = angle < -areaHalf and (2*pi+angle) or angle
+            local selection = floor((angle+areaHalf) / (2*areaHalf)) + 1
 
             if selection ~= pingWheelSelection then
                 setSelection(selection, false)
@@ -899,9 +901,6 @@ function widget:Update(dt)
         end
     elseif (sec2 > 0.03) and keyDown and not displayPingWheel and doubleWheel and pressReleaseMode then
         -- gesture left or right to select primary or secondary wheel on pressRelaseMode
-        if not pingWheelScreenLocation then
-            return
-        end
         local mx, my = spGetMouseState()
         local dx = mx - pingWheelScreenLocation.x
         local dy = my - pingWheelScreenLocation.y
