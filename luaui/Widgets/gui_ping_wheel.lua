@@ -906,28 +906,27 @@ function widget:Update(dt)
                 setSelection(0, 0, false)
                 return
             end
-            local angle = atan2(dx, dy)
-            local angleDeg = floor(angle * 180 / pi + 0.5)
-            if angleDeg < 0 then
-                angleDeg = angleDeg + 360
-            end
             local bSize = baseOuterRadius*wheelRadius
             local sSize = secondaryOuterRadius*wheelRadius
+
+            local angle = atan2(dx, dy)
+            local areahalf = pi/#pingWheel
+            angle = angle < -areahalf and (2*pi+angle) or angle
+
             if (dist < sSize*sSize and pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children)
                 and (dist > bSize*bSize) then
-                local offset = 360 / (#pingWheel*2) / 2
-                local selection = (floor((360 + angleDeg + offset) / 360 * (#pingWheel*2))) % (#pingWheel*2) + 1
-                -- next line instead of 1 should be 3 when pingWheelSelection is last
-                selection2 = selection == (#pingWheel*2) and 1 or selection-(pingWheelSelection-1)*2+1
-                Spring.Echo("Secondary "..tostring(selection2).." "..tostring(selection).." "..pingWheelSelection)
-                if secondarySelection ~= selection2 then
-                    setSelection(pingWheelSelection, selection2, false)
+                local nelmts = #pingWheel[pingWheelSelection].children
+                local areaSize = nelmts*areahalf   -- for now area size is hardcoded to area/2 slots
+                local areaCenter = (pingWheelSelection-1)*areahalf*2
+                local areaStart = areaCenter - areaSize/2
+                local selection = floor((angle-areaStart)/(areaSize/nelmts))+1
+
+                if secondarySelection ~= selection then
+                    setSelection(pingWheelSelection, selection, false)
                 end
                 return
             end
 
-            local areahalf = pi/#pingWheel
-            angle = angle < -areahalf and (2*pi+angle) or angle
             local selection = floor((angle+areahalf) / (2*areahalf)) + 1
 
             if selection ~= pingWheelSelection or secondarySelection ~= 0 then
