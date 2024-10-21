@@ -546,7 +546,7 @@ local function createStandaloneMapPoint(playerID, text, x, y, z, color, icon)
 end
 
 local function addStandaloneSettings()
-    if not standalone then return end
+    if not standaloneMode then return end
 
     -- global (engine -non i18n-) mappoints
     createMapPoint = createStandaloneMapPoint
