@@ -140,9 +140,10 @@ local spamControlFrames = 8 -- how many frames to wait before allowing another p
 
 -- Sizes and colors
 local dividerLineBaseWidth = 3.5        -- width of the divider empty space between sections
-local outerCircleBaseWidth = 2          -- width of the outer circle line
+local outerCircleBaseWidth = 2.5          -- width of the outer circle line
+local areaOutlineBaseWidth = 2.1          -- width of the outer circle line
 local centerDotBaseSize = 15            -- size of the center dot
-local linesBaseWidth = 2		-- thickness of the ping wheel line drawing
+local linesBaseWidth = 2.1		-- thickness of the ping wheel line drawing
 local deadZoneBaseRadius = 0.12         -- the center "no selection" area as a ratio of the ping wheel radius
 local centerAreaRadiusRatio = 0.29
 local outerLimitRadiusRatio = 1.5       -- the outer limit ratio where "no selection" is active
@@ -223,6 +224,7 @@ local centerDotSize = centerDotBaseSize * sizeRatio
 local dividerLineWidth = dividerLineBaseWidth * sizeRatio
 local pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
 local pingWheelRingWidth = outerCircleBaseWidth * sizeRatio
+local pingWheelBorderWidth = areaOutlineBaseWidth * sizeRatio
 local selOuterRadius = defaults.selOuterRadius
 local baseOuterRadius = defaults.baseOuterRadius
 local areaVertexNumber = 10
@@ -594,6 +596,7 @@ function widget:ViewResize(vsx, vsy)
     dividerLineWidth = dividerLineBaseWidth * f
     pingWheelThickness = linesBaseWidth * f
     pingWheelRingWidth = outerCircleBaseWidth * f
+    pingWheelBorderWidth = areaOutlineBaseWidth * f
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
@@ -1035,7 +1038,7 @@ local function drawWheel()
     local arr = baseCircleArrays[#pingWheel]
     -- a ring around the wheel
     glColor(pingWheelRingColor)
-    glLineWidth(pingWheelRingWidth * lineScale * 1.0)
+    glLineWidth(pingWheelRingWidth * lineScale)
     local hole = (selOuterRadius>0.92) and pingWheelSelection or 0
     drawCircleOutline(0.92, arr, hole)
 
@@ -1049,6 +1052,9 @@ local function drawWheel()
         glStencilMask(0xff)
     end
 
+    local borderWidth = pingWheelBorderWidth * lineScale
+    local borderMargin = borderWidth/(wheelRadius*2)
+    glLineWidth(borderWidth)
     -- item area backgrounds
     glColor(pingWheelBaseColor)
     local r1, r2, spacing = 0.3, baseOuterRadius, 0.008 -- hardcoded for now
@@ -1058,6 +1064,8 @@ local function drawWheel()
             drawArea(areaVertexNumber, #pingWheel, i, r1, r2, spacing, arr)
             glColor(pingWheelAreaOutlineColor)
             drawAreaOutline(#pingWheel, i, r1, r2, spacing, arr)
+            glColor(pingWheelAreaInlineColor)
+            drawAreaOutline(#pingWheel, i, r1+borderMargin, r2-borderMargin, spacing+borderMargin, arr)
         end
     end
     -- selected part
@@ -1076,6 +1084,8 @@ local function drawWheel()
             glColor(pingWheelBaseColor)
         end
         drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRadiusRatio, centerAreaRadiusRatio, 0.0, arr)
+        glColor(pingWheelAreaInlineColor)
+        drawCircleOutline(deadZoneRadiusRatio, arr, 0)
     end
 
     -- from now on don't update stencil mask
