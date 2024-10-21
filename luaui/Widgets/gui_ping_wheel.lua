@@ -269,6 +269,7 @@ local function setSizedVariables()
     outerLimitRadiusSq = (outerLimitRatio*wheelRadius)^2
     baseOuterRadiusSq = (baseOuterRatio*wheelRadius)^2
     centerAreaRadiusSq = (centerAreaRatio*wheelRadius)^2
+    secondaryOuterRadiusSq = (secondaryOuterRatio*wheelRadius)^2
 end
 setSizedVariables()
 
@@ -918,15 +919,13 @@ function widget:Update(dt)
                 setSelection(0, 0, false)
                 return
             end
-            local bSize = baseOuterRatio*wheelRadius
-            local sSize = secondaryOuterRatio*wheelRadius
 
             local angle = atan2(dx, dy)
             local areahalf = pi/#pingWheel
             angle = angle < -areahalf and (2*pi+angle) or angle
 
-            if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children and (dist < sSize*sSize)
-                and (dist > bSize*bSize) then
+            if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children and (dist < secondaryOuterRadiusSq)
+                and (dist > baseOuterRadiusSq) then
                 local nelmts = #pingWheel[pingWheelSelection].children
                 local areaSize = nelmts*areahalf   -- for now area size is hardcoded to area/2 slots
                 local areaCenter = (pingWheelSelection-1)*areahalf*2
