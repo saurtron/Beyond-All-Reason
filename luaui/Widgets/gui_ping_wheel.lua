@@ -381,10 +381,6 @@ local function getTranslatedText(text)
 end
 
 local function createMapPoint(playerID, text, x, y, z, color, icon)
-    if standaloneMode then
-        Spring.MarkerAddPoint(x, y, z, getTranslatedText(text))
-        return
-    end
     data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
     if color then
         data.r = color[1]
@@ -525,15 +521,44 @@ local standaloneSettings = {
     },
 }
 
+local function colourNames(R, G, B)
+    local R255 = math.floor(R * 255) --the first \255 is just a tag (not colour setting) no part can end with a zero due to engine limitation (C)
+    local G255 = math.floor(G * 255)
+    local B255 = math.floor(B * 255)
+    if R255 % 10 == 0 then
+        R255 = R255 + 1
+    end
+    if G255 % 10 == 0 then
+        G255 = G255 + 1
+    end
+    if B255 % 10 == 0 then
+        B255 = B255 + 1
+    end
+    return "\255" .. string.char(R255) .. string.char(G255) .. string.char(B255) --works thanks to zwzsg
+end
+
+local function createStandaloneMapPoint(playerID, text, x, y, z, color, icon)
+    local text = getTranslatedText(text)
+    if color and use_colors then
+        text = colourNames(color[1], color[2], color[3]) .. text
+    end
+    Spring.MarkerAddPoint(x, y, z, text)
+end
+
 local function addStandaloneSettings()
-    if standaloneMode and WG['options'] then
+    if not standalone then return end
+
+    -- global (engine -non i18n-) mappoints
+    createMapPoint = createStandaloneMapPoint
+
+    -- settings and translations
+    if WG['options'] then
         local langFile = configDir..'language.json'
         local data = VFS.LoadFile(langFile, VFS.RAW_FIRST)
 
         if data then
             Spring.I18N.load({ ['en'] = Json.decode(data) })
         end
-
         WG['options'].addOptions(table.map(standaloneSettings, mapSetting))
     end
 end
