@@ -265,7 +265,7 @@ local baseOuterRadiusSq
 local centerAreaRadiusSq
 
 local function setSizedVariables()
-    deadZoneRadiusSq = (deadZoneBaseRatio*wheelRadius)^2
+    deadZoneRadiusSq = (deadZoneRatio*wheelRadius)^2
     outerLimitRadiusSq = (outerLimitRatio*wheelRadius)^2
     baseOuterRadiusSq = (baseOuterRatio*wheelRadius)^2
     centerAreaRadiusSq = (centerAreaRatio*wheelRadius)^2
