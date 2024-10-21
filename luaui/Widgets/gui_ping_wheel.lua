@@ -23,7 +23,7 @@ end
 -- Default is just one wheel, but two wheel mode can be activated through options gui.
 --
 -- You can add or change the options in the pingWheel tables editing this or through json files.
--- Files for custom items are: commands.json and/or messages.json (inside luaui/configs/pingwheel/).
+-- Files for custom items are: commands.json and/or messages.json (inside LuaUI/Config/pingwheel/).
 -- the two tables pingCommands and pingMessages are main (left) and secondary (right) click options respectively.
 --
 -- Other features: I18N support, configurable through gui, different styles, background blur.
