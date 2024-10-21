@@ -901,6 +901,16 @@ function widget:MousePress(mx, my, button)
         end
     elseif showLRHint or button == 4 or button == 5 then
         local alt, ctrl, meta, shift = spGetModKeyState()
+        if standaloneMode and (button == 4 or button == 5) and alt then
+            if button == 4 then
+                Spring.SendCommands("buildspacing inc")
+                return true
+            elseif button == 5 then
+                Spring.SendCommands("buildspacing dec")
+                return true
+            end
+            return
+        end
         -- If any modifier is pressed we let other widgets handle this
         -- unless on our keydown event.
         if showLRHint or not (alt or ctrl or meta or shift) then
