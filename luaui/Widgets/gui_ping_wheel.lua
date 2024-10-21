@@ -74,7 +74,7 @@ local styleConfig = {
     [1] = {
         name = "White",
         baseTextOpacity = 1.0,
-        wheelBaseColor = {0.0, 0.0, 0.0, 0.3},
+        wheelBaseColor = {0.05, 0.0, 0.0, 0.35},
         selOuterRadius = 1,
     },
     [2] = {
@@ -164,6 +164,7 @@ local pingWheelBaseColor = defaults.wheelBaseColor
 local pingWheelSelColor = defaults.wheelSelColor
 local pingWheelRingColor = defaults.wheelRingColor
 local pingWheelAreaOutlineColor = defaults.wheelAreaOutlineColor
+local pingWheelAreaInlineColor = {0.5, 0.5, 0.5, 0.4}
 local pingWheelDrawBase = defaults.drawBase
 
 local selectedScaleFactor = 1.3         -- how much bigger to draw selected item text
