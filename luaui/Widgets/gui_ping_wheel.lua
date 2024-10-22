@@ -1155,6 +1155,31 @@ local function drawDividers()
     glBeginEnd(GL_LINES, Lines)
 end
 
+local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBlack)
+    local text = getTranslatedText(selItem.name)
+    local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
+    if isSelected and flashBlack then
+        color = { 0, 0, 0, 0 }
+    elseif spamControl > 0 and not flashing then
+        color = pingWheelTextSpamColor
+    else
+        -- TODO: this is modifying in place
+        color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
+    end
+    local x = wheelRadius * posRatio * sin(angle)
+    local y = wheelRadius * posRatio * cos(angle)
+    local icon = selItem.icon
+    local textScale = isSelected and selectedScaleFactor or 1.0
+    if icon and useIcons then
+        drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.icon_size, selItem.icon_offset)
+        y = y-0.028*wheelRadius
+    end
+    glColor(color)
+    glText(text, pingWheelScreenLocation.x+x,
+        pingWheelScreenLocation.y+y,
+        pingWheelTextSize*textScale, "cvos")
+end
+
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
@@ -1169,30 +1194,8 @@ local function drawItems()
         local isSelected = pingWheelSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        local text = getTranslatedText(selItem.name)
-        local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
-        if isSelected and flashBlack then
-            color = { 0, 0, 0, 0 }
-        elseif spamControl > 0 and not flashing then
-            color = pingWheelTextSpamColor
-        else
-            -- TODO: this is modifying in place
-            color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
-        end
-        local x = wheelRadius * textAlignRatio * sin(angle)
-        local y = wheelRadius * textAlignRatio * cos(angle)
-        local icon = selItem.icon
-        local textScale = isSelected and selectedScaleFactor or 1.0
-        if icon and useIcons then
-            drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.icon_size, selItem.icon_offset)
-            y = y-0.028*wheelRadius
-        end
-        glColor(color)
-        glText(text, pingWheelScreenLocation.x+x,
-            pingWheelScreenLocation.y+y,
-            pingWheelTextSize*textScale, "cvos")
+        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
     end
-
     if hasCenterAction then
         local v = (deadZoneRatio+centerAreaRatio)/2
         if centerSelected and flashBlack then
