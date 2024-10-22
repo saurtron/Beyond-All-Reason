@@ -1401,8 +1401,12 @@ local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBl
     local icon = selItem.icon
     local textScale = isSelected and selectedScaleFactor or 1.0
     if icon and useIcons then
-        drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.icon_size, selItem.icon_offset)
-        y = y-0.028*wheelRadius
+        local halfSize = wheelRadius * iconSize
+        local dist = pingWheelTextSize * 0.3
+        local yOffset = pingWheelTextSize/2 + dist/2
+        y = y + halfSize*0.3 -- account for icons being smaller than their bb
+        drawIcon(icon, {x, y + yOffset}, selItem.icon_size, selItem.icon_offset)
+        y = y - dist/2 - halfSize
     end
     glColor(color)
     glText(text, pingWheelScreenLocation.x+x,
@@ -1444,7 +1448,7 @@ local function drawItems()
             local isSelected = secondarySelection == i
             local selItem = pingWheel[pingWheelSelection].children[i]
             local angle = (idx - 1) * pi / #pingWheel
-            drawItem(selItem, 1.15, angle, isSelected, useColors, flashBlack)
+            drawItem(selItem, 1.17, angle, isSelected, useColors, flashBlack)
         end
     end
     glEndText()
