@@ -1314,7 +1314,7 @@ local function drawItems()
             local isSelected = secondarySelection == i
             local selItem = pingWheel[pingWheelSelection].children[i]
             local angle = (idx - 1) * pi / #pingWheel
-            drawItem(selItem, 1.15, angle, isSelected, useColors, flashBlack)
+            drawItem(selItem, 1.17, angle, isSelected, useColors, flashBlack)
         end
     end
     glEndText()
