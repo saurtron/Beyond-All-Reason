@@ -1,6 +1,6 @@
 # Ping Wheel
 
-Based on the work by Errrrr, this new implementation is proposed, targeting merging into BAR as a default widget for all players.
+Based on the work by Errrrrrr, this new implementation is proposed, targeting merging into BAR as a default widget for all players.
 
 ## Features
 
@@ -69,7 +69,7 @@ This mode can be activated through settings.
 
 The wheel supports several themes.
 
-There is both 'new style' and 'original style'. The new style is the IceXuick design, the original one is the one Errrrr designed on his implementation. Both styles have two themes each, as designed by IceXuick and Errrrr.
+There is both 'new style' and 'original style'. The new style is the IceXuick design, the original one is the one Errrrrrr designed on his implementation. Both styles have two themes each, as designed by IceXuick and Errrrrrr.
 
 ## New LuaUIMsg interplayer mapmark communication
 
