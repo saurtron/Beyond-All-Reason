@@ -14,7 +14,7 @@ Based on the work by Errrrrrr and a new design by IceXuick, this new implementat
   - Any number of actions per wheel.
 - Supports two action levels, and center 'ping' action without message.
 - Click and pressrelease [interaction modes](#interaction-modes).
-- Configurable messages through .json files.
+- Configurable messages through [.json files](#custom-message-files).
 - Can use colors, each player can choose if they want to see them.
 - Activated with alt+w or mouse 4/5.
   - Works nicely with the 'mouse buildspacing widget' (also uses mouse 4/5).
