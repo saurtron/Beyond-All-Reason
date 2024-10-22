@@ -9,7 +9,6 @@ Based on the work by Errrrrrr, this new implementation is proposed, targeting me
 - I18n support for wheel and mapmarks.
   - Mapmarks are localized for each player in their own language.
 - Can use colors, each player can choose if they want to see them.
-- Configurable through gui.
 - Themable (4 different themes in 2 styles provided).
 - Supports one/two wheel mode.
 - Supports two action levels.
@@ -21,6 +20,7 @@ Based on the work by Errrrrrr, this new implementation is proposed, targeting me
 - Supports stand alone mode and in-bar deployment.
 - Uses shaders and display lists to render.
   - Background blur through guishader.
+- Configurable through gui:
 
 ![available settings](wheelsettings.png "Settings")
 
