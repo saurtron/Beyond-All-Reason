@@ -108,7 +108,7 @@ local styleConfig = {
         wheelSelColor = {0.0, 0.0, 0.0, 0.7},
         wheelRingColor = {0.0, 0.0, 0.0, 0.7},
         baseTextOpacity = 1.0,
-        selOuterRadius = 1,
+        selOuterRadius = 0.94,
     },
     [3] = {
         name = "Circle Light",
