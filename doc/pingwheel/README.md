@@ -22,6 +22,8 @@ Based on the work by Errrrrrr, this new implementation is proposed, targeting me
 - Uses shaders and display lists to render.
   - Background blur through guishader.
 
+![available settings](wheelsettings.png "Settings")
+
 ## Specs
 
 After reviewing dev requests and player reported usage of the wheel, I have gathered the following specs:
