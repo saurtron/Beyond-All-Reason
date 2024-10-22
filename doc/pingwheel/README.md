@@ -2,6 +2,8 @@
 
 Based on the work by Errrrrrr, this new implementation is proposed, targeting merging into BAR as a default widget for all players.
 
+![showing different styles](wheel.png "Ping wheel styles")
+
 ## Features
 
 - I18n support for wheel and mapmarks.
