@@ -1510,7 +1510,8 @@
 			"paid": "Payé",
 			"omw": "En chemin",
 			"attack": "Attaque",
-			"retreat": "Reviens"
+			"retreat": "Reviens",
+			"cancel": "Annuler"
 		}
 	}
 }
