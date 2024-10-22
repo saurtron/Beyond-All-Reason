@@ -36,7 +36,7 @@ local configDir = 'LuaUI/Config/pingwheel/'
 -- Wheel item attributes for the pingCommands and pingMessages tables:
 -- * name: The item label and message.
 -- * msg: (optional) If set, will override the msg sent for that item.
--- * color (optional): Color for the message, not it will only be displayed if use colors is activated in options gui.
+-- * color (optional): Color for the message, note it will only be displayed if use colors is activated in options gui.
 -- * icon (optional): Icon for the item, will also be sent on the ping message and can be displayed by ping renderer.
 -- * icon_offset (optional): Offset for the icon, for off-center icons.
 -- * icon_size (optional): Scale to icon (default is 1 meaning normal size).
@@ -80,7 +80,6 @@ local pingCommands = {                             -- the options in the ping wh
 }
 
 local pingMessages = {
-    -- let's give these commands rainbow colors!
     { name = "TY!",      color = { 1, 1, 1, 1 } },
     { name = "GJ!",      color = { 1, 0.5, 0, 1 } },
     { name = "DANGER!",  color = { 1, 1, 0, 1 } },
@@ -118,6 +117,8 @@ local styleConfig = {
         textSize = 22,
         drawBase = false,
         drawDividers = true,
+        baseOuterRadius = 0.8,
+        closeHintSize = 0.85,
     },
     [4] = {
         name = "Ring Light",
@@ -127,6 +128,8 @@ local styleConfig = {
         textSize = 22,
         drawBase = false,
         drawDividers = true,
+        baseOuterRadius = 0.8,
+        closeHintSize = 0.85,
     },
 }
 
@@ -161,6 +164,7 @@ local defaults = {
     soundDefaultSelect = "sounds/commands/cmd-default-select.wav",
     soundSetTarget = "sounds/commands/cmd-settarget.wav",
     rclickIcon = "icons/mouse/rclick_glow.png",
+    closeHintSize = 1,
 }
 
 -- On/Off switches
@@ -259,6 +263,7 @@ local pingWheelRingWidth
 local pingWheelBorderWidth
 local selOuterRatio = defaults.selOuterRadius
 local baseOuterRatio = defaults.baseOuterRadius
+local closeHintSize = defaults.closeHintSize
 local areaVertexNumber = 10
 local secondaryOuterRatio = 1.4
 
@@ -292,7 +297,6 @@ local function setSizedVariables()
     centerAreaRadiusSq = (centerAreaRatio*wheelRadius)^2
     secondaryOuterRadiusSq = (secondaryOuterRatio*wheelRadius)^2
 end
-setSizedVariables()
 
 --- Other file variables
 local globalDim = 1     -- this controls global alpha for all wheel elements
@@ -481,6 +485,8 @@ local function applyStyle()
     pingWheelTextBaseSize = style.textSize or defaults.textSize
     pingWheelSelTextAlpha = style.selTextOpacity or defaults.selTextOpacity
     pingWheelBaseTextAlpha = style.baseTextOpacity or defaults.baseTextOpacity
+    baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
+    closeHintSize = style.closeHintSize or defaults.closeHintSize
     pingWheelDrawBase = style.drawBase
     if pingWheelDrawBase == nil then
         pingWheelDrawBase = defaults.drawBase
@@ -492,7 +498,6 @@ local function applyStyle()
         pingWheelAreaOutlineColor = style.wheelAreaOutlineColor or defaults.wheelAreaOutlineColor
         pingWheelBaseColor = style.wheelBaseColor or defaults.wheelBaseColor
         selOuterRatio = style.selOuterRadius or defaults.selOuterRadius
-        baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
         doDividers = false
         deadZoneRatio = defaults.deadZoneBaseRatio
         hasCenterAction = true
@@ -1126,7 +1131,7 @@ local function resetDrawState()
     gl.Texture(0, false)
     glColor(1.0, 1.0, 1.0, 1.0)
     glLineWidth(1.0)
-    if bgTexture then
+    if bgTexture and pingWheelDrawBase then
         glStencilTest(false)
         gl.Clear(GL.STENCIL_BUFFER_BIT, 0)
         glStencilMask(255)
@@ -1347,9 +1352,9 @@ local function drawCloseHint()
     if pressReleaseMode then return end
 
     local x = 0
-    local y = -wheelRadius*0.95
-    local hintIconSize = 0.8
-    local hintTextSize = 0.9
+    local y = -wheelRadius*(baseOuterRatio+0.05)
+    local hintIconSize = 0.8*closeHintSize
+    local hintTextSize = 0.9*closeHintSize
     local drawIconSize = wheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
     x_offset = (w+drawIconSize)/2.0
