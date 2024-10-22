@@ -21,7 +21,7 @@ Jump [here](#standalone-installation) for installation instructions.
 - Activated with alt+w or mouse 4/5.
   - Works nicely with the 'mouse buildspacing widget' (also uses mouse 4/5).
   - Bindable action name: ping_wheel_on.
-- Supports stand alone mode and in-bar [deployment](#installation).
+- Supports stand alone mode and in-bar [deployment](#installing).
 - Uses shaders and display lists to render.
   - Background blur through guishader.
 - Experimental [augmented mapmark](#mapmarks) support.
