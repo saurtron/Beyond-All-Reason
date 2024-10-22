@@ -1155,7 +1155,7 @@ local function drawDividers()
     glBeginEnd(GL_LINES, Lines)
 end
 
-local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBlack)
+local function drawItem(selItem, posRadius, angle, isSelected, useColors, flashBlack)
     local text = getTranslatedText(selItem.name)
     local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
     if isSelected and flashBlack then
@@ -1166,8 +1166,8 @@ local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBl
         -- TODO: this is modifying in place
         color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
     end
-    local x = wheelRadius * posRatio * sin(angle)
-    local y = wheelRadius * posRatio * cos(angle)
+    local x = posRadius * sin(angle)
+    local y = posRadius * cos(angle)
     local icon = selItem.icon
     local textScale = isSelected and selectedScaleFactor or 1.0
     if icon and useIcons then
@@ -1192,13 +1192,14 @@ local function drawItems()
     if flashing and (flashFrame % 2 == 0) then
         flashBlack = true
     end
+    local textAlignRadius = textAlignRatio*wheelRadius
 
     glBeginText()
     for i = 1, #pingWheel do
         local isSelected = mainSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack)
+        drawItem(selItem, textAlignRadius, angle, isSelected, useColors, flashBlack)
     end
     if hasCenterAction then
         local v = (deadZoneRatio+centerAreaRatio)/2
