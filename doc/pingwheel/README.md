@@ -64,11 +64,11 @@ For optimal result [this folder](https://github.com/saurtron/Beyond-All-Reason/t
 
 For now some of the more experimental features live in their own branches.
 
-- [standard implementation](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget): the standard implementation.
-- [augmented mapmarks](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-markmark-icons): branch with proof of concept augmented mapmarks.
-- [standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-standalone): branch supporting stand alone installation into LuaUI/Widgets/
-- [two level wheel](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level): supports two levels of options
-- [two level wheel standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone): two level and standalone together
+- [standard implementation](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget/luaui/Widgets/gui_ping_wheel.lua): the standard implementation.
+- [augmented mapmarks](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-markmark-icons/luaui/Widgets/gui_ping_wheel.lua): branch with proof of concept augmented mapmarks.
+- [standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-standalone/luaui/Widgets/gui_ping_wheel.lua): branch supporting stand alone installation into LuaUI/Widgets/
+- [two level wheel](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level/luaui/Widgets/gui_ping_wheel.lua): supports two levels of options
+- [two level wheel standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/Widgets/gui_ping_wheel.lua): two level and standalone together
 
 ## Interaction modes
 
@@ -119,6 +119,8 @@ The augmented mapmark implementation does the same, but also shows sprite icons 
 Since the augmented mapmarks are just augmenting the standard render, I have synchronized the TTL with engine mapmarks by using MapDrawCmd and ClearMapMarks callins. Note ClearMapMarks callin currently doesn't exist, I [prepared a PR](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3853) with this that also helps other widgets.
 
 The mapmark renderer is a separate widget: [gui_ping_wheel_event.lua](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget/luaui/Widgets/gui_ping_wheel_event.lua). Since this can be totally independent of the ping wheel, I think probably a better name can be used, like maybe `gui_local_mapmarks.lua`.
+
+See [here](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-mapmark-icons/luaui/Widgets/gui_ping_wheel_event.lua) for the augmented mapmarks version (note it's just a proof of concept for now, so implementation is quite unpolished).
 
 ## Implementation and compatibility
 
