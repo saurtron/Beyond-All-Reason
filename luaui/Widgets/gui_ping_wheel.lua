@@ -900,7 +900,14 @@ function widget:Update(dt)
         if not pingWheelScreenLocation then
             return
         end
-        if globalFadeOut == 0 and not flashing then -- if not flashing and not fading out
+        if flashing then
+            if flashFrame > 0 then
+                flashFrame = flashFrame - 1
+            else
+                flashing = false
+                FadeOut()
+            end
+        else
             local mx, my = spGetMouseState()
             -- calculate where the mouse is relative to the pingWheelScreenLocation, remember top is the first selection
             local dx = mx - pingWheelScreenLocation.x
@@ -953,13 +960,6 @@ function widget:Update(dt)
             if selection ~= pingWheelSelection or secondarySelection ~= 0 then
                 setSelection(selection, 0, false)
                 return
-            end
-        elseif flashing then
-            if flashFrame > 0 then
-                flashFrame = flashFrame - 1
-            else
-                flashing = false
-                FadeOut()
             end
         end
     elseif (sec2 > 0.03) and keyDown and not displayPingWheel and doubleWheel and pressReleaseMode then
