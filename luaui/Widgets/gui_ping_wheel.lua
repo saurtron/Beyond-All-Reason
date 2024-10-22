@@ -319,8 +319,8 @@ local keyDown = false
 local displayPingWheel = false
 
 local pingWorldLocation
-local pingWheelScreenLocation
-local pingWheelSelection = 0
+local screenLocation
+local mainSelection = 0
 local secondarySelection = 0
 local centerSelected = false
 local spamControl = 0
@@ -777,7 +777,7 @@ local function SetPingLocation()
     local _, pos = Spring.TraceScreenRay(mx, my, true)
     if pos then
         pingWorldLocation = { pos[1], pos[2], pos[3] }
-        pingWheelScreenLocation = { x = mx, y = my }
+        screenLocation = { x = mx, y = my }
 
         -- play a UI sound to indicate wheel is open
         Spring.PlaySoundFile(defaults.soundSetTarget, 0.1, 'ui')
@@ -811,15 +811,15 @@ end
 
 local function TurnOff(reason)
     if displayPingWheel then
-        if pingWheelSelection ~= 0 or centerSelected then
+        if mainSelection ~= 0 or centerSelected then
             destroyBaseDlist()
         end
         destroyItemsDlist()
         destroyBlurDlist()
         displayPingWheel = false
         pingWorldLocation = nil
-        pingWheelScreenLocation = nil
-        pingWheelSelection = 0
+        screenLocation = nil
+        mainSelection = 0
         centerSelected = false
         --Spring.Echo("Turned off: " .. reason)
         return true
@@ -837,20 +837,20 @@ local function checkRelease()
         and pingWorldLocation
         and spamControl == 0
     then
-        if (pingWheelSelection > 0 or centerSelected) and not flashing then
+        if (mainSelection > 0 or centerSelected) and not flashing then
             local pingText, color, icon
             local selWheel, sel
             if secondarySelection > 0 then
-                selWheel = pingWheel[pingWheelSelection].children
+                selWheel = pingWheel[mainSelection].children
                 sel = secondarySelection
-            elseif pingWheelSelection > 0 then
+            elseif mainSelection > 0 then
                 selWheel = pingWheel
-                sel = pingWheelSelection
+                sel = mainSelection
             end
             if selWheel then
                 pingText = selWheel[sel].msg or selWheel[sel].name
-                color = selWheel[sel].color or pingWheel[pingWheelSelection].color or pingWheelColor
-                icon = selWheel[sel].icon or pingWheel[pingWheelSelection].icon
+                color = selWheel[sel].color or pingWheel[mainSelection].color or pingWheelColor
+                icon = selWheel[sel].icon or pingWheel[mainSelection].icon
             end
             createMapPoint(Spring.GetMyPlayerID(), pingText, pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
                 color, icon)
@@ -876,10 +876,10 @@ end
 --- Key/Mouse Interaction
 
 local function setSelection(selected, secondary, centersel)
-    if selected ~= pingWheelSelection or centersel ~= centerSelected or secondary ~= secondarySelection then
+    if selected ~= mainSelection or centersel ~= centerSelected or secondary ~= secondarySelection then
         destroyItemsDlist()
         destroyBaseDlist()
-        if selected ~= pingWheelSelection then
+        if selected ~= mainSelection then
             -- avoid blur 'blinking' if we destroy the list here
             recreateBlurDlist = true
         end
@@ -890,7 +890,7 @@ local function setSelection(selected, secondary, centersel)
     if selected ~=0 or centersel or secondary ~= 0 then
         Spring.SetMouseCursor("cursornormal")
     end
-    pingWheelSelection = selected
+    mainSelection = selected
     secondarySelection = secondary
     centerSelected = centersel
 end
@@ -1031,14 +1031,21 @@ function widget:Update(dt)
         if spamControl > 0 then
             spamControl = (spamControl == 0) and 0 or (spamControl - 1)
         end
-        if not pingWheelScreenLocation then
+        if not screenLocation then
             return
         end
-        if globalFadeOut == 0 and not flashing then -- if not flashing and not fading out
+        if flashing then
+            if flashFrame > 0 then
+                flashFrame = flashFrame - 1
+            else
+                flashing = false
+                FadeOut()
+            end
+        else
             local mx, my = spGetMouseState()
-            -- calculate where the mouse is relative to the pingWheelScreenLocation, remember top is the first selection
-            local dx = mx - pingWheelScreenLocation.x
-            local dy = my - pingWheelScreenLocation.y
+            -- calculate where the mouse is relative to the screenLocation, remember top is the first selection
+            local dx = mx - screenLocation.x
+            local dy = my - screenLocation.y
             local dist = dx * dx + dy * dy
 
             -- deadzone is no selection
@@ -1061,11 +1068,11 @@ function widget:Update(dt)
             local twopi = 2*pi
             angle = angle < -areaHalf and (twopi+angle) or angle
 
-            if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children and (dist < secondaryOuterRadiusSq)
+            if mainSelection ~= 0 and pingWheel[mainSelection].children and (dist < secondaryOuterRadiusSq)
                 and (dist > baseOuterRadiusSq) then
-                local nelmts = #pingWheel[pingWheelSelection].children
+                local nelmts = #pingWheel[mainSelection].children
                 local areaSize = nelmts*areaHalf   -- for now area size is hardcoded to area/2 slots
-                local areaCenter = (pingWheelSelection-1)*areaHalf*2
+                local areaCenter = (mainSelection-1)*areaHalf*2
                 local areaStart = areaCenter - areaSize/2
                 local angleDiff = angle-areaStart
 
@@ -1077,30 +1084,23 @@ function widget:Update(dt)
                 if selection > nelmts then selection = 0 end
 
                 if secondarySelection ~= selection then
-                    setSelection(pingWheelSelection, selection, false)
+                    setSelection(mainSelection, selection, false)
                 end
                 return
             end
 
             local selection = floor((angle+areaHalf) / (2*areaHalf)) + 1
 
-            if selection ~= pingWheelSelection or secondarySelection ~= 0 then
+            if selection ~= mainSelection or secondarySelection ~= 0 then
                 setSelection(selection, 0, false)
                 return
-            end
-        elseif flashing then
-            if flashFrame > 0 then
-                flashFrame = flashFrame - 1
-            else
-                flashing = false
-                FadeOut()
             end
         end
     elseif (sec2 > 0.03) and keyDown and not displayPingWheel and doubleWheel and pressReleaseMode then
         -- gesture left or right to select primary or secondary wheel on pressRelaseMode
         local mx, my = spGetMouseState()
-        local dx = mx - pingWheelScreenLocation.x
-        local dy = my - pingWheelScreenLocation.y
+        local dx = mx - screenLocation.x
+        local dy = my - screenLocation.y
         local chosenWheel = false
         if dx < -5 then
             chosenWheel = pingCommands
@@ -1265,10 +1265,10 @@ local function drawWheel()
     local outerCircleRatio = defaults['outerCircleRatio']
     local secondaryInnerRatio = defaults['secondaryInnerRatio']
 
-    if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
+    if mainSelection ~= 0 and pingWheel[mainSelection].children then
         arr = baseCircleArrays[#pingWheel*2]
         for i=1, 3 do
-            s = (pingWheelSelection == 1 and i == 1) and #pingWheel*2 or (pingWheelSelection*2+i-3)
+            s = (mainSelection == 1 and i == 1) and #pingWheel*2 or (mainSelection*2+i-3)
             if i == secondarySelection then
                 glColor(pingWheelSelColor)
             else
@@ -1283,7 +1283,7 @@ local function drawWheel()
         glColor(pingWheelRingColor)
         glLineWidth(pingWheelRingWidth * lineScale)
         local vn = areaVertexNumber-1
-        local start = (pingWheelSelection-1)*2-1
+        local start = (mainSelection-1)*2-1
         start = start > 0 and start or start+#pingWheel*2
         drawArc(secondaryOuterRatio+0.01, arr, start*vn+1, (start+3)*vn+1)
     end
@@ -1293,7 +1293,7 @@ local function drawWheel()
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale)
-    local hole = (selOuterRatio>=outerCircleRatio) and pingWheelSelection or 0
+    local hole = (selOuterRatio>=outerCircleRatio) and mainSelection or 0
     drawCircleOutline(outerCircleRatio, arr, hole)
 
     -- setup stencil buffer to mask areas
@@ -1310,7 +1310,7 @@ local function drawWheel()
     -- item area backgrounds
     glColor(pingWheelBaseColor)
     for i=1, #pingWheel do
-        if i~=pingWheelSelection then
+        if i~=mainSelection then
             glColor(pingWheelBaseColor)
             drawArea(areaVertexNumber, #pingWheel, i, r1, r2, spacing, arr)
             glColor(pingWheelAreaOutlineColor)
@@ -1320,11 +1320,11 @@ local function drawWheel()
         end
     end
     -- selected part
-    if pingWheelSelection ~= 0 then
+    if mainSelection ~= 0 then
         r2 = selOuterRatio
         glColor(pingWheelSelColor)
-        drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, r1, r2, spacing, arr)
-        drawAreaOutline(#pingWheel, pingWheelSelection, r1, r2, spacing, arr)
+        drawArea(areaVertexNumber, #pingWheel, mainSelection, r1, r2, spacing, arr)
+        drawAreaOutline(#pingWheel, mainSelection, r1, r2, spacing, arr)
     end
 
     arr = baseCircleArrays[#pingWheel]
@@ -1352,11 +1352,11 @@ local function drawDottedLine()
         glVertex(x2, y2)
     end
     -- draw a dotted line connecting from center of wheel to the mouse location
-    if draw_line and (pingWheelSelection > 0 or centerSelected) then
+    if draw_line and (mainSelection > 0 or centerSelected) then
         glColor({1, 1, 1, 0.5})
         glLineWidth(pingWheelThickness / 4)
         local mx, my = spGetMouseState()
-        glBeginEnd(GL_LINES, line, 0, 0, mx-pingWheelScreenLocation.x, my-pingWheelScreenLocation.y)
+        glBeginEnd(GL_LINES, line, 0, 0, mx-screenLocation.x, my-screenLocation.y)
     end
 end
 
@@ -1373,8 +1373,8 @@ local function drawCloseHint()
     drawIcon(defaults.rclickIcon, {x-x_offset, y}, hintIconSize)
     glColor({1, 1, 1, 0.7})
     glBeginText()
-    glText("Cancel", pingWheelScreenLocation.x+drawIconSize/2-x_offset+w/6,
-            pingWheelScreenLocation.y+y,
+    glText("Cancel", screenLocation.x+drawIconSize/2-x_offset+w/6,
+            screenLocation.y+y,
             pingWheelTextSize*hintTextSize, "lovs")
     glEndText()
 end
@@ -1421,8 +1421,8 @@ local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBl
         y = y - dist/2 - halfSize
     end
     glColor(color)
-    glText(text, pingWheelScreenLocation.x+x,
-        pingWheelScreenLocation.y+y,
+    glText(text, screenLocation.x+x,
+        screenLocation.y+y,
         pingWheelTextSize*textScale, "cvos")
 end
 
@@ -1437,7 +1437,7 @@ local function drawItems()
 
     glBeginText()
     for i = 1, #pingWheel do
-        local isSelected = pingWheelSelection == i
+        local isSelected = mainSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
         drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
@@ -1450,15 +1450,15 @@ local function drawItems()
             glColor(pingWheelTextColor)
         end
         local textScale = centerSelected and selectedScaleFactor or 1
-        glText('Ping', pingWheelScreenLocation.x,
-            pingWheelScreenLocation.y-v*wheelRadius,
+        glText('Ping', screenLocation.x,
+            screenLocation.y-v*wheelRadius,
             pingWheelTextSize*textScale*0.8, "cvos")
     end
-    if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
+    if mainSelection ~= 0 and pingWheel[mainSelection].children then
         for i = 1, 3 do
-            local idx = pingWheelSelection*2+i-3
+            local idx = mainSelection*2+i-3
             local isSelected = secondarySelection == i
-            local selItem = pingWheel[pingWheelSelection].children[i]
+            local selItem = pingWheel[mainSelection].children[i]
             local angle = (idx - 1) * pi / #pingWheel
             drawItem(selItem, 1.17, angle, isSelected, useColors, flashBlack)
         end
@@ -1472,10 +1472,10 @@ end
 local function drawWheelChoiceHelper()
     -- draw dot at mouse location
     local mx, my
-    if pressReleaseMode and pingWheelScreenLocation then
+    if pressReleaseMode and screenLocation then
         -- fixed position in pressrelease mode
-        mx = pingWheelScreenLocation.x
-        my = pingWheelScreenLocation.y
+        mx = screenLocation.x
+        my = screenLocation.y
     else
         -- follows mouse in click mode
         mx, my = spGetMouseState()
@@ -1554,18 +1554,18 @@ local function prepareBlur()
         local secondaryInnerRatio = defaults['secondaryInnerRatio']
         blurDlist = gl.CreateList(function()
             glPushMatrix()
-            gl.Translate(pingWheelScreenLocation.x, pingWheelScreenLocation.y, 0)
+            gl.Translate(screenLocation.x, screenLocation.y, 0)
             gl.Scale(wheelRadius, wheelRadius, wheelRadius)
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
             drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, outerCircleRatio, 0.0, arr)
-            if pingWheelSelection ~= 0 and selOuterRatio > outerCircleRatio then
-                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, outerCircleRatio, selOuterRatio, spacing, arr)
+            if mainSelection ~= 0 and selOuterRatio > outerCircleRatio then
+                drawArea(areaVertexNumber, #pingWheel, mainSelection, outerCircleRatio, selOuterRatio, spacing, arr)
             end
-            if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
+            if mainSelection ~= 0 and pingWheel[mainSelection].children then
                 arr = baseCircleArrays[#pingWheel*2]
                 for i=1, 3 do
-                    s = (pingWheelSelection == 1 and i == 1) and #pingWheel*2 or (pingWheelSelection*2+i-3)
+                    s = (mainSelection == 1 and i == 1) and #pingWheel*2 or (mainSelection*2+i-3)
                     drawArea(areaVertexNumber, #pingWheel*2, s, secondaryInnerRatio, secondaryOuterRatio, 0, arr)
                 end
             end
@@ -1604,10 +1604,10 @@ function widget:DrawScreen()
     end
 
     -- Main wheel
-    if displayPingWheel and pingWheelScreenLocation then
+    if displayPingWheel and screenLocation then
         local vsx, vsy, vpx, vpy = Spring.GetViewGeometry()
-        local mmx = pingWheelScreenLocation.x*2 - vsx
-        local mmy = pingWheelScreenLocation.y*2 - vsy
+        local mmx = screenLocation.x*2 - vsx
+        local mmy = screenLocation.y*2 - vsy
 
         local scale1 = (vsy/vsx)*defaults.baseWheelSize -- for items in -1, 1
         local scale2 = 2/vsx           -- for items in screen space
