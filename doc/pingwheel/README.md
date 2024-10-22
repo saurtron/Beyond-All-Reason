@@ -60,16 +60,6 @@ For standalone installation, the [normal standalone](https://raw.githubuserconte
 
 For optimal result [this folder](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/configs/pingwheel) should be put inside LuaUI/Config/ so it will load translations, otherwise it will work but some texts won't be completely right. Also you should put there the icon as explained in the folder README.
 
-## Branches
-
-For now some of the more experimental features live in their own branches.
-
-- [standard implementation](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget/luaui/Widgets/gui_ping_wheel.lua): the standard implementation.
-- [augmented mapmarks](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-markmark-icons/luaui/Widgets/gui_ping_wheel.lua): branch with proof of concept augmented mapmarks.
-- [standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-standalone/luaui/Widgets/gui_ping_wheel.lua): branch supporting stand alone installation into LuaUI/Widgets/
-- [two level wheel](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level/luaui/Widgets/gui_ping_wheel.lua): supports two levels of options
-- [two level wheel standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/Widgets/gui_ping_wheel.lua): two level and standalone together
-
 ## Interaction modes
 
 ### Click mode
@@ -92,18 +82,6 @@ There is both 'new style' and 'original style'. The new style is the IceXuick de
 
 ![showing different styles](wheel2.png "Ping wheel styles")
 
-## New LuaUIMsg interplayer mapmark communication
-
-In order to support localized, locally customizable mapmarks, a new mechanism to communicate them is needed, instead of the default MapDrawCmd.
-
-I'm using a LuaUIMsg, with a `mppnt:` header and json payload: `{text: text, x: x, y: y, z: z, r: r, g: g, b: b , icon: icon}`, the payload is not final. For now the icon is sent as a path, but it could be the case we want to have a standard set of icons with ids instead.
-
-It is important to note, this new mapmarker message format goes beyond the ping wheel implementation. This can be exploited in the future to create other "ping messaging" widgets and also to completely overhaul the (arguably dated) mapmark rendering.
-
-Once the format is final, different widgets can try rendering in different ways. For example now I'm providing two implementations, a simple one that just i18n's and optionally colorizes the usual mapmark pings, and another one that actually renders extra stuff (the augmented mapmarks). The second one could completely avoid rendering engine mapmarks and just do something custom if so desired.
-
-Note for now, it's not the ping wheel scope to completely overhaul the mapmark rendering, but the new mechanism is required, and opens the doors to further experimentation.
-
 ## Mapmarks
 
 It is important to note localized mapmarks require everyone to have a widget to display the new mapmark message.
@@ -121,6 +99,19 @@ Since the augmented mapmarks are just augmenting the standard render, I have syn
 The mapmark renderer is a separate widget: [gui_ping_wheel_event.lua](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget/luaui/Widgets/gui_ping_wheel_event.lua). Since this can be totally independent of the ping wheel, I think probably a better name can be used, like maybe `gui_local_mapmarks.lua`.
 
 See [here](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-markmark-icons/luaui/Widgets/gui_ping_wheel_event.lua) for the augmented mapmarks version (note it's just a proof of concept for now, so implementation is quite unpolished).
+
+## New LuaUIMsg interplayer mapmark communication
+
+In order to support localized, locally customizable mapmarks, a new mechanism to communicate them is needed, instead of the default MapDrawCmd.
+
+I'm using a LuaUIMsg, with a `mppnt:` header and json payload: `{text: text, x: x, y: y, z: z, r: r, g: g, b: b , icon: icon}`, the payload is not final. For now the icon is sent as a path, but it could be the case we want to have a standard set of icons with ids instead.
+
+It is important to note, this new mapmarker message format goes beyond the ping wheel implementation. This can be exploited in the future to create other "ping messaging" widgets and also to completely overhaul the (arguably dated) mapmark rendering.
+
+Once the format is final, different widgets can try rendering in different ways. For example now I'm providing two implementations, a simple one that just i18n's and optionally colorizes the usual mapmark pings, and another one that actually renders extra stuff (the augmented mapmarks). The second one could completely avoid rendering engine mapmarks and just do something custom if so desired.
+
+Note for now, it's not the ping wheel scope to completely overhaul the mapmark rendering, but the new mechanism is required, and opens the doors to further experimentation.
+
 
 ## Implementation and compatibility
 
@@ -226,4 +217,15 @@ At the moment, it seems the engine has some limitations (easily overcome) for fu
 * Not sure it's possible to draw on minimap below the unit icons. Maybe DrawInMinimapBackground allows that, but couldn't test it yet. Otherwise a new callin might be needed as I think unit icons are more important.
 * Current mapmark erase method is clumsy, depending on 100 radius messages. Either current mapmarks should have an ID or else the system could be completely migrated to lua (no biggie).
   * Also forces all widgets to check for maperase and test distance to know if a cached mapmark has been deleted.
+
+## Branches
+
+For now some of the more experimental features live in their own branches.
+
+- [standard implementation](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget/luaui/Widgets/gui_ping_wheel.lua): the standard implementation.
+- [augmented mapmarks](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-markmark-icons/luaui/Widgets/gui_ping_wheel.lua): branch with proof of concept augmented mapmarks.
+- [standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-standalone/luaui/Widgets/gui_ping_wheel.lua): branch supporting stand alone installation into LuaUI/Widgets/
+- [two level wheel](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level/luaui/Widgets/gui_ping_wheel.lua): supports two levels of options
+- [two level wheel standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/Widgets/gui_ping_wheel.lua): two level and standalone together
+
 
