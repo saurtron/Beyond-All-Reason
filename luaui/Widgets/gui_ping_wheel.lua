@@ -139,6 +139,7 @@ local defaults = {
     rclickIcon = "icons/mouse/rclick_glow.png",
     closeHintSize = 1,
     outerCircleRatio = 0.92,          -- the outer circle radius ratio
+    outerLimitRatio = 1.5,            -- the outer limit ratio where "no selection" is active
 }
 
 -- On/Off switches
@@ -157,7 +158,6 @@ local spamControlFrames = 8 -- how many frames to wait before allowing another p
 
 -- Sizes and colors
 local centerAreaRatio = 0.29
-local outerLimitRatio = 1.5       -- the outer limit ratio where "no selection" is active
 local deadZoneRatio = defaults.deadZoneBaseRatio
 
 local pingWheelSelTextAlpha = defaults.selSelTextOpacity
@@ -265,7 +265,7 @@ local centerAreaRadiusSq
 
 local function setSizedVariables()
     deadZoneRadiusSq = (deadZoneRatio*wheelRadius)^2
-    outerLimitRadiusSq = (outerLimitRatio*wheelRadius)^2
+    outerLimitRadiusSq = (defaults['outerLimitRatio']*wheelRadius)^2
     baseOuterRadiusSq = (baseOuterRatio*wheelRadius)^2
     centerAreaRadiusSq = (centerAreaRatio*wheelRadius)^2
 end
@@ -1054,21 +1054,21 @@ end
 ------------------------
 --- Drawing
 ---
-local function circleArray(items, itemverts, r)
+local function circleArray(items, itemverts)
     local arr = {}
     local parts = items * (itemverts-1)
     local f = 2 * pi / parts
     for i = 1, parts+1 do
         local a = (i-1) * f - pi/items
-        arr[i] = {r * sin(a), r * cos(a)}
+        arr[i] = {sin(a), cos(a)}
     end
     return arr
 end
 
 -- Initialize circle vector arrays for both wheel's number of vectors
-baseCircleArrays[#pingCommands] = circleArray(#pingCommands, areaVertexNumber, 1)
+baseCircleArrays[#pingCommands] = circleArray(#pingCommands, areaVertexNumber)
 if #pingCommands ~= #pingMessages then
-    baseCircleArrays[#pingMessages] = circleArray(#pingMessages, areaVertexNumber, 1)
+    baseCircleArrays[#pingMessages] = circleArray(#pingMessages, areaVertexNumber)
 end
 
 local function resetDrawState()
