@@ -934,6 +934,7 @@ function widget:Update(dt)
                 local areaCenter = (pingWheelSelection-1)*areaHalf*2
                 local areaStart = areaCenter - areaSize/2
                 local selection = floor((angle-areaStart)/(areaSize/nelmts))+1
+                if selection > nelmts then selection = 0 end
 
                 if secondarySelection ~= selection then
                     setSelection(pingWheelSelection, selection, false)
