@@ -14,7 +14,7 @@ Based on the work by Errrrr, this new implementation is proposed, targeting merg
 - Supports click and pressrelease interaction modes.
 - Configurable messages through .json files.
 - Activated with alt+w or mouse 4/5.
-  - Works nicely with the 'mouse buildspacing widget'.
+  - Works nicely with the 'mouse buildspacing widget' (also uses mouse 4/5).
   - Bindable action name: ping_wheel_on.
 - Supports stand alone mode and in-bar deployment.
 - Uses shaders and display lists to render.
@@ -76,6 +76,10 @@ There is both 'new style' and 'original style'. The new style is the IceXuick de
 In order to support localized, locally customizable mapmarks, a new mechanism to communicate them is needed, instead of the default MapDrawCmd.
 
 I'm using a LuaUIMsg, with a `mppnt:` header and json payload: `{text: text, x: x, y: y, z: z, r: r, g: g, b: b , icon: icon}`, the payload is not final. For now the icon is sent as a path, but it could be the case we want to have a standard set of icons with ids instead.
+
+It is important to note, this new mapmarker message format goes beyond the ping wheel implementation. This can be exploited in the future to create other "ping messaging" widgets and also to completely overhaul the (arguably dated) mapmark rendering. Once the format is final, different widgets can try rendering in different ways. For example now I'm providing two implementations, a simple one that just i18n's and optionally colorizes the usual mapmark pings, and another one that actually renders extra stuff (the augmented mapmarks). The second one could completely avoid rendering engine mapmarks and just do something custom if so desired.
+
+Note for now, it's not the ping wheel scope to completely overhaul the mapmark rendering, but the new mechanism is required, and opens the doors to further experimentation.
 
 ## Mapmarks
 
