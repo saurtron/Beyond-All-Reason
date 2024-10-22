@@ -1140,7 +1140,7 @@ local function drawAreaOutline(n, i, r1, r2, spacing, arr)
     local function CirclePart(n, i, p, r, dir, arr)
         local o1, o2
         local startidx = (i-1)*(p-1)+1
-        local endidx = (i-1)*(p-1)+p
+        local endidx = startidx+p-1
         if dir == -1 then
             startidx, endidx = endidx, startidx
         end
@@ -1177,6 +1177,10 @@ local function drawIcon(img, pos, size, offset)
 end
 
 local function drawWheel()
+    local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
+    local borderWidth = pingWheelBorderWidth * lineScale
+    local borderMargin = borderWidth/(wheelRadius*2)
+
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
     -- a ring around the wheel
@@ -1195,12 +1199,9 @@ local function drawWheel()
         glStencilMask(0xff)
     end
 
-    local borderWidth = pingWheelBorderWidth * lineScale
-    local borderMargin = borderWidth/(wheelRadius*2)
     glLineWidth(borderWidth)
     -- item area backgrounds
     glColor(pingWheelBaseColor)
-    local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     for i=1, #pingWheel do
         if i~=pingWheelSelection then
             glColor(pingWheelBaseColor)
