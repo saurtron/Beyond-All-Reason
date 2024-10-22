@@ -138,6 +138,7 @@ local defaults = {
     soundSetTarget = "sounds/commands/cmd-settarget.wav",
     rclickIcon = "icons/mouse/rclick_glow.png",
     closeHintSize = 1,
+    outerCircleRatio = 0.92,          -- the outer circle radius ratio
 }
 
 -- On/Off switches
@@ -1046,14 +1047,15 @@ local function drawWheel()
     local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     local borderWidth = pingWheelBorderWidth * lineScale
     local borderMargin = borderWidth/(wheelRadius*2)
+    local outerCircleRatio = defaults['outerCircleRatio']
 
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale)
-    local hole = (selOuterRatio>0.92) and pingWheelSelection or 0
-    drawCircleOutline(0.92, arr, hole)
+    local hole = (selOuterRatio>outerCircleRatio) and pingWheelSelection or 0
+    drawCircleOutline(outerCircleRatio, arr, hole)
 
     -- setup stencil buffer to mask areas
     if bgTexture then
@@ -1299,15 +1301,16 @@ local function prepareBlur()
         recreateBlurDlist = false
     end
     if not blurDlist and do_blur and WG['guishader'] then
+        local outerCircleRatio = defaults['outerCircleRatio']
         blurDlist = gl.CreateList(function()
             glPushMatrix()
             gl.Translate(pingWheelScreenLocation.x, pingWheelScreenLocation.y, 0)
             gl.Scale(wheelRadius, wheelRadius, wheelRadius)
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
-            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, 0.92, 0.0, arr)
-            if pingWheelSelection ~= 0 and selOuterRatio > 0.92 then
-                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRatio, spacing, arr)
+            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, outerCircleRatio, 0.0, arr)
+            if pingWheelSelection ~= 0 and selOuterRatio > outerCircleRatio then
+                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, outerCircleRatio, selOuterRatio, spacing, arr)
             end
             glPopMatrix()
         end)
