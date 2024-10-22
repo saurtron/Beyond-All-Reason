@@ -1,4 +1,4 @@
-Only for standalone installations:
+## Only for standalone installations
 
 This folder needs to be placed inside your LuaUI/Config/ directory.
 
