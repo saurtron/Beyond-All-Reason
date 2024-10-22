@@ -835,19 +835,18 @@ local sec, sec2 = 0, 0
 function widget:Update(dt)
     sec = sec + dt
     -- we need smooth update of fade frames
-    if (sec > 0.017) and globalFadeIn > 0 or globalFadeOut > 0 then
+    if (sec > 0.017) and (globalFadeIn > 0 or globalFadeOut > 0) then
         sec = 0
         if globalFadeIn > 0 then
             globalFadeIn = globalFadeIn - 1
-            if globalFadeIn < 0 then globalFadeIn = 0 end
             globalDim = 1 - globalFadeIn / numFadeInFrames
-        elseif globalFadeOut > 0 then
+        else
             globalFadeOut = globalFadeOut - 1
-            if globalFadeOut <= 0 then
-                globalFadeOut = 0
+            if globalFadeOut == 0 then
                 TurnOff("globalFadeOut 0")
             end
             globalDim = globalFadeOut / numFadeOutFrames
+            return
         end
     end
 
