@@ -97,7 +97,7 @@ The augmented mapmark implementation does the same, but also shows sprite icons 
 
 ![augmented mapmarks](mapmarks.png "Mapmarks")
 
-Since the augmented mapmarks are just augmenting the standard render, I have synchronized the TTL with engine mapmarks by using MapDrawCmd and ClearMapMarks callins. Note ClearMapMarks currently doesn't exist, I [prepared a PR](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3853) with this that also helps other widgets.
+Since the augmented mapmarks are just augmenting the standard render, I have synchronized the TTL with engine mapmarks by using MapDrawCmd and ClearMapMarks callins. Note ClearMapMarks callin currently doesn't exist, I [prepared a PR](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3853) with this that also helps other widgets.
 
 The mapmark renderer is a separate widget: [gui_ping_wheel_event.lua](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget/luaui/Widgets/gui_ping_wheel_event.lua). Since this can be totally independent of the ping wheel, I think probably a better name can be used, like maybe `gui_local_mapmarks.lua`.
 
