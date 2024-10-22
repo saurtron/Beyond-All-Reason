@@ -205,6 +205,8 @@ For the two level wheel, icons of suboptions can be variations of the main icon 
 * secondary selection -> when leaving secondary on left or right, should probably deselect the primary area
 * closeHint should appear below selected area, not above.
 * text doesn't actually fade in and out (barely noticeable).
+* can't set mouse cursor in all situations, for example mex build cursor always seems to be there.
+* there is no good layer to pick, 2 is the one with mapmarker effects, 1 is the one with build menu. ideally we want to be under other menu items but above map stuff.
 
 ### Augmented mapmark limitations
 
