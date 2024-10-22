@@ -8,11 +8,12 @@ Based on the work by Errrrrrr, this new implementation is proposed, targeting me
 
 - I18n support for wheel and mapmarks.
   - Mapmarks are localized for each player in their own language.
+  - Uses new proposed [LuaUI message communication](#new-luauimsg-interplayer-mapmark-communication) for mapmarks.
 - Can use colors, each player can choose if they want to see them.
-- Themable (4 different themes in 2 styles provided).
+- [Themable](#themes) (4 different themes in 2 styles provided).
 - Supports one/two wheel mode.
 - Supports two action levels.
-- Supports click and pressrelease interaction modes.
+- Supports click and pressrelease [interaction modes](#interaction-modes).
 - Configurable messages through .json files.
 - Activated with alt+w or mouse 4/5.
   - Works nicely with the 'mouse buildspacing widget' (also uses mouse 4/5).
@@ -20,6 +21,7 @@ Based on the work by Errrrrrr, this new implementation is proposed, targeting me
 - Supports stand alone mode and in-bar deployment.
 - Uses shaders and display lists to render.
   - Background blur through guishader.
+- Experimental [augmented mapmark](#mapmarks) support.
 - Configurable through gui:
 
 ![available settings](wheelsettings.png "Settings")
