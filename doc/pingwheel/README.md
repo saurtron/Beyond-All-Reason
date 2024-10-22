@@ -50,6 +50,14 @@ At the moment there are two ways to test this:
 - Using BAR.sdd mechanism, any of the non-standalone branches can be tested.
 - Installing into LuaUI/Widgets using any of the standalone branches.
 
+### Standalone installation
+
+**note:** Standalone version won't use the local mapmarks. Also it has a default alt+w keybinding not depending on config, although it can be overriden.
+
+For standalone installation, the [normal standalone version](https://raw.githubusercontent.com/saurtron/Beyond-All-Reason/refs/heads/add-ping-wheel-widget-standalone/luaui/Widgets/gui_ping_wheel.lua), or the [standalone two level version](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-second-level-standalone/luaui/Widgets/gui_ping_wheel.lua) can be used.
+
+For optimal result [this folder](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/configs/pingwheel) should be put inside LuaUI/Config/ so it will load translations, otherwise it will work but some texts won't be completely right. Also you should put there the icon as explained in the folder README.
+
 ## Branches
 
 - [standard implementation](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget): the standard implementation.
