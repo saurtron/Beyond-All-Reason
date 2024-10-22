@@ -43,7 +43,7 @@ local configDir = 'LuaUI/Config/pingwheel/'
 
 local attackCommands = {
     { name = "All-in", icon = iconDir..'cursordgun_4.png' },
-    { name = "Push", icon = iconDir..'cursorcapture_7.png' },
+    { name = "Push", icon = iconDir..'cursorcapture_7.png', icon_offset={0, -4} },
     { name = "Pressure", icon = iconDir..'cursorattack_15.png' },
 }
 local defendCommands = {
@@ -165,6 +165,9 @@ local defaults = {
     soundSetTarget = "sounds/commands/cmd-settarget.wav",
     rclickIcon = "icons/mouse/rclick_glow.png",
     closeHintSize = 1,
+    outerCircleRatio = 0.92,          -- the outer circle radius ratio
+    secondaryInnerRatio = 0.93,       -- secondary items inner limit
+    secondaryOuterRatio = 1.4,        -- secondary items outer limit
 }
 
 -- On/Off switches
@@ -265,7 +268,7 @@ local selOuterRatio = defaults.selOuterRadius
 local baseOuterRatio = defaults.baseOuterRadius
 local closeHintSize = defaults.closeHintSize
 local areaVertexNumber = 10
-local secondaryOuterRatio = 1.4
+local secondaryOuterRatio = defaults.secondaryOuterRatio
 
 -- Calculated sizes
 local function updateSizes(vsx, vsy)
@@ -1065,6 +1068,7 @@ function widget:Update(dt)
                 local areaCenter = (pingWheelSelection-1)*areaHalf*2
                 local areaStart = areaCenter - areaSize/2
                 local selection = floor((angle-areaStart)/(areaSize/nelmts))+1
+                if selection > nelmts then selection = 0 end
 
                 if secondarySelection ~= selection then
                     setSelection(pingWheelSelection, selection, false)
@@ -1252,6 +1256,8 @@ local function drawWheel()
     local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     local borderWidth = pingWheelBorderWidth * lineScale
     local borderMargin = borderWidth/(wheelRadius*2)
+    local outerCircleRatio = defaults['outerCircleRatio']
+    local secondaryInnerRatio = defaults['secondaryInnerRatio']
 
     if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
         arr = baseCircleArrays[#pingWheel*2]
@@ -1262,11 +1268,11 @@ local function drawWheel()
             else
                 glColor(pingWheelBaseColor)
             end
-            drawArea(areaVertexNumber, #pingWheel*2, s, 0.93, secondaryOuterRatio, spacing, arr)
+            drawArea(areaVertexNumber, #pingWheel*2, s, secondaryInnerRatio, secondaryOuterRatio, spacing, arr)
             glColor(pingWheelAreaOutlineColor)
-            drawAreaOutline(#pingWheel*2, s, 0.93, secondaryOuterRatio, spacing, arr)
+            drawAreaOutline(#pingWheel*2, s, secondaryInnerRatio, secondaryOuterRatio, spacing, arr)
             glColor(pingWheelAreaInlineColor)
-            drawAreaOutline(#pingWheel, s, 0.93+borderMargin, secondaryOuterRatio-borderMargin, spacing+borderMargin, arr)
+            drawAreaOutline(#pingWheel, s, secondaryInnerRatio+borderMargin, secondaryOuterRatio-borderMargin, spacing+borderMargin, arr)
         end
         glColor(pingWheelRingColor)
         glLineWidth(pingWheelRingWidth * lineScale)
@@ -1281,8 +1287,8 @@ local function drawWheel()
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale)
-    local hole = (selOuterRatio>=0.92) and pingWheelSelection or 0
-    drawCircleOutline(0.92, arr, hole)
+    local hole = (selOuterRatio>=outerCircleRatio) and pingWheelSelection or 0
+    drawCircleOutline(outerCircleRatio, arr, hole)
 
     -- setup stencil buffer to mask areas
     if bgTexture then
@@ -1538,21 +1544,23 @@ local function prepareBlur()
         recreateBlurDlist = false
     end
     if not blurDlist and do_blur and WG['guishader'] then
+        local outerCircleRatio = defaults['outerCircleRatio']
+        local secondaryInnerRatio = defaults['secondaryInnerRatio']
         blurDlist = gl.CreateList(function()
             glPushMatrix()
             gl.Translate(pingWheelScreenLocation.x, pingWheelScreenLocation.y, 0)
             gl.Scale(wheelRadius, wheelRadius, wheelRadius)
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
-            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, 0.92, 0.0, arr)
-            if pingWheelSelection ~= 0 and selOuterRatio > 0.92 then
-                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRatio, spacing, arr)
+            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, outerCircleRatio, 0.0, arr)
+            if pingWheelSelection ~= 0 and selOuterRatio > outerCircleRatio then
+                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, outerCircleRatio, selOuterRatio, spacing, arr)
             end
             if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children then
                 arr = baseCircleArrays[#pingWheel*2]
                 for i=1, 3 do
                     s = (pingWheelSelection == 1 and i == 1) and #pingWheel*2 or (pingWheelSelection*2+i-3)
-                    drawArea(areaVertexNumber, #pingWheel*2, s, 0.93, secondaryOuterRatio, 0, arr)
+                    drawArea(areaVertexNumber, #pingWheel*2, s, secondaryInnerRatio, secondaryOuterRatio, 0, arr)
                 end
             end
             glPopMatrix()
