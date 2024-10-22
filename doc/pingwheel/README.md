@@ -43,7 +43,7 @@ After reviewing dev requests and player reported usage of the wheel, I have gath
 
 The above feature list tries to answer all of these specs.
 
-## Installation
+## Installing
 
 The wheel is designed to be used directly integrated into bar. This is needed if i18n mapmarks are desired, as all players will need some kind of local mapmark render support to see the i18n mapmarks.
 
