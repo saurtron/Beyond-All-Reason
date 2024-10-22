@@ -616,7 +616,7 @@ function widget:Initialize()
     end
     WG['pingwheel_gui'].setInteractionMode = function(value)
         pressReleaseMode = value == 2
-        destroyDecorationsDlist()
+        destroyItemsDlist()
     end
     WG['pingwheel_gui'].getDoubleWheel = function()
         return doubleWheel
@@ -879,19 +879,18 @@ local sec, sec2 = 0, 0
 function widget:Update(dt)
     sec = sec + dt
     -- we need smooth update of fade frames
-    if (sec > 0.017) and globalFadeIn > 0 or globalFadeOut > 0 then
+    if (sec > 0.017) and (globalFadeIn > 0 or globalFadeOut > 0) then
         sec = 0
         if globalFadeIn > 0 then
             globalFadeIn = globalFadeIn - 1
-            if globalFadeIn < 0 then globalFadeIn = 0 end
             globalDim = 1 - globalFadeIn / numFadeInFrames
-        elseif globalFadeOut > 0 then
+        else
             globalFadeOut = globalFadeOut - 1
-            if globalFadeOut <= 0 then
-                globalFadeOut = 0
+            if globalFadeOut == 0 then
                 TurnOff("globalFadeOut 0")
             end
             globalDim = globalFadeOut / numFadeOutFrames
+            return
         end
     end
 
@@ -1310,7 +1309,7 @@ local function drawItems()
         local isSelected = pingWheelSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
+        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack)
     end
     if hasCenterAction then
         local v = (deadZoneRatio+centerAreaRatio)/2
