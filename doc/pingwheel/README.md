@@ -1,6 +1,6 @@
 # Ping Wheel
 
-Based on the work by Errrrrrr, this new implementation is proposed, targeting merging into BAR as a default widget for all players.
+Based on the work by Errrrrrr and a new design by IceXuick, this new implementation is proposed, targeting merging into BAR as a default widget for all players.
 
 ![some features](wheel_opts.png "Ping wheel")
 
