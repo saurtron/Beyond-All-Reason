@@ -11,8 +11,9 @@ Based on the work by Errrrrrr, this new implementation is proposed, targeting me
   - Uses new proposed [LuaUI message format](#new-luauimsg-interplayer-mapmark-communication) for mapmarks.
 - [Themable](#themes) (4 different themes in 2 styles provided).
 - Supports one/two wheel mode.
-- Supports two action levels.
-- Supports click and pressrelease [interaction modes](#interaction-modes).
+  - Any number of actions per wheel.
+- Supports two action levels, and center 'ping' action without message.
+- Click and pressrelease [interaction modes](#interaction-modes).
 - Configurable messages through .json files.
 - Can use colors, each player can choose if they want to see them.
 - Activated with alt+w or mouse 4/5.
