@@ -20,6 +20,9 @@
 				"pingwheel_doublewheel": "two wheels",
 				"pingwheel_doublewheel_descr": "On: two wheels. Off: one wheel"
 			}
+		},
+		"wheel": {
+			"cancel": "Cancel"
 		}
 	}
 }
