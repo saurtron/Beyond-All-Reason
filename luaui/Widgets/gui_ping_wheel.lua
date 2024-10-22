@@ -743,7 +743,7 @@ local function SetPingLocation()
     local _, pos = Spring.TraceScreenRay(mx, my, true)
     if pos then
         pingWorldLocation = { pos[1], pos[2], pos[3] }
-        screenLocation = { x = mx, y = my }
+        screenLocation = { mx, my }
 
         -- play a UI sound to indicate wheel is open
         Spring.PlaySoundFile(defaults.soundSetTarget, 0.1, 'ui')
@@ -1002,8 +1002,8 @@ function widget:Update(dt)
         else
             local mx, my = spGetMouseState()
             -- calculate where the mouse is relative to the screenLocation, remember top is the first selection
-            local dx = mx - screenLocation.x
-            local dy = my - screenLocation.y
+            local dx = mx - screenLocation[1]
+            local dy = my - screenLocation[2]
             local dist = dx * dx + dy * dy
 
             -- deadzone is no selection
@@ -1034,8 +1034,8 @@ function widget:Update(dt)
     elseif (sec2 > 0.03) and keyDown and not displayPingWheel and doubleWheel and pressReleaseMode then
         -- gesture left or right to select primary or secondary wheel on pressRelaseMode
         local mx, my = spGetMouseState()
-        local dx = mx - screenLocation.x
-        local dy = my - screenLocation.y
+        local dx = mx - screenLocation[1]
+        local dy = my - screenLocation[2]
         local chosenWheel = false
         if dx < -5 then
             chosenWheel = pingCommands
@@ -1248,7 +1248,7 @@ local function drawDottedLine()
         glColor({1, 1, 1, 0.5})
         glLineWidth(pingWheelThickness / 4)
         local mx, my = spGetMouseState()
-        glBeginEnd(GL_LINES, line, 0, 0, mx-screenLocation.x, my-screenLocation.y)
+        glBeginEnd(GL_LINES, line, 0, 0, mx-screenLocation[1], my-screenLocation[2])
     end
 end
 
@@ -1265,8 +1265,8 @@ local function drawCloseHint()
     drawIcon(defaults.rclickIcon, {x-x_offset, y}, hintIconSize)
     glColor({1, 1, 1, 0.7})
     glBeginText()
-    glText("Cancel", screenLocation.x+drawIconSize/2-x_offset+w/6,
-            screenLocation.y+y,
+    glText("Cancel", screenLocation[1]+drawIconSize/2-x_offset+w/6,
+            screenLocation[2]+y,
             pingWheelTextSize*hintTextSize, "lovs")
     glEndText()
 end
@@ -1313,8 +1313,8 @@ local function drawItem(selItem, posRadius, angle, isSelected, useColors, flashB
         y = y - dist/2 - halfSize
     end
     glColor(color)
-    glText(text, screenLocation.x+x,
-        screenLocation.y+y,
+    glText(text, screenLocation[1]+x,
+        screenLocation[2]+y,
         pingWheelTextSize*textScale, "cvos")
 end
 
@@ -1343,8 +1343,8 @@ local function drawItems()
             glColor(pingWheelTextColor)
         end
         local textScale = centerSelected and selectedScaleFactor or 1
-        glText('Ping', screenLocation.x,
-            screenLocation.y-v*wheelRadius,
+        glText('Ping', screenLocation[1],
+            screenLocation[2]-v*wheelRadius,
             pingWheelTextSize*textScale*0.8, "cvos")
     end
     glEndText()
@@ -1358,8 +1358,8 @@ local function drawWheelChoiceHelper()
     local mx, my
     if pressReleaseMode and screenLocation then
         -- fixed position in pressrelease mode
-        mx = screenLocation.x
-        my = screenLocation.y
+        mx = screenLocation[1]
+        my = screenLocation[2]
     else
         -- follows mouse in click mode
         mx, my = spGetMouseState()
@@ -1437,7 +1437,7 @@ local function prepareBlur()
         local outerCircleRatio = defaults['outerCircleRatio']
         blurDlist = gl.CreateList(function()
             glPushMatrix()
-            gl.Translate(screenLocation.x, screenLocation.y, 0)
+            gl.Translate(screenLocation[1], screenLocation[2], 0)
             gl.Scale(wheelRadius, wheelRadius, wheelRadius)
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
@@ -1482,8 +1482,8 @@ function widget:DrawScreen()
     -- Main wheel
     if displayPingWheel and screenLocation then
         local vsx, vsy, vpx, vpy = Spring.GetViewGeometry()
-        local mmx = screenLocation.x*2 - vsx
-        local mmy = screenLocation.y*2 - vsy
+        local mmx = screenLocation[1]*2 - vsx
+        local mmy = screenLocation[2]*2 - vsy
 
         local scale1 = (vsy/vsx)*defaults.baseWheelSize -- for items in -1, 1
         local scale2 = 2/vsx           -- for items in screen space
