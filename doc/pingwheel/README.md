@@ -172,6 +172,7 @@ While most of the implementation is done and robust, the following things can st
 
 * Select a final list of messages.
 * Needs [good icons](#needed-icons). At the moment the wheel uses bar's cursor icons, but they're somewhat limited.
+* The LRHint element needs to be overhauled to use icons.
 
 Other things that could optionally be done:
 
