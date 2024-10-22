@@ -171,6 +171,8 @@ The following sample files are provided here for now:
 
 The format for now is just a straightforward encoding of the internal data structure. Additionally to the json format, lines can be prefixed with `#` to comment them out.
 
+**note:** Since implementation is still ongoing some details can still change. For example the icon handling atm is just path to BAR files, but this could change to just be a key for the icon in case we have a supported list in the future.
+
 ## Pending Work
 
 While most of the implementation is done and robust, the following things can still be done:
