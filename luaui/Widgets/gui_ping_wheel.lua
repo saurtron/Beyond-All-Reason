@@ -1212,7 +1212,7 @@ local function drawAreaOutline(n, i, r1, r2, spacing, arr)
     local function CirclePart(n, i, p, r, dir, arr)
         local o1, o2
         local startidx = (i-1)*(p-1)+1
-        local endidx = (i-1)*(p-1)+p
+        local endidx = startidx+p-1
         if dir == -1 then
             startidx, endidx = endidx, startidx
         end
