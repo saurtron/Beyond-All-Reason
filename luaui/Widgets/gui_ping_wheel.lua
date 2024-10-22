@@ -1059,7 +1059,8 @@ function widget:Update(dt)
             -- selection
             local angle = atan2(dx, dy)
             local areaHalf = pi/#pingWheel
-            angle = angle < -areaHalf and (2*pi+angle) or angle
+            local twopi = 2*pi
+            angle = angle < -areaHalf and (twopi+angle) or angle
 
             if pingWheelSelection ~= 0 and pingWheel[pingWheelSelection].children and (dist < secondaryOuterRadiusSq)
                 and (dist > baseOuterRadiusSq) then
@@ -1067,7 +1068,13 @@ function widget:Update(dt)
                 local areaSize = nelmts*areaHalf   -- for now area size is hardcoded to area/2 slots
                 local areaCenter = (pingWheelSelection-1)*areaHalf*2
                 local areaStart = areaCenter - areaSize/2
-                local selection = floor((angle-areaStart)/(areaSize/nelmts))+1
+                local angleDiff = angle-areaStart
+
+                if angleDiff < 0 then angleDiff = angleDiff + twopi
+                elseif angleDiff > twopi then angleDiff = angleDiff - twopi end
+
+                local selection = floor(angleDiff/(areaSize/nelmts))+1
+
                 if selection > nelmts then selection = 0 end
 
                 if secondarySelection ~= selection then
