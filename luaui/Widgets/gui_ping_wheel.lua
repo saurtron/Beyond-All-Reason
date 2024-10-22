@@ -1186,7 +1186,7 @@ local function drawWheel()
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale)
-    local hole = (selOuterRatio>outerCircleRatio) and mainSelection or 0
+    local hole = (selOuterRatio>=outerCircleRatio) and mainSelection or 0
     drawCircleOutline(outerCircleRatio, arr, hole)
 
     -- setup stencil buffer to mask areas
