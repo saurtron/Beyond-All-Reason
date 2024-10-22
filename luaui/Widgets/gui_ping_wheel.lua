@@ -1306,7 +1306,7 @@ local function drawItems()
         local isSelected = pingWheelSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack)
+        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
     end
     if hasCenterAction then
         local v = (deadZoneRatio+centerAreaRatio)/2
