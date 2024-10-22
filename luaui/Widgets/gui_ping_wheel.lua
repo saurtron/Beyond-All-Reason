@@ -36,7 +36,7 @@ local configDir = 'LuaUI/Config/pingwheel/'
 -- Wheel item attributes for the pingCommands and pingMessages tables:
 -- * name: The item label and message.
 -- * msg: (optional) If set, will override the msg sent for that item.
--- * color (optional): Color for the message, not it will only be displayed if use colors is activated in options gui.
+-- * color (optional): Color for the message, note it will only be displayed if use colors is activated in options gui.
 -- * icon (optional): Icon for the item, will also be sent on the ping message and can be displayed by ping renderer.
 -- * icon_offset (optional): Offset for the icon, for off-center icons.
 -- * icon_size (optional): Scale to icon (default is 1 meaning normal size).
@@ -53,7 +53,6 @@ local pingCommands = {                             -- the options in the ping wh
 }
 
 local pingMessages = {
-    -- let's give these commands rainbow colors!
     { name = "TY!",      color = { 1, 1, 1, 1 } },
     { name = "GJ!",      color = { 1, 0.5, 0, 1 } },
     { name = "DANGER!",  color = { 1, 1, 0, 1 } },
