@@ -910,7 +910,7 @@ function widget:Update(dt)
 
             -- center area
             if hasCenterAction and dist < centerAreaRadiusSq then
-                setSelection(0, true)
+                setSelection(0, 0, true)
                 return
             end
 
