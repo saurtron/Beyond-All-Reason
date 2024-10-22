@@ -189,7 +189,7 @@ local spamControlFrames = 8 -- how many frames to wait before allowing another p
 local centerAreaRatio = 0.29
 local deadZoneRatio = defaults.deadZoneBaseRatio
 
-local pingWheelSelTextAlpha = defaults.selSelTextOpacity
+local pingWheelSelTextAlpha = defaults.selTextOpacity
 local pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
 
 local pingWheelTextBaseSize = defaults.textSize
@@ -885,9 +885,6 @@ local function setSelection(selected, secondary, centersel)
             Spring.PlaySoundFile(defaults.soundDefaultSelect, 0.3, 'ui')
         end
     end
-    if selected ~=0 or centersel or secondary ~= 0 then
-        Spring.SetMouseCursor("cursornormal")
-    end
     mainSelection = selected
     secondarySelection = secondary
     centerSelected = centersel
@@ -1021,6 +1018,10 @@ function widget:Update(dt)
             globalDim = globalFadeOut / numFadeOutFrames
             return
         end
+    end
+
+    if mainSelection ~= 0 or centerSelected or secondarySelection ~= 0 then
+        Spring.SetMouseCursor("cursornormal")
     end
 
     sec2 = sec2 + dt
