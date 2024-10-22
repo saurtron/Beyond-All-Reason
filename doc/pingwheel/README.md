@@ -179,3 +179,12 @@ Other things that could optionally be done:
 * secondary selection -> when leaving secondary on left or right, should probably deselect the primary area
 * closeHint should appear below selected area, not above.
 
+### Augmented mapmark limitations
+
+At the moment, it seems the engine has some limitations (easily overcome) for full lua render of mapmarks.
+
+* No ClearMapMark message so local gui can better coordinate cleaning. See [this PR](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3853).
+* Not sure it's possible to draw on minimap below the unit icons. Maybe DrawInMinimapBackground allows that, but couldn't test it yet. Otherwise a new callin might be needed as I think unit icons are more important.
+* Current mapmark erase method is clumsy, depending on 100 radius messages. Either current mapmarks should have an ID or else the system could be completely migrated to lua (no biggie).
+  * Also forces all widgets to check for maperase and test distance to know if a cached mapmark has been deleted.
+
