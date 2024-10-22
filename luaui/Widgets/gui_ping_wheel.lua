@@ -166,12 +166,9 @@ local defaults = {
     rclickIcon = "icons/mouse/rclick_glow.png",
     closeHintSize = 1,
     outerCircleRatio = 0.92,          -- the outer circle radius ratio
-<<<<<<< HEAD
     secondaryInnerRatio = 0.93,       -- secondary items inner limit
     secondaryOuterRatio = 1.4,        -- secondary items outer limit
-=======
     outerLimitRatio = 1.5,            -- the outer limit ratio where "no selection" is active
->>>>>>> add-ping-wheel-widget
 }
 
 -- On/Off switches
