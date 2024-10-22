@@ -3,7 +3,7 @@ function widget:GetInfo()
         name    = "Ping Wheel",
         desc    =
         "Displays a ping wheel when a keybind is held down. Default keybind is 'alt-w', rebindable. Left click (or mouse 4) to bring up commands wheel, right click (or mouse 5) for messages wheel.",
-        author  = "Errrrrrr, Saurtron",
+        author  = "Errrrrrr, IceXuick, Saurtron",
         date    = "June 27, 2023",
         license = "GNU GPL, v2 or later",
         version = "3.0 alpha1",
