@@ -115,12 +115,6 @@ It is important to note, this new mapmarker message format goes beyond the ping 
 Once the format is final, different widgets can try rendering in different ways. For example now I'm providing two implementations, a simple one that just i18n's and optionally colorizes the usual mapmark pings, and another one that actually renders extra stuff (the augmented mapmarks). The second one could completely avoid rendering engine mapmarks and just do something custom if so desired.
 
 
-## Implementation and compatibility
-
-For now the wheel is implemented using display lists and shaders (v150 compatibility profile), this gives a nice balance of efficiency and compatibility. I have considered going full GL4 (VBO and more recent shader profile), but for now I'm hesitant to do so as I'm not sure if this can be problematic in some computer configurations. I'm not sure if BAR requires GL4, if so, the wheel could be implemented with GL4.
-
-Augmented mapmarks are rendered now using direct mode opengl, but for production I would implement using VBO for maximum efficiency, that should result in a really lightweight system. Alternatively display lists can be used but that won't be so good with lots of mapmarks.
-
 ## Ping message list
 
 **The wheel doesn't yet implement a final set of messages**.
@@ -219,6 +213,13 @@ At the moment, it seems the engine has some limitations (easily overcome) for fu
 * Not sure it's possible to draw on minimap below the unit icons. Maybe DrawInMinimapBackground allows that, but couldn't test it yet. Otherwise a new callin might be needed as I think unit icons are more important.
 * Current mapmark erase method is clumsy, depending on 100 radius messages. Either current mapmarks should have an ID or else the system could be completely migrated to lua (no biggie).
   * Also forces all widgets to check for maperase and test distance to know if a cached mapmark has been deleted.
+
+## Implementation and compatibility
+
+For now the wheel is implemented using display lists and shaders (v150 compatibility profile), this gives a nice balance of efficiency and compatibility. I have considered going full GL4 (VBO and more recent shader profile), but for now I'm hesitant to do so as I'm not sure if this can be problematic in some computer configurations. I'm not sure if BAR requires GL4, if so, the wheel could be implemented with GL4.
+
+Augmented mapmarks are rendered now using direct mode opengl, but for production I would implement using VBO for maximum efficiency, that should result in a really lightweight system. Alternatively display lists can be used but that won't be so good with lots of mapmarks.
+
 
 ## Branches
 
