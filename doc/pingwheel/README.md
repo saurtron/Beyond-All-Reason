@@ -94,13 +94,17 @@ The augmented mapmark implementation does the same, but also shows sprite icons 
 
 ![augmented mapmarks](mapmarks.png "Mapmarks")
 
+Note for now, it's not the ping wheel scope to completely overhaul the mapmark rendering, but the new mechanism is required, and opens the doors to further experimentation.
+
+### Mapmark technical details
+
 Since the augmented mapmarks are just augmenting the standard render, I have synchronized the TTL with engine mapmarks by using MapDrawCmd and ClearMapMarks callins. Note ClearMapMarks callin currently doesn't exist, I [prepared a PR](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3853) with this that also helps other widgets.
 
 The mapmark renderer is a separate widget: [gui_ping_wheel_event.lua](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget/luaui/Widgets/gui_ping_wheel_event.lua). Since this can be totally independent of the ping wheel, I think probably a better name can be used, like maybe `gui_local_mapmarks.lua`.
 
 See [here](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-markmark-icons/luaui/Widgets/gui_ping_wheel_event.lua) for the augmented mapmarks version (note it's just a proof of concept for now, so implementation is quite unpolished).
 
-## New LuaUIMsg interplayer mapmark communication
+### New LuaUIMsg interplayer mapmark communication
 
 In order to support localized, locally customizable mapmarks, a new mechanism to communicate them is needed, instead of the default MapDrawCmd.
 
@@ -109,8 +113,6 @@ I'm using a LuaUIMsg, with a `mppnt:` header and json payload: `{text: text, x: 
 It is important to note, this new mapmarker message format goes beyond the ping wheel implementation. This can be exploited in the future to create other "ping messaging" widgets and also to completely overhaul the (arguably dated) mapmark rendering.
 
 Once the format is final, different widgets can try rendering in different ways. For example now I'm providing two implementations, a simple one that just i18n's and optionally colorizes the usual mapmark pings, and another one that actually renders extra stuff (the augmented mapmarks). The second one could completely avoid rendering engine mapmarks and just do something custom if so desired.
-
-Note for now, it's not the ping wheel scope to completely overhaul the mapmark rendering, but the new mechanism is required, and opens the doors to further experimentation.
 
 
 ## Implementation and compatibility
