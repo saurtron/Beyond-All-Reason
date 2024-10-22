@@ -1262,7 +1262,7 @@ local function drawDividers()
     glBeginEnd(GL_LINES, Lines)
 end
 
-local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBlack)
+local function drawItem(selItem, posRadius, angle, isSelected, useColors, flashBlack)
     local text = getTranslatedText(selItem.name)
     local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
     if isSelected and flashBlack then
@@ -1273,8 +1273,8 @@ local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBl
         -- TODO: this is modifying in place
         color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
     end
-    local x = wheelRadius * posRatio * sin(angle)
-    local y = wheelRadius * posRatio * cos(angle)
+    local x = posRadius * sin(angle)
+    local y = posRadius * cos(angle)
     local icon = selItem.icon
     local textScale = isSelected and selectedScaleFactor or 1.0
     if icon and useIcons then
@@ -1299,13 +1299,14 @@ local function drawItems()
     if flashing and (flashFrame % 2 == 0) then
         flashBlack = true
     end
+    local textAlignRadius = textAlignRatio*wheelRadius
 
     glBeginText()
     for i = 1, #pingWheel do
         local isSelected = mainSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
+        drawItem(selItem, textAlignRadius, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
     end
     if hasCenterAction then
         local v = (deadZoneRatio+centerAreaRatio)/2
@@ -1320,12 +1321,13 @@ local function drawItems()
             pingWheelTextSize*textScale*0.8, "cvos")
     end
     if mainSelection ~= 0 and pingWheel[mainSelection].children then
+        local secondaryRadius = 1.17*wheelRadius
         for i = 1, 3 do
             local idx = mainSelection*2+i-3
             local isSelected = secondarySelection == i
             local selItem = pingWheel[mainSelection].children[i]
             local angle = (idx - 1) * pi / #pingWheel
-            drawItem(selItem, 1.17, angle, isSelected, useColors, flashBlack)
+            drawItem(selItem, secondaryRadius, angle, isSelected, useColors, flashBlack)
         end
     end
     glEndText()
