@@ -1255,7 +1255,7 @@ end
 local function drawCloseHint()
     if pressReleaseMode then return end
 
-    local cancelText = Spring.I18N("ui.wheel.cancel")
+    local cancelText = getTranslatedText("ui.wheel.cancel")
     local x = 0
     local y = -wheelRadius*(baseOuterRatio+0.05)
     local hintIconSize = 0.8*closeHintSize
