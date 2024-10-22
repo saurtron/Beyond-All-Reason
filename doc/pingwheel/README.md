@@ -161,3 +161,11 @@ Other things that could optionally be done:
 * Setting for sounds?
 * Proper implementation of augmented mapmarks.
 * Make center ping full size (ie, no internal dead zone) when on click mode?
+
+### Known bugs
+
+* on some systems the center dot shows as a square instead of a circle (like steam deck).
+* secondary selection -> first item can't select the first half
+* secondary selection -> when leaving secondary on left or right, should probably deselect the primary area
+* closeHint should appear below selected area, not above.
+
