@@ -2,7 +2,7 @@
 
 Based on the work by Errrrrrr, this new implementation is proposed, targeting merging into BAR as a default widget for all players.
 
-![showing different styles](wheel.png "Ping wheel styles")
+![showing different styles](wheel2.png "Ping wheel styles")
 
 ## Features
 
