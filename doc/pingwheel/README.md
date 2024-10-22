@@ -8,13 +8,13 @@ Based on the work by Errrrrrr, this new implementation is proposed, targeting me
 
 - I18n support for wheel and mapmarks.
   - Mapmarks are localized for each player in their own language.
-  - Uses new proposed [LuaUI message communication](#new-luauimsg-interplayer-mapmark-communication) for mapmarks.
-- Can use colors, each player can choose if they want to see them.
+  - Uses new proposed [LuaUI message format](#new-luauimsg-interplayer-mapmark-communication) for mapmarks.
 - [Themable](#themes) (4 different themes in 2 styles provided).
 - Supports one/two wheel mode.
 - Supports two action levels.
 - Supports click and pressrelease [interaction modes](#interaction-modes).
 - Configurable messages through .json files.
+- Can use colors, each player can choose if they want to see them.
 - Activated with alt+w or mouse 4/5.
   - Works nicely with the 'mouse buildspacing widget' (also uses mouse 4/5).
   - Bindable action name: ping_wheel_on.
@@ -144,3 +144,20 @@ I made the following list, where I tried to group some common things:
 For now the list is not final, some of the categories don't match very well, some messages are missing, and some messages are superfluous.
 
 Also, some messages like 'on my way' or 'reclaim' seem to make it into most people lists, while for now having no clear category.
+
+## Pending Work
+
+While most of the implementation is done and robust, the following things can still be done:
+
+* Select a final list of messages.
+* Better alignment of icon and text label.
+
+Other things that could optionally be done:
+
+* Maybe load themes from json files too.
+* Maybe add a mechanism to send text messages too (as proposed by `devious null`).
+* Maybe reconsider the selection flashing.
+* Maybe allow for variable number of children in two level mode (now it's hardcoded to either 0 or 3 children).
+* Setting for sounds?
+* Proper implementation of augmented mapmarks.
+* Make center ping full size (ie, no internal dead zone) when on click mode?
