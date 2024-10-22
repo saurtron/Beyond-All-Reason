@@ -935,7 +935,7 @@ local function resetDrawState()
     gl.Texture(0, false)
     glColor(1.0, 1.0, 1.0, 1.0)
     glLineWidth(1.0)
-    if bgTexture then
+    if bgTexture and pingWheelDrawBase then
         glStencilTest(false)
         gl.Clear(GL.STENCIL_BUFFER_BIT, 0)
         glStencilMask(255)
