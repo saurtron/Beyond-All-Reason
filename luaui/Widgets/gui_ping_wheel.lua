@@ -90,6 +90,8 @@ local styleConfig = {
         textSize = 22,
         drawBase = false,
         drawDividers = true,
+        baseOuterRadius = 0.8,
+        closeHintSize = 0.85,
     },
     [4] = {
         name = "Ring Light",
@@ -99,6 +101,8 @@ local styleConfig = {
         textSize = 22,
         drawBase = false,
         drawDividers = true,
+        baseOuterRadius = 0.8,
+        closeHintSize = 0.85,
     },
 }
 
@@ -133,6 +137,7 @@ local defaults = {
     soundDefaultSelect = "sounds/commands/cmd-default-select.wav",
     soundSetTarget = "sounds/commands/cmd-settarget.wav",
     rclickIcon = "icons/mouse/rclick_glow.png",
+    closeHintSize = 1,
 }
 
 -- On/Off switches
@@ -229,6 +234,7 @@ local pingWheelRingWidth
 local pingWheelBorderWidth
 local selOuterRatio = defaults.selOuterRadius
 local baseOuterRatio = defaults.baseOuterRadius
+local closeHintSize = defaults.closeHintSize
 local areaVertexNumber = 10
 
 -- Calculated sizes
@@ -443,6 +449,8 @@ local function applyStyle()
     pingWheelTextBaseSize = style.textSize or defaults.textSize
     pingWheelSelTextAlpha = style.selTextOpacity or defaults.selTextOpacity
     pingWheelBaseTextAlpha = style.baseTextOpacity or defaults.baseTextOpacity
+    baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
+    closeHintSize = style.closeHintSize or defaults.closeHintSize
     pingWheelDrawBase = style.drawBase
     if pingWheelDrawBase == nil then
         pingWheelDrawBase = defaults.drawBase
@@ -454,7 +462,6 @@ local function applyStyle()
         pingWheelAreaOutlineColor = style.wheelAreaOutlineColor or defaults.wheelAreaOutlineColor
         pingWheelBaseColor = style.wheelBaseColor or defaults.wheelBaseColor
         selOuterRatio = style.selOuterRadius or defaults.selOuterRadius
-        baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
         doDividers = false
         deadZoneRatio = defaults.deadZoneBaseRatio
         hasCenterAction = true
@@ -1114,9 +1121,9 @@ local function drawCloseHint()
     if pressReleaseMode then return end
 
     local x = 0
-    local y = -wheelRadius*0.95
-    local hintIconSize = 0.8
-    local hintTextSize = 0.9
+    local y = -wheelRadius*(baseOuterRatio+0.05)
+    local hintIconSize = 0.8*closeHintSize
+    local hintTextSize = 0.9*closeHintSize
     local drawIconSize = wheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
     x_offset = (w+drawIconSize)/2.0
