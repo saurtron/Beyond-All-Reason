@@ -120,7 +120,7 @@ Since the augmented mapmarks are just augmenting the standard render, I have syn
 
 The mapmark renderer is a separate widget: [gui_ping_wheel_event.lua](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget/luaui/Widgets/gui_ping_wheel_event.lua). Since this can be totally independent of the ping wheel, I think probably a better name can be used, like maybe `gui_local_mapmarks.lua`.
 
-See [here](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-mapmark-icons/luaui/Widgets/gui_ping_wheel_event.lua) for the augmented mapmarks version (note it's just a proof of concept for now, so implementation is quite unpolished).
+See [here](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-markmark-icons/luaui/Widgets/gui_ping_wheel_event.lua) for the augmented mapmarks version (note it's just a proof of concept for now, so implementation is quite unpolished).
 
 ## Implementation and compatibility
 
