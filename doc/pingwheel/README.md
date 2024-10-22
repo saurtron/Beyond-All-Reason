@@ -95,7 +95,7 @@ The standard implementation just does i18n and optional colors, then uses a loca
 
 The augmented mapmark implementation does the same, but also shows sprite icons when zoomed out and minimap. On close up view it will show a decal with icon below the engine mapmark.
 
-![augmented mapmarks](pingwheel_6sides.png "Mapmarks")
+![augmented mapmarks](mapmarks.png "Mapmarks")
 
 Since the augmented mapmarks are just augmenting the standard render, I have synchronized the TTL with engine mapmarks by using MapDrawCmd and ClearMapMarks callins. Note ClearMapMarks currently doesn't exist, I [prepared a PR](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3853) with this that also helps other widgets.
 
