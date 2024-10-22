@@ -2,6 +2,8 @@
 
 Based on the work by Errrrrrr and a new design by IceXuick, this new implementation is proposed, targeting merging into BAR as a default widget for all players.
 
+Jump [here](#standalone-installation) for installation instructions.
+
 ![some features](wheel_opts.png "Ping wheel")
 
 ## Features
