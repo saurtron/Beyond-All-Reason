@@ -1683,7 +1683,8 @@
 			"paid": "Paid",
 			"omw": "OMW",
 			"attack": "Attack",
-			"retreat": "Retreat"
+			"retreat": "Retreat",
+			"cancel": "Cancel"
 		}
 	}
 }
