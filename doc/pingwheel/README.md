@@ -62,6 +62,8 @@ For optimal result [this folder](https://github.com/saurtron/Beyond-All-Reason/t
 
 ## Branches
 
+For now some of the more experimental features live in their own branches.
+
 - [standard implementation](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget): the standard implementation.
 - [augmented mapmarks](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-markmark-icons): branch with proof of concept augmented mapmarks.
 - [standalone](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-standalone): branch supporting stand alone installation into LuaUI/Widgets/
