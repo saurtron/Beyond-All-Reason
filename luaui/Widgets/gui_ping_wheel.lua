@@ -581,7 +581,7 @@ function widget:Initialize()
     end
     WG['pingwheel_gui'].setInteractionMode = function(value)
         pressReleaseMode = value == 2
-        destroyDecorationsDlist()
+        destroyItemsDlist()
     end
     WG['pingwheel_gui'].getDoubleWheel = function()
         return doubleWheel
