@@ -18,7 +18,7 @@ Based on the work by Errrrrrr, this new implementation is proposed, targeting me
 - Activated with alt+w or mouse 4/5.
   - Works nicely with the 'mouse buildspacing widget' (also uses mouse 4/5).
   - Bindable action name: ping_wheel_on.
-- Supports stand alone mode and in-bar deployment.
+- Supports stand alone mode and in-bar [deployment](#installation).
 - Uses shaders and display lists to render.
   - Background blur through guishader.
 - Experimental [augmented mapmark](#mapmarks) support.
