@@ -158,7 +158,7 @@ local spamControlFrames = 8 -- how many frames to wait before allowing another p
 local centerAreaRatio = 0.29
 local deadZoneRatio = defaults.deadZoneBaseRatio
 
-local pingWheelSelTextAlpha = defaults.selSelTextOpacity
+local pingWheelSelTextAlpha = defaults.selTextOpacity
 local pingWheelBaseTextAlpha = defaults.selBaseTextOpacity
 
 local pingWheelTextBaseSize = defaults.textSize
