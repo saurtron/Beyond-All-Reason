@@ -139,6 +139,7 @@ local defaults = {
     rclickIcon = "icons/mouse/rclick_glow.png",
     closeHintSize = 1,
     outerCircleRatio = 0.92,          -- the outer circle radius ratio
+    outerLimitRatio = 1.5,            -- the outer limit ratio where "no selection" is active
 }
 
 -- On/Off switches
@@ -155,7 +156,6 @@ local spamControlFrames = 8 -- how many frames to wait before allowing another p
 
 -- Sizes and colors
 local centerAreaRatio = 0.29
-local outerLimitRatio = 1.5       -- the outer limit ratio where "no selection" is active
 local deadZoneRatio = defaults.deadZoneBaseRatio
 
 local pingWheelSelTextAlpha = defaults.selSelTextOpacity
@@ -263,7 +263,7 @@ local centerAreaRadiusSq
 
 local function setSizedVariables()
     deadZoneRadiusSq = (deadZoneRatio*wheelRadius)^2
-    outerLimitRadiusSq = (outerLimitRatio*wheelRadius)^2
+    outerLimitRadiusSq = (defaults['outerLimitRatio']*wheelRadius)^2
     baseOuterRadiusSq = (baseOuterRatio*wheelRadius)^2
     centerAreaRadiusSq = (centerAreaRatio*wheelRadius)^2
 end
