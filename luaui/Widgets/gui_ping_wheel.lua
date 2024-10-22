@@ -166,8 +166,7 @@ local pingWheelTextColor = { 1, 1, 1, 0.7 }
 local pingWheelTextHighlightColor = { 1, 1, 1, 1 }
 local pingWheelTextSpamColor = { 0.9, 0.9, 0.9, 0.4 }
 
-local pingWheelPlayerColor = { 0.9, 0.8, 0.5, 0.8 } -- will be loaded externally
-local pingWheelColor = { 0.9, 0.8, 0.5, 0.6 } -- will be overriden with playerColor for now
+local playerColor = { 0.9, 0.8, 0.5, 0.6 } -- will be overwritten with actual player color.
 
 local pingWheelBaseColor = defaults.wheelBaseColor
 local pingWheelSelColor = defaults.wheelSelColor
@@ -596,8 +595,7 @@ function widget:Initialize()
     -- add the action handler with argument for press and release using the same function call
     widgetHandler:AddAction("ping_wheel_on", PingWheelAction, { true }, "p") --pR do we actually want Repeat?
     -- widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { false }, "r") -- can't trust release event since releasing modified first makes it fail detection
-    pingWheelPlayerColor = { Spring.GetTeamColor(Spring.GetMyTeamID()) }
-    pingWheelColor = pingWheelPlayerColor
+    playerColor = { Spring.GetTeamColor(Spring.GetMyTeamID()) }
 
     -- set the style from config
     applyStyle()
@@ -693,7 +691,7 @@ local function checkRelease()
             local pingText, color, icon
             if mainSelection > 0 then
                 pingText = pingWheel[mainSelection].msg or pingWheel[mainSelection].name
-                color = pingWheel[mainSelection].color or pingWheelColor
+                color = pingWheel[mainSelection].color or playerColor
                 icon = pingWheel[mainSelection].icon
             end
             createMapPoint(Spring.GetMyPlayerID(), pingText, pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
@@ -1230,7 +1228,7 @@ local function drawWheelChoiceHelper()
         -- follows mouse in click mode
         mx, my = spGetMouseState()
     end
-    glColor(pingWheelColor)
+    glColor(playerColor)
     glPointSize(centerDotSize)
     glBeginEnd(GL_POINTS, glVertex, mx, my)
 
@@ -1256,7 +1254,7 @@ end
 local function drawDeadZone()
     -- draw a smooth circle with 64 vertices
     if not draw_deadzone then return end
-    --glColor(pingWheelColor)
+    --glColor(playerColor)
 
     glColor({1, 1, 1, 0.25})
     glLineWidth(pingWheelThickness)
@@ -1278,7 +1276,7 @@ local function drawCenterDot()
     glColor({0,0,0,0.8})
     glPointSize(centerDotSize)
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
-    glColor(pingWheelColor)
+    glColor(playerColor)
     glPointSize(centerDotSize*0.8)
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
 end
