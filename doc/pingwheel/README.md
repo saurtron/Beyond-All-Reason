@@ -162,7 +162,7 @@ I don't see why the full vocabulary listed above can't be supported translation 
 
 ### Custom message files
 
-The pingwheel messages can be fully customized by placing .json files at \<datadir\>/LuaUI/Config/. Two files are supported, commands.json for the main wheel, and messages.json for the secondary wheel.
+The pingwheel messages can be fully customized by placing .json files at \<datadir\>/LuaUI/Config/pingwheel/. Two files are supported, commands.json for the main wheel, and messages.json for the secondary wheel.
 
 The following sample files are provided here for now:
 
