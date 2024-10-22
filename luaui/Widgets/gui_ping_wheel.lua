@@ -729,9 +729,6 @@ local function setSelection(selected, centersel)
             Spring.PlaySoundFile(defaults.soundDefaultSelect, 0.3, 'ui')
         end
     end
-    if selected ~=0 or centersel then
-        Spring.SetMouseCursor("cursornormal")
-    end
     mainSelection = selected
     centerSelected = centersel
 end
@@ -846,6 +843,10 @@ function widget:Update(dt)
             globalDim = globalFadeOut / numFadeOutFrames
             return
         end
+    end
+
+    if mainSelection ~= 0 or centerSelected then
+        Spring.SetMouseCursor("cursornormal")
     end
 
     sec2 = sec2 + dt
