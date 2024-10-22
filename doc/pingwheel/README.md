@@ -56,7 +56,7 @@ At the moment there are two ways to test this:
 
 **note:** Standalone version won't use the local mapmarks. Also it has a default alt+w keybinding not depending on config, although it can be overriden.
 
-For standalone installation, the [normal standalone](https://raw.githubusercontent.com/saurtron/Beyond-All-Reason/refs/heads/add-ping-wheel-widget-standalone/luaui/Widgets/gui_ping_wheel.lua), or the [standalone two level](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-second-level-standalone/luaui/Widgets/gui_ping_wheel.lua) files can be used. Just take it and place it inside LuaUI/Widgets/.
+For standalone installation, the [normal standalone](https://raw.githubusercontent.com/saurtron/Beyond-All-Reason/refs/heads/add-ping-wheel-widget-standalone/luaui/Widgets/gui_ping_wheel.lua), or the [standalone two level](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-second-level-standalone/luaui/Widgets/gui_ping_wheel.lua) file can be used. Just take it and place it inside LuaUI/Widgets/.
 
 For optimal result [this folder](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/configs/pingwheel) should be put inside LuaUI/Config/ so it will load translations, otherwise it will work but some texts won't be completely right. Also you should put there the icon as explained in the folder README.
 
