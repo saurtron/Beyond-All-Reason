@@ -260,7 +260,6 @@ local function setSizedVariables()
     baseOuterRadiusSq = (baseOuterRatio*wheelRadius)^2
     centerAreaRadiusSq = (centerAreaRatio*wheelRadius)^2
 end
-setSizedVariables()
 
 --- Other file variables
 local globalDim = 1     -- this controls global alpha for all wheel elements
