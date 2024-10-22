@@ -160,6 +160,17 @@ Regarding i18n capabilities: In the spirit of easing communication, I think it c
 
 I don't see why the full vocabulary listed above can't be supported translation wise, even if most options are not listed by default on default wheel.
 
+### Custom message files
+
+The pingwheel messages can be fully customized by placing .json files at \<datadir\>/LuaUI/Config/. Two files are supported, commands.json for the main wheel, and messages.json for the secondary wheel.
+
+The following sample files are provided here for now:
+
+* [commands.json](commands.json)
+* [2level commands.json](commands_2level.json)
+
+The format for now is just a straightforward encoding of the internal data structure. Additionally to the json format, lines can be prefixed with `#` to comment them out.
+
 ## Pending Work
 
 While most of the implementation is done and robust, the following things can still be done:
