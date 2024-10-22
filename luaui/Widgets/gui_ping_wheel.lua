@@ -1362,17 +1362,18 @@ end
 local function drawCloseHint()
     if pressReleaseMode then return end
 
+    local cancelText = getTranslatedText("ui.wheel.cancel")
     local x = 0
     local y = -wheelRadius*(baseOuterRatio+0.05)
     local hintIconSize = 0.8*closeHintSize
     local hintTextSize = 0.9*closeHintSize
     local drawIconSize = wheelRadius * iconSize * hintIconSize
-    local w = gl.GetTextWidth("Cancel")*pingWheelTextSize*hintTextSize
+    local w = gl.GetTextWidth(cancelText)*pingWheelTextSize*hintTextSize
     x_offset = (w+drawIconSize)/2.0
     drawIcon(defaults.rclickIcon, {x-x_offset, y}, hintIconSize)
     glColor({1, 1, 1, 0.7})
     glBeginText()
-    glText("Cancel", screenLocation[1]+drawIconSize/2-x_offset+w/6,
+    glText(cancelText, screenLocation[1]+drawIconSize/2-x_offset+w/6,
             screenLocation[2]+y,
             pingWheelTextSize*hintTextSize, "lovs")
     glEndText()
