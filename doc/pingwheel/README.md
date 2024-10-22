@@ -156,11 +156,16 @@ For now the list is not final, some of the categories don't match very well, som
 
 Also, some messages like 'on my way' or 'reclaim' seem to make it into most people lists, while for now having no clear category.
 
+Regarding i18n capabilities: In the spirit of easing communication, I think it can be good to have an ample vocabulary with translations, even if for starters we just show 6 basic options, then up to 6x3 or 6x2 or so for advanced users (2 levels or 2 wheels respectively), pro users could even activate hidden translatable vocabulary in json.
+
+I don't see why the full vocabulary listed above can't be supported translation wise, even if most options are not listed by default on default wheel.
+
 ## Pending Work
 
 While most of the implementation is done and robust, the following things can still be done:
 
 * Select a final list of messages.
+* Needs [good icons](#needed-icons). At the moment the wheel uses bar's cursor icons, but they're somewhat limited.
 
 Other things that could optionally be done:
 
@@ -171,6 +176,21 @@ Other things that could optionally be done:
 * Setting for sounds?
 * Proper implementation of augmented mapmarks.
 * Make center ping full size (ie, no internal dead zone) when on click mode?
+
+### Needed Icons
+
+The following I think are definitely needed:
+
+* Review icons for main actions.
+* defend: maybe a shield icon?.
+* alert: something like original iceXuick mockup can be used.
+* retreat: don't have any icon that looks like retreat, an arrow going up and turning back could be used.
+* paid: it's such common message in BAR games it'd be great to have an icon.
+* air: air support is commonly needed so an air icon would be great.
+
+All in all, I think the more icons available for use, the merrier.
+
+For the two level wheel, icons of suboptions can be variations of the main icon for the category, so they're easier to recognize and we don't need to make 200 icons.
 
 ### Known bugs
 
