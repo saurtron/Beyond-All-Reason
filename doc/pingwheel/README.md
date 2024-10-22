@@ -201,9 +201,9 @@ For the two level wheel, icons of suboptions can be variations of the main icon 
 ### Known bugs
 
 * on some systems the center dot shows as a square instead of a circle (like steam deck).
-* secondary selection -> first item can't select the first half
 * secondary selection -> when leaving secondary on left or right, should probably deselect the primary area
 * closeHint should appear below selected area, not above.
+* text doesn't actually fade in and out (barely noticeable).
 
 ### Augmented mapmark limitations
 
