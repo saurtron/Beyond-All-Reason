@@ -1,0 +1,10 @@
+[
+	{"name": "ui.wheel.attack", "color": [1, 0.3, 0.3, 1], "icon": "anims/icexuick_75/cursorattack_2.png"},
+	{"name": "Rally", "color": [0.4, 0.8, 0.4, 1], "icon_offset": [7, -8], "icon": "anims/icexuick_75/cursorfight_11.png"},
+	{"name": "Defend", "color": [0.7, 0.9, 1, 1], "icon_size": 0.8, "icon": "anims/icexuick_75/cursordefend_59.png"},
+	{"name": "ui.wheel.retreat", "color": [0.9, 0.7, 1, 1]},
+	{"name": "Alert", "color": [1, 1, 0.5, 1]},
+	{"name": "Reclaim", "color": [0.7, 1, 0.7, 1], "icon": "anims/icexuick_75/cursorreclamate_55.png"},
+	{"name": "Stop", "color": [1, 0.2, 0.2, 1]},
+	{"name": "Wait", "color": [0.7, 0.6, 0.3, 1], "icon": "anims/icexuick_75/cursorwait_31.png"}
+]

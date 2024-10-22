@@ -1,0 +1,29 @@
+[
+	{"name": "ui.wheel.attack", "color": [1, 0.3, 0.3, 1], "icon": "anims/icexuick_75/cursorattack_2.png", "children": [
+		{"name": "All-in", "icon": "anims/icexuick_75/cursordgun_4.png"},
+		{"name": "Push", "icon_offset": [0, -4], "icon": "anims/icexuick_75/cursorcapture_7.png"},
+		{"name": "Pressure", "icon": "anims/icexuick_75/cursorattack_15.png"}
+	]},
+	{"name": "Defend", "color": [0.7, 0.9, 1, 1], "icon_size": 0.8, "icon": "anims/icexuick_75/cursordefend_59.png", "children": [
+		{"name": "ui.wheel.retreat"},
+		{"name": "Protect", "icon": "anims/icexuick_75/cursordefend_55.png"},
+		{"name": "Hold", "icon": "anims/icexuick_75/cursorcentroid_0.png"}
+	]},
+	{"name": "Help", "color": [0.9, 0.7, 1, 1], "icon": "anims/icexuick_75/cursorgather_0.png", "children": [
+		{"name": "Air", "icon": "anims/icexuick_75/cursorunload_31.png"},
+		{"name": "Vision", "icon": "anims/icexuick_75/cursordwatch_0.png"},
+		{"name": "Support", "icon": "anims/icexuick_75/cursorrepair_44.png"}
+	]},
+	{"name": "Alert", "color": [1, 1, 0.5, 1], "icon": "anims/icexuick_75/cursorsettarget_0.png", "children": [
+		{"name": "Danger", "icon": "anims/icexuick_75/cursorsettarget_57.png"},
+		{"name": "Caution", "icon": "anims/icexuick_75/cursorsettarget_38.png"},
+		{"name": "T3", "icon": "anims/icexuick_75/cursorselfd_11.png"}
+	]},
+	{"name": "Reclaim", "color": [0.7, 1, 0.7, 1], "icon": "anims/icexuick_75/cursorreclamate_55.png"},
+	{"name": "On my way", "color": [0.5, 0, 1, 1], "icon_offset": [7,-8], "icon": "anims/icexuick_75/cursormove_24.png"},
+	{"name": "Paid", "color": [1, 0.2, 0.2, 1], "icon_size": 0.6, "icon": "anims/icexuick_75/cursorpurchase_0.png", "children": [
+		{"name": "T1 con", "msg": "T1 con pls"},
+		{"name": "Transport", "msg": "Transport pls"},
+		{"name": "Scout", "msg": "Scout pls"}
+	]}
+]
