@@ -151,7 +151,6 @@ Also, some messages like 'on my way' or 'reclaim' seem to make it into most peop
 While most of the implementation is done and robust, the following things can still be done:
 
 * Select a final list of messages.
-* Better alignment of icon and text label.
 
 Other things that could optionally be done:
 
