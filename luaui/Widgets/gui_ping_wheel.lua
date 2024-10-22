@@ -138,6 +138,7 @@ local defaults = {
     soundSetTarget = "sounds/commands/cmd-settarget.wav",
     rclickIcon = "icons/mouse/rclick_glow.png",
     closeHintSize = 1,
+    outerCircleRatio = 0.92,          -- the outer circle radius ratio
 }
 
 -- On/Off switches
@@ -1006,7 +1007,7 @@ local function drawAreaOutline(n, i, r1, r2, spacing, arr)
     local function CirclePart(n, i, p, r, dir, arr)
         local o1, o2
         local startidx = (i-1)*(p-1)+1
-        local endidx = (i-1)*(p-1)+p
+        local endidx = startidx+p-1
         if dir == -1 then
             startidx, endidx = endidx, startidx
         end
@@ -1043,13 +1044,18 @@ local function drawIcon(img, pos, size, offset)
 end
 
 local function drawWheel()
+    local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
+    local borderWidth = pingWheelBorderWidth * lineScale
+    local borderMargin = borderWidth/(wheelRadius*2)
+    local outerCircleRatio = defaults['outerCircleRatio']
+
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth * lineScale)
-    local hole = (selOuterRatio>0.92) and pingWheelSelection or 0
-    drawCircleOutline(0.92, arr, hole)
+    local hole = (selOuterRatio>outerCircleRatio) and pingWheelSelection or 0
+    drawCircleOutline(outerCircleRatio, arr, hole)
 
     -- setup stencil buffer to mask areas
     if bgTexture then
@@ -1061,12 +1067,9 @@ local function drawWheel()
         glStencilMask(0xff)
     end
 
-    local borderWidth = pingWheelBorderWidth * lineScale
-    local borderMargin = borderWidth/(wheelRadius*2)
     glLineWidth(borderWidth)
     -- item area backgrounds
     glColor(pingWheelBaseColor)
-    local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     for i=1, #pingWheel do
         if i~=pingWheelSelection then
             glColor(pingWheelBaseColor)
@@ -1154,6 +1157,35 @@ local function drawDividers()
     glBeginEnd(GL_LINES, Lines)
 end
 
+local function drawItem(selItem, posRatio, angle, isSelected, useColors, flashBlack)
+    local text = getTranslatedText(selItem.name)
+    local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
+    if isSelected and flashBlack then
+        color = { 0, 0, 0, 0 }
+    elseif spamControl > 0 and not flashing then
+        color = pingWheelTextSpamColor
+    else
+        -- TODO: this is modifying in place
+        color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
+    end
+    local x = wheelRadius * posRatio * sin(angle)
+    local y = wheelRadius * posRatio * cos(angle)
+    local icon = selItem.icon
+    local textScale = isSelected and selectedScaleFactor or 1.0
+    if icon and useIcons then
+        local halfSize = wheelRadius * iconSize
+        local dist = pingWheelTextSize * 0.3
+        local yOffset = pingWheelTextSize/2 + dist/2
+        y = y + halfSize*0.3 -- account for icons being smaller than their bb
+        drawIcon(icon, {x, y + yOffset}, selItem.icon_size, selItem.icon_offset)
+        y = y - dist/2 - halfSize
+    end
+    glColor(color)
+    glText(text, pingWheelScreenLocation.x+x,
+        pingWheelScreenLocation.y+y,
+        pingWheelTextSize*textScale, "cvos")
+end
+
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
@@ -1168,30 +1200,8 @@ local function drawItems()
         local isSelected = pingWheelSelection == i
         local selItem = pingWheel[i]
         local angle = (i - 1) * 2 * pi / #pingWheel
-        local text = getTranslatedText(selItem.name)
-        local color = (useColors and selItem.color) or (isSelected and pingWheelTextHighlightColor) or pingWheelTextColor
-        if isSelected and flashBlack then
-            color = { 0, 0, 0, 0 }
-        elseif spamControl > 0 and not flashing then
-            color = pingWheelTextSpamColor
-        else
-            -- TODO: this is modifying in place
-            color[4] = isSelected and pingWheelSelTextAlpha or pingWheelBaseTextAlpha
-        end
-        local x = wheelRadius * textAlignRatio * sin(angle)
-        local y = wheelRadius * textAlignRatio * cos(angle)
-        local icon = selItem.icon
-        local textScale = isSelected and selectedScaleFactor or 1.0
-        if icon and useIcons then
-            drawIcon(icon, {x, y+0.12*wheelRadius}, selItem.icon_size, selItem.icon_offset)
-            y = y-0.028*wheelRadius
-        end
-        glColor(color)
-        glText(text, pingWheelScreenLocation.x+x,
-            pingWheelScreenLocation.y+y,
-            pingWheelTextSize*textScale, "cvos")
+        drawItem(selItem, textAlignRatio, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
     end
-
     if hasCenterAction then
         local v = (deadZoneRatio+centerAreaRatio)/2
         if centerSelected and flashBlack then
@@ -1291,15 +1301,16 @@ local function prepareBlur()
         recreateBlurDlist = false
     end
     if not blurDlist and do_blur and WG['guishader'] then
+        local outerCircleRatio = defaults['outerCircleRatio']
         blurDlist = gl.CreateList(function()
             glPushMatrix()
             gl.Translate(pingWheelScreenLocation.x, pingWheelScreenLocation.y, 0)
             gl.Scale(wheelRadius, wheelRadius, wheelRadius)
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
-            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, 0.92, 0.0, arr)
-            if pingWheelSelection ~= 0 and selOuterRatio > 0.92 then
-                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, 0.92, selOuterRatio, spacing, arr)
+            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, outerCircleRatio, 0.0, arr)
+            if pingWheelSelection ~= 0 and selOuterRatio > outerCircleRatio then
+                drawArea(areaVertexNumber, #pingWheel, pingWheelSelection, outerCircleRatio, selOuterRatio, spacing, arr)
             end
             glPopMatrix()
         end)
