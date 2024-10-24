@@ -119,6 +119,7 @@ local styleConfig = {
         drawDividers = true,
         baseOuterRadius = 0.8,
         closeHintSize = 0.85,
+        centerDotBaseSize = 25,
     },
     [4] = {
         name = "Ring Light",
@@ -130,6 +131,7 @@ local styleConfig = {
         drawDividers = true,
         baseOuterRadius = 0.8,
         closeHintSize = 0.85,
+        centerDotBaseSize = 25,
     },
 }
 
@@ -153,12 +155,12 @@ local defaults = {
     baseTextOpacity = 0.75,
     selOuterRadius = 0.9,
     baseOuterRadius = 0.9,
+    centerDotBaseSize = 15,           -- size of the center dot
     -- next ones are not editable from style atm
     baseWheelSize = 0.355,            -- ~1/3 screen
     deadZoneBaseRatio = 0.12,         -- the center "no selection" area as a ratio of the ping wheel radius
     areaOutlineBaseWidth = 1.4,       -- width of the area outline
     dividerLineBaseWidth = 3.5,       -- width of the divider empty space between sections
-    centerDotBaseSize = 15,           -- size of the center dot
     outerCircleBaseWidth = 2.5,       -- width of the outer circle line
     linesBaseWidth = 2.1,             -- thickness of the ping wheel line drawing
     soundDefaultSelect = "sounds/commands/cmd-default-select.wav",
@@ -257,6 +259,7 @@ local iconSize = defaults.iconSize
 local wheelRadius
 local pingWheelThickness
 local centerDotSize
+local centerDotBaseSize = defaults.centerDotBaseSize
 local dividerLineWidth
 local pingWheelTextSize
 local pingWheelRingWidth
@@ -275,7 +278,7 @@ local function updateSizes(vsx, vsy)
     local f = math.min(vsx, vsy) / 1080.0
     wheelRadius = (math.min(vsx, vsy)*defaults.baseWheelSize)/2
     pingWheelTextSize = pingWheelTextBaseSize * f
-    centerDotSize = defaults.centerDotBaseSize * f
+    centerDotSize = centerDotBaseSize * f
     dividerLineWidth = defaults.dividerLineBaseWidth * f
     pingWheelThickness = defaults.linesBaseWidth * f
     pingWheelRingWidth = defaults.outerCircleBaseWidth * f
@@ -488,6 +491,7 @@ local function applyStyle()
     pingWheelBaseTextAlpha = style.baseTextOpacity or defaults.baseTextOpacity
     baseOuterRatio = style.baseOuterRadius or defaults.baseOuterRadius
     closeHintSize = style.closeHintSize or defaults.closeHintSize
+    centerDotBaseSize = style.centerDotBaseSize or defaults.centerDotBaseSize
     pingWheelDrawBase = style.drawBase
     if pingWheelDrawBase == nil then
         pingWheelDrawBase = defaults.drawBase
@@ -511,8 +515,10 @@ local function applyStyle()
 
     local sizeRatio = math.min(vx, vy)/1080.0
     pingWheelTextSize = pingWheelTextBaseSize * sizeRatio
+    centerDotSize = centerDotBaseSize * sizeRatio
 
     setSizedVariables()
+    destroyChoiceDlist()
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
@@ -1383,9 +1389,8 @@ local function drawDeadZone()
 end
 
 local function drawCenterDot()
-    if flashing then return end
+    if flashing or globalFadeOut > 0 then return end
     -- draw the center dot
-    glColor({0,0,0,0.8})
     glPointSize(centerDotSize)
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
     glColor(playerColor)
@@ -1393,17 +1398,28 @@ local function drawCenterDot()
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
 end
 
+local function drawImgCenterDot()
+    if flashing or globalFadeOut > 0 then return end
+    glColor(playerColor)
+    local halfSize = 0.003*centerDotSize
+    glTexture("luaui/images/circle2.png")
+    glTexRect(-halfSize, -halfSize,
+        halfSize, halfSize)
+    glTexture(false)
+end
+
 local function drawWheelChoice()
     local nparts = 6
     local arr = baseCircleArrays[nparts]
 
-    drawCenterDot()
-
-    local r1 = deadZoneRatio
+    local r1 = defaults.deadZoneBaseRatio -- don't want this to change with style
     local r2 = centerAreaRatio*1.2
     local v = (areaVertexNumber-1)*nparts/2+1
 
     gl.Scale(wheelRadius, wheelRadius, wheelRadius)
+
+    drawImgCenterDot()
+
     gl.PushMatrix()
     gl.Rotate(-180/nparts, 0, 0, 1)
 
@@ -1456,11 +1472,11 @@ local function drawWheelChoiceHelper()
         mx, my = spGetMouseState()
     end
 
-    gl.PushMatrix()
-    gl.Translate(mx, my, 0)
     if not choiceDlist then
         choiceDlist = gl.CreateList(drawWheelChoice)
     end
+    gl.PushMatrix()
+    gl.Translate(mx, my, 0)
     glCallList(choiceDlist)
     gl.PopMatrix()
 end
@@ -1470,7 +1486,7 @@ local function drawDecorations()
     drawDeadZone()
 
     -- if keyDown then draw a dot at where mouse is
-    drawCenterDot()
+    --drawCenterDot()
 
     -- draw dividers between zones for styles with no base
     drawDividers()
@@ -1560,17 +1576,14 @@ function widget:DrawScreen()
         -- background texture, can be overlayed over the new base
         shader:SetUniform("useTex", 1)
         drawBgTexture()
+        drawImgCenterDot()
         shader:SetUniform("useTex", 0)
 
         -- Other details
-        if flashing then
-            drawDecorations()
-        else
-            if not decorationsDlist then
-                decorationsDlist = gl.CreateList(drawDecorations)
-            end
-            glCallList(decorationsDlist)
+        if not decorationsDlist then
+            decorationsDlist = gl.CreateList(drawDecorations)
         end
+        glCallList(decorationsDlist)
 
         shader:SetUniform("scale", scale2)
         drawWheelForeground()
