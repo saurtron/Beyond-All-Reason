@@ -1289,7 +1289,7 @@ local function drawWheelChoice()
 
     drawCenterDot()
 
-    local r1 = deadZoneRatio
+    local r1 = defaults.deadZoneBaseRatio -- don't want this to change with style
     local r2 = centerAreaRatio*1.2
     local v = (areaVertexNumber-1)*nparts/2+1
 
@@ -1446,14 +1446,10 @@ function widget:DrawScreen()
         shader:SetUniform("useTex", 0)
 
         -- Other details
-        if flashing then
-            drawDecorations()
-        else
-            if not decorationsDlist then
-                decorationsDlist = gl.CreateList(drawDecorations)
-            end
-            glCallList(decorationsDlist)
+        if not decorationsDlist then
+            decorationsDlist = gl.CreateList(drawDecorations)
         end
+        glCallList(decorationsDlist)
 
         shader:SetUniform("scale", scale2)
         drawWheelForeground()
