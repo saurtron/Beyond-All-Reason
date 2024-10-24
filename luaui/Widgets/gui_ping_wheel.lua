@@ -129,7 +129,7 @@ local defaults = {
     -- next ones are not editable from style atm
     baseWheelSize = 0.355,            -- ~1/3 screen
     deadZoneBaseRatio = 0.12,         -- the center "no selection" area as a ratio of the ping wheel radius
-    areaOutlineBaseWidth = 2.1,       -- width of the outer circle line
+    areaOutlineBaseWidth = 1.4,       -- width of the area outline
     dividerLineBaseWidth = 3.5,       -- width of the divider empty space between sections
     centerDotBaseSize = 15,           -- size of the center dot
     outerCircleBaseWidth = 2.5,       -- width of the outer circle line
@@ -291,7 +291,6 @@ local centerSelected = false
 local spamControl = 0
 local flashFrame = 0
 local flashing = false
-local lineScale = 1
 
 -- Speedups
 local spGetMouseState = Spring.GetMouseState
@@ -969,9 +968,9 @@ local function dVector(x1, x2, y1, y2, ff)
     return dx*z, dy*z
 end
 
-local function drawArea(vertices, n, i, r1, r2, spacing, arr)
+local function drawArea(vertices, i, r1, r2, spacing, arr)
     -- draw a donut portion with spacer space
-    local function Area(n, i, p, r1, r2, arr)
+    local function Area(i, p, r1, r2, arr)
         local o1, o2, o3, o4
         local startidx = (i-1)*(p-1)
         for j=startidx+1, startidx+p-1 do
@@ -989,7 +988,7 @@ local function drawArea(vertices, n, i, r1, r2, spacing, arr)
             glVertex(sin2*r1+o3, cos2*r1+o4)
         end
     end
-    glBeginEnd(GL.QUADS, Area, n, i, vertices, r1, r2, arr)
+    glBeginEnd(GL.QUADS, Area, i, vertices, r1, r2, arr)
 end
 
 local function drawCircleOutline(r, arr, hole)
@@ -1009,11 +1008,11 @@ local function drawCircleOutline(r, arr, hole)
     glBeginEnd(GL.LINE_STRIP, Circle)
 end
 
-local function drawAreaOutline(vertices, n, i, r1, r2, spacing, arr)
+local function drawAreaOutline(vertices, i, r1, r2, spacing, arr)
     -- draw a triangle at the right angle for selection
     -- also push external vertex a bit to the inside so we leave
     -- some space between sections
-    local function CirclePart(n, i, p, r, dir, arr)
+    local function CirclePart(i, p, r, dir, arr)
         local o1, o2
         local startidx = (i-1)*(p-1)+1
         local endidx = startidx+p-1
@@ -1031,12 +1030,11 @@ local function drawAreaOutline(vertices, n, i, r1, r2, spacing, arr)
             glVertex(sin1*r+o1, cos1*r+o2)
         end
     end
-    local function AreaOutline(n, i, p, r1, r2, arr)
-        CirclePart(n, i, p, r2, 1, arr)
-        CirclePart(n, i, p, r1, -1, arr)
+    local function AreaOutline(i, p, r1, r2, arr)
+        CirclePart(i, p, r2, 1, arr)
+        CirclePart(i, p, r1, -1, arr)
     end
-    glLineWidth(dividerLineWidth * lineScale * 0.4)
-    glBeginEnd(GL_LINE_LOOP, AreaOutline, n, i, vertices, r1, r2, arr)
+    glBeginEnd(GL_LINE_LOOP, AreaOutline, i, vertices, r1, r2, arr)
 end
 
 local function drawIcon(img, pos, size, offset)
@@ -1054,15 +1052,15 @@ end
 
 local function drawWheel()
     local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
-    local borderWidth = pingWheelBorderWidth * lineScale
-    local borderMargin = borderWidth/(wheelRadius*2)
+    local borderWidth = pingWheelBorderWidth
+    local borderMargin = 0.75*borderWidth/wheelRadius
     local outerCircleRatio = defaults['outerCircleRatio']
 
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
     -- a ring around the wheel
     glColor(pingWheelRingColor)
-    glLineWidth(pingWheelRingWidth * lineScale)
+    glLineWidth(pingWheelRingWidth)
     local hole = (selOuterRatio>=outerCircleRatio) and mainSelection or 0
     drawCircleOutline(outerCircleRatio, arr, hole)
 
@@ -1082,19 +1080,19 @@ local function drawWheel()
     for i=1, #pingWheel do
         if i~=mainSelection then
             glColor(pingWheelBaseColor)
-            drawArea(areaVertexNumber, #pingWheel, i, r1, r2, spacing, arr)
+            drawArea(areaVertexNumber, i, r1, r2, spacing, arr)
             glColor(pingWheelAreaOutlineColor)
-            drawAreaOutline(areaVertexNumber, #pingWheel, i, r1, r2, spacing, arr)
+            drawAreaOutline(areaVertexNumber, i, r1, r2, spacing, arr)
             glColor(pingWheelAreaInlineColor)
-            drawAreaOutline(areaVertexNumber, #pingWheel, i, r1+borderMargin, r2-borderMargin, spacing+borderMargin, arr)
+            drawAreaOutline(areaVertexNumber, i, r1+borderMargin, r2-borderMargin, spacing+borderMargin, arr)
         end
     end
     -- selected part
     if mainSelection ~= 0 then
         r2 = selOuterRatio
         glColor(pingWheelSelColor)
-        drawArea(areaVertexNumber, #pingWheel, mainSelection, r1, r2, spacing, arr)
-        drawAreaOutline(areaVertexNumber, #pingWheel, mainSelection, r1, r2, spacing, arr)
+        drawArea(areaVertexNumber, mainSelection, r1, r2, spacing, arr)
+        drawAreaOutline(areaVertexNumber, mainSelection, r1, r2, spacing, arr)
     end
 
     --center hotzone
@@ -1104,7 +1102,7 @@ local function drawWheel()
         else
             glColor(pingWheelBaseColor)
         end
-        drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, centerAreaRatio, 0.0, arr)
+        drawArea((areaVertexNumber-1)*#pingWheel+1, 1, deadZoneRatio, centerAreaRatio, 0.0, arr)
         glColor(pingWheelAreaInlineColor)
         drawCircleOutline(deadZoneRatio, arr, 0)
     end
@@ -1287,17 +1285,17 @@ local function drawWheelChoice()
     gl.PushMatrix()
     gl.Rotate(-180/#pingWheel, 0, 0, 1)
 
-    local borderWidth = pingWheelBorderWidth * lineScale
-    local borderMargin = borderWidth/(wheelRadius*2)
+    local borderWidth = pingWheelBorderWidth
+    local borderMargin = 0.75*borderWidth/wheelRadius
 
     glLineWidth(borderWidth)
     for i = 1, 2 do
         glColor(pingWheelBaseColor)
-        drawArea(v, 1, i, r1, r2, 0.01, arr)
+        drawArea(v, i, r1, r2, 0.01, arr)
         glColor(pingWheelAreaOutlineColor)
-        drawAreaOutline(v, 1, i, r1, r2, 0.01, arr)
+        drawAreaOutline(v, i, r1, r2, 0.01, arr)
         glColor(pingWheelAreaInlineColor)
-        drawAreaOutline(v, 1, i, r1+borderMargin, r2-borderMargin, 0.01+borderMargin, arr)
+        drawAreaOutline(v, i, r1+borderMargin, r2-borderMargin, 0.01+borderMargin, arr)
     end
 
     gl.PopMatrix()
@@ -1369,9 +1367,9 @@ local function prepareBlur()
             gl.Scale(wheelRadius, wheelRadius, wheelRadius)
             local arr = baseCircleArrays[#pingWheel]
             local spacing = 0.003
-            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, 1, deadZoneRatio, outerCircleRatio, 0.0, arr)
+            drawArea((areaVertexNumber-1)*#pingWheel+1, 1, deadZoneRatio, outerCircleRatio, 0.0, arr)
             if mainSelection ~= 0 and selOuterRatio > outerCircleRatio then
-                drawArea(areaVertexNumber, #pingWheel, mainSelection, outerCircleRatio, selOuterRatio, spacing, arr)
+                drawArea(areaVertexNumber, mainSelection, outerCircleRatio, selOuterRatio, spacing, arr)
             end
             glPopMatrix()
         end)
