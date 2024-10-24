@@ -1010,6 +1010,9 @@ if #pingCommands ~= #pingMessages then
     baseCircleArrays[#pingMessages] = circleArray(#pingMessages, areaVertexNumber)
     baseCircleArrays[#pingMessages*2] = circleArray(#pingMessages*2, areaVertexNumber)
 end
+if not baseCircleArrays[6] then
+    baseCircleArrays[6] = circleArray(6, areaVertexNumber)
+end
 
 local function resetDrawState()
     -- restore gl state
@@ -1391,17 +1394,18 @@ local function drawCenterDot()
 end
 
 local function drawWheelChoice()
-    local arr = baseCircleArrays[#pingWheel]
+    local nparts = 6
+    local arr = baseCircleArrays[nparts]
 
     drawCenterDot()
 
     local r1 = deadZoneRatio
     local r2 = centerAreaRatio*1.2
-    local v = (areaVertexNumber-1)*#pingWheel/2+1
+    local v = (areaVertexNumber-1)*nparts/2+1
 
     gl.Scale(wheelRadius, wheelRadius, wheelRadius)
     gl.PushMatrix()
-    gl.Rotate(-180/#pingWheel, 0, 0, 1)
+    gl.Rotate(-180/nparts, 0, 0, 1)
 
     local borderWidth = pingWheelBorderWidth
     local borderMargin = 0.75*borderWidth/wheelRadius
