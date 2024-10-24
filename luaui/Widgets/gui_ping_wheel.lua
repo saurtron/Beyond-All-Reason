@@ -756,27 +756,28 @@ local function setWheel(selected)
 end
 
 function widget:KeyRelease(key)
+    local wasPressed = keyDown == true
     keyDown = false
     showLRHint = false
     if not pressReleaseMode and displayPingWheel and key == 27 then -- could include KEYSIMS but not sure it's worth it
         -- click mode: allow closing with esc.
         FadeOut()
-    elseif pressReleaseMode and displayPingWheel then
+    elseif wasPressed and pressReleaseMode and displayPingWheel then
         -- pressRelease mode: allow activating on key release.
         checkRelease()
     end
 end
 
 function PingWheelAction(_, _, _, args)
-    if args[1] then
+    if args[1] and not displayPingWheel then
         keyDown = true
         if doubleWheel then
             showLRHint = true
         end
-        if not displayPingWheel and doubleWheel and pressReleaseMode then
+        if doubleWheel and pressReleaseMode then
             SetPingLocation()
         end
-        if not displayPingWheel and not doubleWheel then
+        if not doubleWheel then
             TurnOn("Single press")
         end
     else
