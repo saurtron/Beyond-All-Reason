@@ -139,6 +139,7 @@ local defaults = {
     soundDefaultSelect = "sounds/commands/cmd-default-select.wav",
     soundSetTarget = "sounds/commands/cmd-settarget.wav",
     rclickIcon = "icons/mouse/rclick_glow.png",
+    circleIcon = "luaui/images/circle2.png",
     closeHintSize = 1,
     outerCircleRatio = 0.92,          -- the outer circle radius ratio
     outerLimitRatio = 1.5,            -- the outer limit ratio where "no selection" is active
@@ -1279,7 +1280,7 @@ local function drawImgCenterDot()
     if flashing or globalFadeOut > 0 then return end
     glColor(playerColor)
     local halfSize = 0.003*centerDotSize
-    glTexture("luaui/images/circle2.png")
+    glTexture(defaults.circleIcon)
     glTexRect(-halfSize, -halfSize,
         halfSize, halfSize)
     glTexture(false)
