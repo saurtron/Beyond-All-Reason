@@ -910,9 +910,6 @@ function widget:Update(dt)
         if spamControl > 0 then
             spamControl = (spamControl == 0) and 0 or (spamControl - 1)
         end
-        if not screenLocation then
-            return
-        end
         if flashing then
             if flashFrame > 0 then
                 flashFrame = flashFrame - 1
@@ -977,9 +974,6 @@ function widget:Update(dt)
         end
     elseif (sec2 > 0.03) and showLRHint and pressReleaseMode then
         -- gesture left or right to select primary or secondary wheel on pressRelaseMode
-        if not screenLocation then
-            return
-        end
         local mx, my = spGetMouseState()
         local dx = mx - screenLocation[1]
         local dy = my - screenLocation[2]
@@ -1464,7 +1458,7 @@ end
 local function drawWheelChoiceHelper()
     -- draw dot at mouse location
     local mx, my
-    if pressReleaseMode and screenLocation then
+    if pressReleaseMode then
         -- fixed position in pressrelease mode
         mx = screenLocation[1]
         my = screenLocation[2]
@@ -1553,7 +1547,7 @@ function widget:DrawScreen()
     end
 
     -- Main wheel
-    if displayPingWheel and screenLocation then
+    if displayPingWheel then
         local vsx, vsy, vpx, vpy = Spring.GetViewGeometry()
         local mmx = screenLocation[1]*2 - vsx
         local mmy = screenLocation[2]*2 - vsy
