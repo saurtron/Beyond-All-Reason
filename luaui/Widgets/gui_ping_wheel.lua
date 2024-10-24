@@ -1441,8 +1441,8 @@ function widget:DrawScreen()
 
         -- background texture, can be overlayed over the new base
         shader:SetUniform("useTex", 1)
-        drawImgCenterDot()
         drawBgTexture()
+        drawImgCenterDot()
         shader:SetUniform("useTex", 0)
 
         -- Other details
