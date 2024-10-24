@@ -166,6 +166,7 @@ local defaults = {
     soundDefaultSelect = "sounds/commands/cmd-default-select.wav",
     soundSetTarget = "sounds/commands/cmd-settarget.wav",
     rclickIcon = "icons/mouse/rclick_glow.png",
+    circleIcon = "luaui/images/circle2.png",
     closeHintSize = 1,
     outerCircleRatio = 0.92,          -- the outer circle radius ratio
     secondaryInnerRatio = 0.93,       -- secondary items inner limit
@@ -601,8 +602,8 @@ local function colourNames(R, G, B)
 end
 
 local function createStandaloneMapPoint(playerID, text, x, y, z, color, icon)
-    local text = getTranslatedText(text)
-    if color and use_colors then
+    text = text and getTranslatedText(text) or nil
+    if color and use_colors and text then
         text = colourNames(color[1], color[2], color[3]) .. text
     end
     Spring.MarkerAddPoint(x, y, z, text)
@@ -625,6 +626,7 @@ local function addStandaloneSettings()
         WG['options'].addOptions(table.map(standaloneSettings, mapSetting))
     end
     defaults['rclickIcon'] = configDir.."rclick_glow.png"
+    defaults['circleIcon'] = configDir.."circle2.png"
 end
 
 
@@ -1531,7 +1533,7 @@ local function drawImgCenterDot()
     if flashing or globalFadeOut > 0 then return end
     glColor(playerColor)
     local halfSize = 0.003*centerDotSize
-    glTexture("luaui/images/circle2.png")
+    glTexture(defaults.circleIcon)
     glTexRect(-halfSize, -halfSize,
         halfSize, halfSize)
     glTexture(false)
