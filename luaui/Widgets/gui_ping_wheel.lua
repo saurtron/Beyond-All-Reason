@@ -345,6 +345,7 @@ local baseDlist
 local decorationsDlist
 local blurDlist
 local recreateBlurDlist
+local choiceDlist
 
 local function destroyItemsDlist()
     if not itemsDlist then return end
@@ -360,6 +361,11 @@ local function destroyDecorationsDlist()
     if not decorationsDlist then return end
     gl.DeleteList(decorationsDlist)
     decorationsDlist = nil
+end
+local function destroyChoiceDlist()
+    if not choiceDlist then return end
+    gl.DeleteList(choiceDlist)
+    choiceDlist = nil
 end
 local function destroyBlurDlist()
     if not blurDlist then return end
@@ -638,6 +644,7 @@ function widget:Shutdown()
     destroyDecorationsDlist()
     destroyBaseDlist()
     destroyBlurDlist()
+    destroyChoiceDlist()
     destroyShaders()
 end
 
@@ -647,6 +654,7 @@ function widget:ViewResize(vsx, vsy)
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
+    destroyChoiceDlist()
 end
 
 ------------------------
@@ -961,8 +969,11 @@ function widget:Update(dt)
                 return
             end
         end
-    elseif (sec2 > 0.03) and keyDown and not displayPingWheel and doubleWheel and pressReleaseMode then
+    elseif (sec2 > 0.03) and showLRHint and pressReleaseMode then
         -- gesture left or right to select primary or secondary wheel on pressRelaseMode
+        if not screenLocation then
+            return
+        end
         local mx, my = spGetMouseState()
         local dx = mx - screenLocation[1]
         local dy = my - screenLocation[2]
@@ -1337,27 +1348,6 @@ local function drawItems()
     drawCloseHint()
 end
 
-local function drawWheelChoiceHelper()
-    -- draw dot at mouse location
-    local mx, my
-    if pressReleaseMode and screenLocation then
-        -- fixed position in pressrelease mode
-        mx = screenLocation[1]
-        my = screenLocation[2]
-    else
-        -- follows mouse in click mode
-        mx, my = spGetMouseState()
-    end
-    glColor(playerColor)
-    glPointSize(centerDotSize)
-    glBeginEnd(GL_POINTS, glVertex, mx, my)
-
-    -- draw two hints at the top left and right of the location
-    glColor(1, 1, 1, 1)
-    glText("R-click\nMsgs", mx + 15, my + 11, 12, "os")
-    glText("L-click\nCmds", mx - 15, my + 11, 12, "ros")
-end
-
 local function drawBgTexture()
     if bgTexture then
         glStencilFunc(GL_NOTEQUAL, 1, 1)
@@ -1399,6 +1389,67 @@ local function drawCenterDot()
     glColor(playerColor)
     glPointSize(centerDotSize*0.8)
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
+end
+
+local function drawWheelChoice()
+    local arr = baseCircleArrays[#pingWheel]
+
+    drawCenterDot()
+
+    local r1 = deadZoneRatio
+    local r2 = centerAreaRatio*1.2
+    local v = (areaVertexNumber-1)*#pingWheel/2+1
+
+    gl.Scale(wheelRadius, wheelRadius, wheelRadius)
+    gl.PushMatrix()
+    gl.Rotate(-180/#pingWheel, 0, 0, 1)
+
+    glColor(pingWheelBaseColor)
+    drawArea(v, 1, 1, r1, r2, 0.01, arr)
+    drawArea(v, 1, 2, r1, r2, 0.01, arr)
+    gl.PopMatrix()
+
+    glColor(1, 1, 1, 1)
+
+    local halfSize = 0.1
+    local halfZone = (r2+r1)/2
+    local yPos = -0.094
+    local xPos = halfZone
+
+    glTexture(defaults.rclickIcon)
+    glTexRect(-halfSize+xPos, -halfSize+yPos,
+        halfSize+xPos, halfSize+yPos)
+    glTexRect(-halfSize-xPos, -halfSize+yPos,
+        halfSize-xPos, halfSize+yPos, true)
+
+    gl.Scale(1/wheelRadius, 1/wheelRadius, 1/wheelRadius)
+
+    local textSize = 0.063*wheelRadius
+    local textOffset = 0.015*wheelRadius
+
+    glText("Msgs", -halfZone*wheelRadius, textOffset, textSize, "cos")
+    glText("Cmds",  halfZone*wheelRadius, textOffset, textSize, "cos")
+end
+
+local function drawWheelChoiceHelper()
+    -- draw dot at mouse location
+    local mx, my
+    if pressReleaseMode and screenLocation then
+        -- fixed position in pressrelease mode
+        mx = screenLocation[1]
+        my = screenLocation[2]
+    else
+        -- follows mouse in click mode
+        mx, my = spGetMouseState()
+    end
+
+    gl.PushMatrix()
+    gl.Translate(mx, my, 0)
+    if not choiceDlist then
+        choiceDlist = gl.CreateList(drawWheelChoice)
+    end
+    glCallList(choiceDlist)
+    gl.PopMatrix()
 end
 
 local function drawDecorations()
