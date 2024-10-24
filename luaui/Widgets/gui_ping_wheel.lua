@@ -570,8 +570,8 @@ local function colourNames(R, G, B)
 end
 
 local function createStandaloneMapPoint(playerID, text, x, y, z, color, icon)
-    local text = getTranslatedText(text)
-    if color and use_colors then
+    text = text and getTranslatedText(text) or nil
+    if color and use_colors and text then
         text = colourNames(color[1], color[2], color[3]) .. text
     end
     Spring.MarkerAddPoint(x, y, z, text)
