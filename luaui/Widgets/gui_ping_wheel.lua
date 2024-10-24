@@ -1265,14 +1265,22 @@ local function drawDeadZone()
 end
 
 local function drawCenterDot()
-    if flashing then return end
+    if flashing or globalFadeOut > 0 then return end
     -- draw the center dot
-    glColor({0,0,0,0.8})
     glPointSize(centerDotSize)
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
     glColor(playerColor)
     glPointSize(centerDotSize*0.8)
     glBeginEnd(GL_POINTS, glVertex, 0, 0)
+end
+
+local function drawImgCenterDot()
+    if flashing or globalFadeOut > 0 then return end
+    glColor(playerColor)
+    local halfSize = 0.05
+    glTexture("luaui/images/circle2.png")
+    glTexRect(-halfSize, -halfSize,
+        halfSize, halfSize)
 end
 
 local function drawWheelChoice()
@@ -1352,7 +1360,7 @@ local function drawDecorations()
     drawDeadZone()
 
     -- if keyDown then draw a dot at where mouse is
-    drawCenterDot()
+    --drawCenterDot()
 
     -- draw dividers between zones for styles with no base
     drawDividers()
@@ -1433,6 +1441,7 @@ function widget:DrawScreen()
 
         -- background texture, can be overlayed over the new base
         shader:SetUniform("useTex", 1)
+        drawImgCenterDot()
         drawBgTexture()
         shader:SetUniform("useTex", 0)
 
