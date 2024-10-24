@@ -6,7 +6,7 @@ function widget:GetInfo()
         author  = "Errrrrrr, IceXuick, Saurtron",
         date    = "June 27, 2023",
         license = "GNU GPL, v2 or later",
-        version = "3.0 alpha1",
+        version = "3.0 alpha2",
         layer   = -1,
         enabled = true,
     }
