@@ -1410,7 +1410,6 @@ local function drawWheelChoice()
     local borderWidth = pingWheelBorderWidth
     local borderMargin = 0.75*borderWidth/wheelRadius
 
-    Spring.Echo(tostring(borderWidth).." "..tostring(borderMargin))
     glLineWidth(borderWidth)
     for i = 1, 2 do
         glColor(pingWheelBaseColor)
