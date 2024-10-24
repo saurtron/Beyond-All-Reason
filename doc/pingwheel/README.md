@@ -58,7 +58,7 @@ At the moment there are two ways to test this:
 
 For standalone installation, the [normal standalone](https://raw.githubusercontent.com/saurtron/Beyond-All-Reason/refs/heads/add-ping-wheel-widget-standalone/luaui/Widgets/gui_ping_wheel.lua), or the [standalone two level](https://github.com/saurtron/Beyond-All-Reason/blob/add-ping-wheel-widget-second-level-standalone/luaui/Widgets/gui_ping_wheel.lua) file can be used. Just take it and place it inside LuaUI/Widgets/.
 
-For optimal result [this folder](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/configs/pingwheel) should be put inside LuaUI/Config/ so it will load translations, otherwise it will work but some texts won't be completely right. Also you should put there the icon as explained in the folder README.
+For optimal result [this folder](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/configs/pingwheel) should be put inside LuaUI/Config/ so it will load translations, otherwise it will work but some texts won't be completely right. Also you should put there some icons as explained in the folder's [README](https://github.com/saurtron/Beyond-All-Reason/tree/add-ping-wheel-widget-second-level-standalone/luaui/configs/pingwheel).
 
 ## Interaction modes
 
@@ -201,7 +201,6 @@ For the two level wheel, icons of suboptions can be variations of the main icon 
 
 ### Known bugs
 
-* on some systems the center dot shows as a square instead of a circle (like steam deck).
 * secondary selection -> when leaving secondary on left or right, should probably deselect the primary area
 * closeHint should appear below selected area, not above.
 * text doesn't actually fade in and out (barely noticeable).
