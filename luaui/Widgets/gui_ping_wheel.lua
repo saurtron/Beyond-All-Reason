@@ -1062,7 +1062,7 @@ local function drawArea(vertices, i, r1, r2, spacing, arr)
     glBeginEnd(GL.QUADS, Area, i, vertices, r1, r2, arr)
 end
 
-local function drawCircleOutline(r, arr, hole, holeEnd)
+local function drawCircleOutline(r, arr, hole)
     local function Circle()
         local vn = areaVertexNumber-1
         local holeEnd = hole*vn
