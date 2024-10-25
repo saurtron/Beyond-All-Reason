@@ -1081,7 +1081,6 @@ end
 
 local function drawArc(r, arr, arcStart, arcEnd)
     local function Circle()
-        local vn = areaVertexNumber-1
         local loopEnd = arcEnd <= #arr and arcEnd or #arr
         for i=arcStart, loopEnd do
             glVertex(arr[i][1]*r, arr[i][2]*r)
