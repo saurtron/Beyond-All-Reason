@@ -1065,12 +1065,12 @@ end
 local function drawCircleOutline(r, arr, hole, holeEnd)
     local function Circle()
         local vn = areaVertexNumber-1
-        holeStart = holeEnd and hole or (hole-1)*vn+1
-        holeEnd = holeEnd and holeEnd or hole*vn
+        local holeEnd = hole*vn
         for i=1+holeEnd, #arr do
             glVertex(arr[i][1]*r, arr[i][2]*r)
         end
         if hole ~=0 then
+            local holeStart = (hole-1)*vn+1
             for i=1, holeStart do
                 glVertex(arr[i][1]*r, arr[i][2]*r)
             end
