@@ -1146,7 +1146,7 @@ local function drawWheel()
 
     if mainSelection ~= 0 and pingWheel[mainSelection].children then
         glLineWidth(borderWidth)
-        arr = baseCircleArrays[#pingWheel*2]
+        local arr = baseCircleArrays[#pingWheel*2]
         for i=1, 3 do
             s = (mainSelection == 1 and i == 1) and #pingWheel*2 or (mainSelection*2+i-3)
             if i == secondarySelection then
@@ -1509,7 +1509,7 @@ local function prepareBlur()
             if mainSelection ~= 0 and pingWheel[mainSelection].children then
                 arr = baseCircleArrays[#pingWheel*2]
                 for i=1, 3 do
-                    s = (mainSelection == 1 and i == 1) and #pingWheel*2 or (mainSelection*2+i-3)
+                    local s = (mainSelection == 1 and i == 1) and #pingWheel*2 or (mainSelection*2+i-3)
                     drawArea(areaVertexNumber, s, secondaryInnerRatio, secondaryOuterRatio, 0, arr)
                 end
             end
