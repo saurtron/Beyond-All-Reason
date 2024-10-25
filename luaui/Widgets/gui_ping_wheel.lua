@@ -439,13 +439,13 @@ local function getTranslatedText(text)
 end
 
 local function createMapPoint(playerID, text, x, y, z, color, icon)
-    data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
+    local data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
     if color then
         data.r = color[1]
         data.g = color[2]
         data.b = color[3]
     end
-    msg = Json.encode(data)
+    local msg = Json.encode(data)
     Spring.SendLuaUIMsg('mppnt:' .. msg)
 end
 
@@ -588,7 +588,7 @@ local function loadShaders()
     vsSrc = vsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
 
     shader = LuaShader({vertex=vsSrc, fragment=fsSrc}, "ping wheel")
-    shaderCompiled = shader:Initialize()
+    local shaderCompiled = shader:Initialize()
     if not shaderCompiled then
         shader:ShowError(shader.shLog)
     end
@@ -1250,7 +1250,7 @@ local function drawCloseHint()
     local hintTextSize = 0.9*closeHintSize
     local drawIconSize = wheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth(cancelText)*pingWheelTextSize*hintTextSize
-    x_offset = (w+drawIconSize)/2.0
+    local x_offset = (w+drawIconSize)/2.0
     drawIcon(defaults.rclickIcon, {x-x_offset, y}, hintIconSize)
     glColor({1, 1, 1, 0.7})
     glBeginText()
