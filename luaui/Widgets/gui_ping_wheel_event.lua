@@ -21,7 +21,6 @@ local iconQuadDlist
 
 -- On/Off switches
 local use_colors = false -- set to false to use player color instead of custom ping color (controlled from options ui)
-local eraseDistance = 100
 local getMiniMapFlipped = VFS.Include("luaui/Widgets/Include/minimap_utils.lua").getMiniMapFlipped
 local defaultIcon = "anims/icexuick_75/cursorattack_2.png"
 local maxIconDuration = 300
@@ -67,11 +66,12 @@ local function getTranslatedText(text)
 end
 
 function widget:MapDrawCmd(playerID, cmdType, x, y, z, a, b, c)
-    local margin = eraseDistance*eraseDistance
     local osClock = os.clock()
     if cmdType == 'erase' then
+        -- a is radius (currently hardcoded to 100 in engine), b and c unused
+        local margin = a*a
         for cmdKey, cmdValue in pairs(commands) do
-            -- maybe check playerID??, what are a (ex: 100) and b (ex: nil)??
+            -- maybe check playerID??
             if cmdValue.x and cmdValue.z and cmdValue.y then
                 Spring.Echo("ERASE "..tostring(playerID).." "..tostring(x).." "..tostring(y).." "..tostring(z).." "..tostring(cmdValue.x).." "..tostring(cmdValue.y).." "..tostring(cmdValue.z))
             end
