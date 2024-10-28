@@ -402,7 +402,8 @@ local glVertex               = gl.Vertex
 local glPointSize            = gl.PointSize
 local GL_LINES               = GL.LINES
 local GL_LINE_LOOP           = GL.LINE_LOOP
-local GL_POINTS              = GL.POINTS
+local GL_LINE_STRIP          = GL.LINE_STRIP
+local GL_QUADS               = GL.QUADS
 local GL_SRC_ALPHA           = GL.SRC_ALPHA
 local GL_ONE_MINUS_SRC_ALPHA = GL.ONE_MINUS_SRC_ALPHA
 local glPushMatrix           = gl.PushMatrix
@@ -441,13 +442,13 @@ local function getTranslatedText(text)
 end
 
 local function createMapPoint(playerID, text, x, y, z, color, icon)
-    data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
+    local data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
     if color then
         data.r = color[1]
         data.g = color[2]
         data.b = color[3]
     end
-    msg = Json.encode(data)
+    local msg = Json.encode(data)
     Spring.SendLuaUIMsg('mppnt:' .. msg)
 end
 
@@ -693,7 +694,7 @@ local function loadShaders()
     vsSrc = vsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
 
     shader = LuaShader({vertex=vsSrc, fragment=fsSrc}, "ping wheel")
-    shaderCompiled = shader:Initialize()
+    local shaderCompiled = shader:Initialize()
     if not shaderCompiled then
         shader:ShowError(shader.shLog)
     end
@@ -1174,89 +1175,93 @@ local function dVector(x1, x2, y1, y2, ff)
     return dx*z, dy*z
 end
 
+local function Area(i, p, r1, r2, spacing, arr)
+    local o1, o2, o3, o4
+    local startidx = (i-1)*(p-1)
+    for j=startidx+1, startidx+p-1 do
+        o1, o2, o3, o4 = 0, 0, 0, 0
+        local sin1, cos1 = unpack(arr[j])
+        local sin2, cos2 = unpack(arr[j+1])
+        if j == (startidx+1) then
+            o1, o2 = dVector(sin1, sin2, cos1, cos2, spacing)
+        elseif j == startidx+p-1 then
+            o3, o4 = dVector(sin1, sin2, cos1, cos2, -spacing)
+        end
+        glVertex(sin1*r1+o1, cos1*r1+o2)
+        glVertex(sin1*r2+o1, cos1*r2+o2)
+        glVertex(sin2*r2+o3, cos2*r2+o4)
+        glVertex(sin2*r1+o3, cos2*r1+o4)
+    end
+end
+
 local function drawArea(vertices, i, r1, r2, spacing, arr)
     -- draw a donut portion with spacer space
-    local function Area(i, p, r1, r2, arr)
-        local o1, o2, o3, o4
-        local startidx = (i-1)*(p-1)
-        for j=startidx+1, startidx+p-1 do
-            o1, o2, o3, o4 = 0, 0, 0, 0
-            local sin1, cos1 = unpack(arr[j])
-            local sin2, cos2 = unpack(arr[j+1])
-            if j == (startidx+1) then
-                o1, o2 = dVector(sin1, sin2, cos1, cos2, spacing)
-            elseif j == startidx+p-1 then
-                o3, o4 = dVector(sin1, sin2, cos1, cos2, -spacing)
-            end
-            glVertex(sin1*r1+o1, cos1*r1+o2)
-            glVertex(sin1*r2+o1, cos1*r2+o2)
-            glVertex(sin2*r2+o3, cos2*r2+o4)
-            glVertex(sin2*r1+o3, cos2*r1+o4)
-        end
-    end
-    glBeginEnd(GL.QUADS, Area, i, vertices, r1, r2, arr)
+    glBeginEnd(GL_QUADS, Area, i, vertices, r1, r2, spacing, arr)
 end
 
-local function drawCircleOutline(r, arr, hole, holeEnd)
-    local function Circle()
-        local vn = areaVertexNumber-1
-        holeStart = holeEnd and hole or (hole-1)*vn+1
-        holeEnd = holeEnd and holeEnd or hole*vn
-        for i=1+holeEnd, #arr do
+local function Circle(r, arr, hole)
+    local vn = areaVertexNumber-1
+    local holeEnd = hole*vn
+    for i=1+holeEnd, #arr do
+        glVertex(arr[i][1]*r, arr[i][2]*r)
+    end
+    if hole ~=0 then
+        local holeStart = (hole-1)*vn+1
+        for i=1, holeStart do
             glVertex(arr[i][1]*r, arr[i][2]*r)
         end
-        if hole ~=0 then
-            for i=1, holeStart do
-                glVertex(arr[i][1]*r, arr[i][2]*r)
-            end
-        end
     end
-    glBeginEnd(GL.LINE_STRIP, Circle)
 end
 
-local function drawArc(r, arr, arcStart, arcEnd)
-    local function Circle()
-        local vn = areaVertexNumber-1
-        local loopEnd = arcEnd <= #arr and arcEnd or #arr
-        for i=arcStart, loopEnd do
-            glVertex(arr[i][1]*r, arr[i][2]*r)
-        end
-        if loopEnd ~= arcEnd then
-            for i=1, arcEnd-#arr+1 do
-                glVertex(arr[i][1]*r, arr[i][2]*r)
-            end
-        end
+local function drawCircleOutline(r, arr, hole)
+    glBeginEnd(GL_LINE_STRIP, Circle, r, arr, hole)
+end
+
+-- draw a triangle at the right angle for selection
+-- also push external vertex a bit to the inside so we leave
+-- some space between sections
+local function CirclePart(i, p, r, dir, spacing, arr)
+    local o1, o2
+    local startidx = (i-1)*(p-1)+1
+    local endidx = startidx+p-1
+    if dir == -1 then
+        startidx, endidx = endidx, startidx
     end
-    glBeginEnd(GL.LINE_STRIP, Circle)
+    for j=startidx, endidx, dir do
+        o1, o2 = 0, 0
+        local sin1, cos1 = unpack(arr[j])
+        if (j == startidx and dir == 1) or (j == endidx and dir == -1) then
+            o1, o2 = dVector(sin1, arr[j+1][1], cos1, arr[j+1][2], spacing)
+        elseif (j == endidx and dir == 1) or (j == startidx and dir == -1) then
+            o1, o2 = dVector(sin1, arr[j-1][1], cos1, arr[j-1][2], spacing)
+        end
+        glVertex(sin1*r+o1, cos1*r+o2)
+    end
+end
+
+local function AreaOutline(i, p, r1, r2, spacing, arr)
+    CirclePart(i, p, r2, 1, spacing, arr)
+    CirclePart(i, p, r1, -1, spacing, arr)
 end
 
 local function drawAreaOutline(vertices, i, r1, r2, spacing, arr)
-    -- draw a triangle at the right angle for selection
-    -- also push external vertex a bit to the inside so we leave
-    -- some space between sections
-    local function CirclePart(i, p, r, dir, arr)
-        local o1, o2
-        local startidx = (i-1)*(p-1)+1
-        local endidx = startidx+p-1
-        if dir == -1 then
-            startidx, endidx = endidx, startidx
-        end
-        for j=startidx, endidx, dir do
-            o1, o2 = 0, 0
-            local sin1, cos1 = unpack(arr[j])
-            if (j == startidx and dir == 1) or (j == endidx and dir == -1) then
-                o1, o2 = dVector(sin1, arr[j+1][1], cos1, arr[j+1][2], spacing)
-            elseif (j == endidx and dir == 1) or (j == startidx and dir == -1) then
-                o1, o2 = dVector(sin1, arr[j-1][1], cos1, arr[j-1][2], spacing)
-            end
-            glVertex(sin1*r+o1, cos1*r+o2)
+    glBeginEnd(GL_LINE_LOOP, AreaOutline, i, vertices, r1, r2, spacing, arr)
+end
+
+local function Arc(r, arr, arcStart, arcEnd)
+    local loopEnd = arcEnd <= #arr and arcEnd or #arr
+    for i=arcStart, loopEnd do
+        glVertex(arr[i][1]*r, arr[i][2]*r)
+    end
+    if loopEnd ~= arcEnd then
+        for i=1, arcEnd-#arr+1 do
+            glVertex(arr[i][1]*r, arr[i][2]*r)
         end
     end
-    local function AreaOutline(i, p, r1, r2, arr)
-        CirclePart(i, p, r2, 1, arr)
-        CirclePart(i, p, r1, -1, arr)
-    end
-    glBeginEnd(GL_LINE_LOOP, AreaOutline, i, vertices, r1, r2, arr)
+end
+
+local function drawArc(r, arr, arcStart, arcEnd)
+    glBeginEnd(GL_LINE_STRIP, Arc, r, arr, arcStart, arcEnd)
 end
 
 local function drawIcon(img, pos, size, offset)
@@ -1281,7 +1286,7 @@ local function drawWheel()
 
     if mainSelection ~= 0 and pingWheel[mainSelection].children then
         glLineWidth(borderWidth)
-        arr = baseCircleArrays[#pingWheel*2]
+        local arr = baseCircleArrays[#pingWheel*2]
         for i=1, 3 do
             s = (mainSelection == 1 and i == 1) and #pingWheel*2 or (mainSelection*2+i-3)
             if i == secondarySelection then
@@ -1362,12 +1367,13 @@ local function drawWheel()
 end
 
 local function drawDottedLine()
-    local function line(x1, y1, x2, y2)
-        glVertex(x1, y1)
-        glVertex(x2, y2)
-    end
     -- draw a dotted line connecting from center of wheel to the mouse location
     if draw_line and (mainSelection > 0 or centerSelected) then
+        local function line(x1, y1, x2, y2)
+            glVertex(x1, y1)
+            glVertex(x2, y2)
+        end
+
         glColor({1, 1, 1, 0.5})
         glLineWidth(pingWheelThickness / 4)
         local mx, my = spGetMouseState()
@@ -1385,7 +1391,7 @@ local function drawCloseHint()
     local hintTextSize = 0.9*closeHintSize
     local drawIconSize = wheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth(cancelText)*pingWheelTextSize*hintTextSize
-    x_offset = (w+drawIconSize)/2.0
+    local x_offset = (w+drawIconSize)/2.0
     drawIcon(defaults.rclickIcon, {x-x_offset, y}, hintIconSize)
     glColor({1, 1, 1, 0.7})
     glBeginText()
@@ -1523,10 +1529,10 @@ local function drawCenterDot()
     if flashing or globalFadeOut > 0 then return end
     -- draw the center dot
     glPointSize(centerDotSize)
-    glBeginEnd(GL_POINTS, glVertex, 0, 0)
+    glBeginEnd(GL.POINTS, glVertex, 0, 0)
     glColor(playerColor)
     glPointSize(centerDotSize*0.8)
-    glBeginEnd(GL_POINTS, glVertex, 0, 0)
+    glBeginEnd(GL.POINTS, glVertex, 0, 0)
 end
 
 local function drawImgCenterDot()
@@ -1644,7 +1650,7 @@ local function prepareBlur()
             if mainSelection ~= 0 and pingWheel[mainSelection].children then
                 arr = baseCircleArrays[#pingWheel*2]
                 for i=1, 3 do
-                    s = (mainSelection == 1 and i == 1) and #pingWheel*2 or (mainSelection*2+i-3)
+                    local s = (mainSelection == 1 and i == 1) and #pingWheel*2 or (mainSelection*2+i-3)
                     drawArea(areaVertexNumber, s, secondaryInnerRatio, secondaryOuterRatio, 0, arr)
                 end
             end
