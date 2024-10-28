@@ -1109,23 +1109,24 @@ local function AreaOutline(i, p, r1, r2, spacing, arr)
     CirclePart(i, p, r1, -1, spacing, arr)
 end
 
-local function drawArc(r, arr, arcStart, arcEnd)
-    local function Circle()
-        local loopEnd = arcEnd <= #arr and arcEnd or #arr
-        for i=arcStart, loopEnd do
-            glVertex(arr[i][1]*r, arr[i][2]*r)
-        end
-        if loopEnd ~= arcEnd then
-            for i=1, arcEnd-#arr+1 do
-                glVertex(arr[i][1]*r, arr[i][2]*r)
-            end
-        end
-    end
-    glBeginEnd(GL.LINE_STRIP, Circle)
-end
-
 local function drawAreaOutline(vertices, i, r1, r2, spacing, arr)
     glBeginEnd(GL_LINE_LOOP, AreaOutline, i, vertices, r1, r2, spacing, arr)
+end
+
+local function Arc(r, arr, arcStart, arcEnd)
+    local loopEnd = arcEnd <= #arr and arcEnd or #arr
+    for i=arcStart, loopEnd do
+        glVertex(arr[i][1]*r, arr[i][2]*r)
+    end
+    if loopEnd ~= arcEnd then
+        for i=1, arcEnd-#arr+1 do
+            glVertex(arr[i][1]*r, arr[i][2]*r)
+        end
+    end
+end
+
+local function drawArc(r, arr, arcStart, arcEnd)
+    glBeginEnd(GL_LINE_STRIP, Arc, r, arr, arcStart, arcEnd)
 end
 
 local function drawIcon(img, pos, size, offset)
