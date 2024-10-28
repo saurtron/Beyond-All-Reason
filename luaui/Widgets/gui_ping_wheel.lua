@@ -349,6 +349,13 @@ local decorationsDlist
 local blurDlist
 local recreateBlurDlist
 local choiceDlist
+local areaDlist
+
+local function destroyAreaDlist()
+    if not areaDlist then return end
+    gl.DeleteList(areaDlist)
+    areaDlist = nil
+end
 
 local function destroyItemsDlist()
     if not itemsDlist then return end
@@ -536,7 +543,6 @@ local vsSrc = [[
 	#line 10000
 
 	uniform float scale;
-	uniform vec4 mousePosition;
 
 	out vec2 texCoord;
 
@@ -547,14 +553,9 @@ local vsSrc = [[
 	void main() {
 		vec4 vertPos = gl_Vertex;
 
-		float viewratio = viewGeometry.x / viewGeometry.y;
+		vertPos.xy *= scale;
 
-		vec2 stretched = vec2(vertPos.x , vertPos.y * viewratio);
-		stretched.xy *= scale;
-
-		vec4 screenPos = mousePosition;
-		screenPos.y *= viewratio;
-		screenPos.xy += stretched.xy;
+		vec4 screenPos = gl_ModelViewProjectionMatrix*vertPos;
 
 		// outputs
 		gl_Position = screenPos;
@@ -635,6 +636,7 @@ function widget:Initialize()
         destroyItemsDlist()
         destroyDecorationsDlist()
         destroyBaseDlist()
+        destroyAreaDlist()
     end
 
     -- add the action handler with argument for press and release using the same function call
@@ -661,6 +663,7 @@ function widget:ViewResize(vsx, vsy)
     destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
+    destroyAreaDlist()
     destroyChoiceDlist()
 end
 
@@ -710,8 +713,8 @@ local function TurnOff(reason)
     if displayPingWheel then
         if mainSelection ~= 0 or centerSelected then
             destroyBaseDlist()
+            destroyItemsDlist()
         end
-        destroyItemsDlist()
         destroyBlurDlist()
         displayPingWheel = false
         pingWorldLocation = nil
@@ -794,6 +797,7 @@ local function setWheel(selected)
         destroyDecorationsDlist()
         destroyItemsDlist()
         destroyBaseDlist()
+        destroyAreaDlist()
     end
     pingWheel = selected
 end
@@ -1145,7 +1149,6 @@ end
 local function drawWheel()
     local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     local borderWidth = pingWheelBorderWidth
-    local borderMargin = 0.75*borderWidth/wheelRadius
     local outerCircleRatio = defaults['outerCircleRatio']
     local secondaryInnerRatio = defaults['secondaryInnerRatio']
 
@@ -1175,6 +1178,7 @@ local function drawWheel()
 
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
+
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth)
@@ -1194,16 +1198,15 @@ local function drawWheel()
     glLineWidth(borderWidth)
     -- item area backgrounds
     glColor(pingWheelBaseColor)
+    glPushMatrix()
     for i=1, #pingWheel do
         if i~=mainSelection then
-            glColor(pingWheelBaseColor)
-            drawArea(areaVertexNumber, i, r1, r2, spacing, arr)
-            glColor(pingWheelAreaOutlineColor)
-            drawAreaOutline(areaVertexNumber, i, r1, r2, spacing, arr)
-            glColor(pingWheelAreaInlineColor)
-            drawAreaOutline(areaVertexNumber, i, r1+borderMargin, r2-borderMargin, spacing+borderMargin, arr)
+            glCallList(areaDlist)
         end
+        gl.Rotate(360/#pingWheel, 0, 0, -1)
     end
+    glPopMatrix()
+
     -- selected part
     if mainSelection ~= 0 then
         r2 = selOuterRatio
@@ -1308,8 +1311,8 @@ local function drawItem(selItem, posRadius, angle, isSelected, useColors, flashB
         y = y - dist/2 - halfSize
     end
     glColor(color)
-    glText(text, screenLocation[1]+x,
-        screenLocation[2]+y,
+    glText(text, x,
+        y,
         pingWheelTextSize*textScale, "cvos")
 end
 
@@ -1338,8 +1341,8 @@ local function drawItems()
             glColor(pingWheelTextColor)
         end
         local textScale = centerSelected and selectedScaleFactor or 1
-        glText('Ping', screenLocation[1],
-            screenLocation[2]-v*wheelRadius,
+        glText('Ping', 0,
+            -v*wheelRadius,
             pingWheelTextSize*textScale*0.8, "cvos")
     end
     if mainSelection ~= 0 and pingWheel[mainSelection].children then
@@ -1526,11 +1529,27 @@ local function prepareBlur()
 end
 
 local function drawWheelBase()
+    if not areaDlist then
+        local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
+        local borderWidth = pingWheelBorderWidth
+        local borderMargin = 0.75*borderWidth/wheelRadius
+        local arr = baseCircleArrays[#pingWheel]
+
+        areaDlist = gl.CreateList(function()
+            glColor(pingWheelBaseColor)
+            drawArea(areaVertexNumber, 1, r1, r2, spacing, arr)
+            glColor(pingWheelAreaOutlineColor)
+            drawAreaOutline(areaVertexNumber, 1, r1, r2, spacing, arr)
+            glColor(pingWheelAreaInlineColor)
+            drawAreaOutline(areaVertexNumber, 1, r1+borderMargin, r2-borderMargin, spacing+borderMargin, arr)
+        end)
+    end
+
     if not baseDlist then
         baseDlist = gl.CreateList(drawWheel)
     end
-
     glCallList(baseDlist)
+
 end
 
 local function drawWheelForeground()
@@ -1556,17 +1575,15 @@ function widget:DrawScreen()
     -- Main wheel
     if displayPingWheel then
         local vsx, vsy, vpx, vpy = Spring.GetViewGeometry()
-        local mmx = screenLocation[1]*2 - vsx
-        local mmy = screenLocation[2]*2 - vsy
 
-        local scale1 = (vsy/vsx)*defaults.baseWheelSize -- for items in -1, 1
-        local scale2 = 2/vsx           -- for items in screen space
+        local scale = defaults.baseWheelSize*vsy/2
 
         shader:Activate()
-        shader:SetUniform("scale", scale1)
         shader:SetUniform("useTex", 0)
         shader:SetUniform("alpha", globalDim)
-        shader:SetUniform("mousePosition", mmx/vsx, mmy/vsx, 1.0, 1.0)
+        shader:SetUniform("scale", scale)
+
+        glTranslate(screenLocation[1], screenLocation[2], 0)
 
         glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         -- The new style base
@@ -1587,8 +1604,10 @@ function widget:DrawScreen()
         end
         glCallList(decorationsDlist)
 
-        shader:SetUniform("scale", scale2)
+        shader:SetUniform("scale", 1)
+
         drawWheelForeground()
+        glTranslate(-screenLocation[1], -screenLocation[2], 0)
 
         -- Reset state
         shader:Deactivate()
