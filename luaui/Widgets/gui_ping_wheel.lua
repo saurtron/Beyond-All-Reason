@@ -1284,6 +1284,7 @@ end
 local function drawWheel()
     local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     local borderWidth = pingWheelBorderWidth
+    local borderMargin = 0.75*borderWidth/wheelRadius
     local outerCircleRatio = defaults['outerCircleRatio']
     local secondaryInnerRatio = defaults['secondaryInnerRatio']
 
