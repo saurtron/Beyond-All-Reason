@@ -343,13 +343,32 @@ local baseCircleArrays = {}
 local cachedTexts = {}
 
 -- Display lists
-local itemsDlist
 local baseDlist
 local decorationsDlist
 local blurDlist
 local recreateBlurDlist
 local choiceDlist
 local areaDlist
+local centerTextDlist
+
+local function destroyItemDlists(item)
+    if item.dlist then
+        gl.DeleteList(item.dlist)
+        gl.DeleteList(item.selDlist)
+        item.dlist = false
+        item.selDlist = false
+    end
+end
+
+local function destroyItemsDlists()
+    for i = 1, #pingWheel do
+        destroyItemDlists(pingWheel[i])
+    end
+    if centerTextDlist then
+        gl.DeleteList(centerTextDlist)
+        centerTextDlist = false
+    end
+end
 
 local function destroyAreaDlist()
     if not areaDlist then return end
@@ -357,11 +376,6 @@ local function destroyAreaDlist()
     areaDlist = nil
 end
 
-local function destroyItemsDlist()
-    if not itemsDlist then return end
-    gl.DeleteList(itemsDlist)
-    itemsDlist = nil
-end
 local function destroyBaseDlist()
     if not baseDlist then return end
     gl.DeleteList(baseDlist)
@@ -528,9 +542,9 @@ local function applyStyle()
 
     setSizedVariables()
     destroyChoiceDlist()
-    destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
+    destroyItemsDlists()
 end
 
 ------------------------
@@ -619,21 +633,20 @@ function widget:Initialize()
     end
     WG['pingwheel_gui'].setUseIcons = function(value)
         useIcons = value
-        destroyItemsDlist()
+        destroyItemsDlists()
     end
     WG['pingwheel_gui'].getInteractionMode = function()
         return pressReleaseMode and 2 or 1
     end
     WG['pingwheel_gui'].setInteractionMode = function(value)
         pressReleaseMode = value == 2
-        destroyItemsDlist()
+        destroyItemsDlists()
     end
     WG['pingwheel_gui'].getDoubleWheel = function()
         return doubleWheel
     end
     WG['pingwheel_gui'].setDoubleWheel = function(value)
         doubleWheel = value
-        destroyItemsDlist()
         destroyDecorationsDlist()
         destroyBaseDlist()
         destroyAreaDlist()
@@ -649,22 +662,22 @@ function widget:Initialize()
 end
 
 function widget:Shutdown()
-    destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
     destroyBlurDlist()
     destroyChoiceDlist()
     destroyShaders()
+    destroyItemsDlists()
 end
 
 function widget:ViewResize(vsx, vsy)
     updateSizes(vsx, vsy)
     setSizedVariables()
-    destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
     destroyAreaDlist()
     destroyChoiceDlist()
+    destroyItemsDlists()
 end
 
 ------------------------
@@ -713,7 +726,6 @@ local function TurnOff(reason)
     if displayPingWheel then
         if mainSelection ~= 0 or centerSelected then
             destroyBaseDlist()
-            destroyItemsDlist()
         end
         destroyBlurDlist()
         displayPingWheel = false
@@ -777,7 +789,6 @@ end
 
 local function setSelection(selected, secondary, centersel)
     if selected ~= mainSelection or centersel ~= centerSelected or secondary ~= secondarySelection then
-        destroyItemsDlist()
         destroyBaseDlist()
         if selected ~= mainSelection then
             -- avoid blur 'blinking' if we destroy the list here
@@ -795,7 +806,6 @@ end
 local function setWheel(selected)
     if selected ~= pingWheel then
         destroyDecorationsDlist()
-        destroyItemsDlist()
         destroyBaseDlist()
         destroyAreaDlist()
     end
@@ -1312,39 +1322,73 @@ local function drawItem(selItem, posRadius, angle, isSelected, useColors, flashB
         y = y - dist/2 - halfSize
     end
     glColor(color)
+    glBeginText()
     glText(text, x,
         y,
         pingWheelTextSize*textScale, "cvos")
+    glEndText()
+end
+
+local function drawCenterItem(isSelected, flashBlack)
+    glBeginText()
+        local v = (deadZoneRatio+centerAreaRatio)/2
+        if isSelected and flashBlack then
+            glColor({ 0, 0, 0, 0 })
+        else
+            glColor(pingWheelTextColor)
+        end
+        local textScale = isSelected and selectedScaleFactor or 1
+        glText('Ping', 0,
+            -v*wheelRadius,
+            pingWheelTextSize*textScale*0.8, "cvos")
+    glEndText()
+end
+
+local function drawItemWrapped(selItem, textAlignRadius, useColors, nItems, i)
+    local isSelected = mainSelection == i
+    if not selItem.dlist then
+        local angle = (i - 1) * 2 * pi / nItems
+        selItem.dlist = gl.CreateList(function()
+            drawItem(selItem, textAlignRadius, angle, false, useColors, false)
+        end)
+        selItem.selDlist = gl.CreateList(function()
+            drawItem(selItem, textAlignRadius, angle, true, useColors, false)
+        end)
+    end
+    local dlist = isSelected and selItem.selDlist or selItem.dlist
+    if flashing and (flashFrame % 2 == 0) and isSelected then
+        local angle = (i - 1) * 2 * pi / nItems
+        drawItem(selItem, textAlignRadius, angle, true, useColors, true)
+    else
+        glCallList(dlist)
+    end
 end
 
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
     local useColors = WG['pingwheel'] and WG['pingwheel'].getUseColors()
-    local flashBlack = false
-    if flashing and (flashFrame % 2 == 0) then
-        flashBlack = true
-    end
     local textAlignRadius = textAlignRatio*wheelRadius
+    local nItems = #pingWheel
 
-    glBeginText()
-    for i = 1, #pingWheel do
-        local isSelected = mainSelection == i
-        local selItem = pingWheel[i]
-        local angle = (i - 1) * 2 * pi / #pingWheel
-        drawItem(selItem, textAlignRadius, angle, isSelected, useColors, flashBlack and secondarySelection == 0)
+    for i = 1, nItems do
+        drawItemWrapped(pingWheel[i], textAlignRadius, useColors, nItems, i)
     end
+
     if hasCenterAction then
-        local v = (deadZoneRatio+centerAreaRatio)/2
-        if centerSelected and flashBlack then
-            glColor({ 0, 0, 0, 0 })
-        else
-            glColor(pingWheelTextColor)
+        if not centerDlist then
+            centerDlist = gl.CreateList(function()
+                drawCenterItem(false)
+            end)
+            centerSelDlist = gl.CreateList(function()
+                drawCenterItem(true)
+            end)
         end
-        local textScale = centerSelected and selectedScaleFactor or 1
-        glText('Ping', 0,
-            -v*wheelRadius,
-            pingWheelTextSize*textScale*0.8, "cvos")
+        if flashing and (flashFrame % 2 == 0) and centerSelected then
+            drawCenterItem(true, true)
+        else
+            glCallList(centerSelected and centerSelDlist or centerDlist)
+        end
     end
     if mainSelection ~= 0 and pingWheel[mainSelection].children then
         local secondaryRadius = 1.17*wheelRadius
@@ -1356,7 +1400,6 @@ local function drawItems()
             drawItem(selItem, secondaryRadius, angle, isSelected, useColors, flashBlack)
         end
     end
-    glEndText()
 
     -- Close hint at the bottom
     drawCloseHint()
@@ -1557,14 +1600,7 @@ local function drawWheelForeground()
     drawDottedLine() -- Dotted line to mouse needs to be updated all the time so no cooking
 
     shader:SetUniform("useTex", 1)
-    if flashing then
-        drawItems()
-    else
-        if not itemsDlist then
-            itemsDlist = gl.CreateList(drawItems)
-        end
-        glCallList(itemsDlist)
-    end
+    drawItems()
 end
 
 function widget:DrawScreen()
