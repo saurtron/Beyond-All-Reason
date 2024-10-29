@@ -210,7 +210,7 @@ For the two level wheel, icons of suboptions can be variations of the main icon 
 
 At the moment, it seems the engine has some limitations (easily overcome) for full lua render of mapmarks.
 
-* Not sure it's possible to draw on minimap below the unit icons. Maybe DrawInMinimapBackground allows that, but couldn't test it yet. Otherwise a new callin might be needed as I think unit icons are more important.
+* Not possible atm to draw on minimap below the unit icons. DrawInMinimapBackground allows that, but not linked at the moment by BAR.
 * Current mapmark erase method is clumsy, depending on 100 radius messages. Either current mapmarks should have an ID or else the system could be completely migrated to lua (no biggie).
   * Also forces all widgets to check for maperase and test distance to know if a cached mapmark has been deleted.
 
