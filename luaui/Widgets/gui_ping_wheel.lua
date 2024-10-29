@@ -7,7 +7,7 @@ function widget:GetInfo()
         date    = "June 27, 2023",
         license = "GNU GPL, v2 or later",
         version = "3.0 alpha2",
-        layer   = -1,
+        layer   = 15, -- below gui but above point tracker
         enabled = true,
     }
 end
