@@ -146,6 +146,7 @@ local defaults = {
 }
 
 -- On/Off switches
+local use_colors = false    -- normally controlled from mapmark rendering module
 local draw_line = false     -- set to true to draw a line from the center to the cursor during selection
 local draw_deadzone = false -- set to true to draw a circle around the dead zone (for debugging purposes)
 local do_blur = true        -- set to false to avoid doing blur
@@ -311,18 +312,39 @@ local baseCircleArrays = {}
 local cachedTexts = {}
 
 -- Display lists
-local itemsDlist
 local baseDlist
 local decorationsDlist
 local blurDlist
 local recreateBlurDlist
 local choiceDlist
+local areaDlist
+local centerTextDlist
 
-local function destroyItemsDlist()
-    if not itemsDlist then return end
-    gl.DeleteList(itemsDlist)
-    itemsDlist = nil
+local function destroyItemDlists(item)
+    if item.dlist then
+        gl.DeleteList(item.dlist)
+        gl.DeleteList(item.selDlist)
+        item.dlist = false
+        item.selDlist = false
+    end
 end
+
+local function destroyItemsDlists()
+    for i = 1, #pingWheel do
+        destroyItemDlists(pingWheel[i])
+    end
+    if centerTextDlist then
+        gl.DeleteList(centerTextDlist)
+        centerTextDlist = false
+    end
+end
+
+local function destroyAreaDlist()
+    if not areaDlist then return end
+    gl.DeleteList(areaDlist)
+    areaDlist = nil
+end
+
 local function destroyBaseDlist()
     if not baseDlist then return end
     gl.DeleteList(baseDlist)
@@ -368,7 +390,8 @@ local glVertex               = gl.Vertex
 local glPointSize            = gl.PointSize
 local GL_LINES               = GL.LINES
 local GL_LINE_LOOP           = GL.LINE_LOOP
-local GL_POINTS              = GL.POINTS
+local GL_LINE_STRIP          = GL.LINE_STRIP
+local GL_QUADS               = GL.QUADS
 local GL_SRC_ALPHA           = GL.SRC_ALPHA
 local GL_ONE_MINUS_SRC_ALPHA = GL.ONE_MINUS_SRC_ALPHA
 local glPushMatrix           = gl.PushMatrix
@@ -407,13 +430,13 @@ local function getTranslatedText(text)
 end
 
 local function createMapPoint(playerID, text, x, y, z, color, icon)
-    data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
+    local data = {text = text, x = x, y = y, z = z, r = r, g = g, b = b, icon = icon}
     if color then
         data.r = color[1]
         data.g = color[2]
         data.b = color[3]
     end
-    msg = Json.encode(data)
+    local msg = Json.encode(data)
     Spring.SendLuaUIMsg('mppnt:' .. msg)
 end
 
@@ -488,9 +511,9 @@ local function applyStyle()
 
     setSizedVariables()
     destroyChoiceDlist()
-    destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
+    destroyItemsDlists()
 end
 
 ------------------------
@@ -503,7 +526,6 @@ local vsSrc = [[
 	#line 10000
 
 	uniform float scale;
-	uniform vec4 mousePosition;
 
 	out vec2 texCoord;
 
@@ -514,14 +536,9 @@ local vsSrc = [[
 	void main() {
 		vec4 vertPos = gl_Vertex;
 
-		float viewratio = viewGeometry.x / viewGeometry.y;
+		vertPos.xy *= scale;
 
-		vec2 stretched = vec2(vertPos.x , vertPos.y * viewratio);
-		stretched.xy *= scale;
-
-		vec4 screenPos = mousePosition;
-		screenPos.y *= viewratio;
-		screenPos.xy += stretched.xy;
+		vec4 screenPos = gl_ModelViewProjectionMatrix*vertPos;
 
 		// outputs
 		gl_Position = screenPos;
@@ -556,7 +573,7 @@ local function loadShaders()
     vsSrc = vsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
 
     shader = LuaShader({vertex=vsSrc, fragment=fsSrc}, "ping wheel")
-    shaderCompiled = shader:Initialize()
+    local shaderCompiled = shader:Initialize()
     if not shaderCompiled then
         shader:ShowError(shader.shLog)
     end
@@ -585,23 +602,30 @@ function widget:Initialize()
     end
     WG['pingwheel_gui'].setUseIcons = function(value)
         useIcons = value
-        destroyItemsDlist()
+        destroyItemsDlists()
     end
     WG['pingwheel_gui'].getInteractionMode = function()
         return pressReleaseMode and 2 or 1
     end
     WG['pingwheel_gui'].setInteractionMode = function(value)
         pressReleaseMode = value == 2
-        destroyItemsDlist()
+        destroyItemsDlists()
     end
     WG['pingwheel_gui'].getDoubleWheel = function()
         return doubleWheel
     end
     WG['pingwheel_gui'].setDoubleWheel = function(value)
         doubleWheel = value
-        destroyItemsDlist()
         destroyDecorationsDlist()
         destroyBaseDlist()
+        destroyAreaDlist()
+    end
+    WG['pingwheel_gui'].getUseColors = function()
+        return use_colors
+    end
+    WG['pingwheel_gui'].setUseColors = function(value)
+        use_colors = value
+        destroyItemsDlists()
     end
 
     -- add the action handler with argument for press and release using the same function call
@@ -614,21 +638,22 @@ function widget:Initialize()
 end
 
 function widget:Shutdown()
-    destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
     destroyBlurDlist()
     destroyChoiceDlist()
     destroyShaders()
+    destroyItemsDlists()
 end
 
 function widget:ViewResize(vsx, vsy)
     updateSizes(vsx, vsy)
     setSizedVariables()
-    destroyItemsDlist()
     destroyDecorationsDlist()
     destroyBaseDlist()
+    destroyAreaDlist()
     destroyChoiceDlist()
+    destroyItemsDlists()
 end
 
 ------------------------
@@ -678,7 +703,6 @@ local function TurnOff(reason)
         if mainSelection ~= 0 or centerSelected then
             destroyBaseDlist()
         end
-        destroyItemsDlist()
         destroyBlurDlist()
         displayPingWheel = false
         pingWorldLocation = nil
@@ -733,7 +757,6 @@ end
 
 local function setSelection(selected, centersel)
     if selected ~= mainSelection or centersel ~= centerSelected then
-        destroyItemsDlist()
         destroyBaseDlist()
         if selected ~= mainSelection then
             -- avoid blur 'blinking' if we destroy the list here
@@ -750,8 +773,8 @@ end
 local function setWheel(selected)
     if selected ~= pingWheel then
         destroyDecorationsDlist()
-        destroyItemsDlist()
         destroyBaseDlist()
+        destroyAreaDlist()
     end
     pingWheel = selected
 end
@@ -973,73 +996,77 @@ local function dVector(x1, x2, y1, y2, ff)
     return dx*z, dy*z
 end
 
+local function Area(i, p, r1, r2, spacing, arr)
+    local o1, o2, o3, o4
+    local startidx = (i-1)*(p-1)
+    for j=startidx+1, startidx+p-1 do
+        o1, o2, o3, o4 = 0, 0, 0, 0
+        local sin1, cos1 = unpack(arr[j])
+        local sin2, cos2 = unpack(arr[j+1])
+        if j == (startidx+1) then
+            o1, o2 = dVector(sin1, sin2, cos1, cos2, spacing)
+        elseif j == startidx+p-1 then
+            o3, o4 = dVector(sin1, sin2, cos1, cos2, -spacing)
+        end
+        glVertex(sin1*r1+o1, cos1*r1+o2)
+        glVertex(sin1*r2+o1, cos1*r2+o2)
+        glVertex(sin2*r2+o3, cos2*r2+o4)
+        glVertex(sin2*r1+o3, cos2*r1+o4)
+    end
+end
+
 local function drawArea(vertices, i, r1, r2, spacing, arr)
     -- draw a donut portion with spacer space
-    local function Area(i, p, r1, r2, arr)
-        local o1, o2, o3, o4
-        local startidx = (i-1)*(p-1)
-        for j=startidx+1, startidx+p-1 do
-            o1, o2, o3, o4 = 0, 0, 0, 0
-            local sin1, cos1 = unpack(arr[j])
-            local sin2, cos2 = unpack(arr[j+1])
-            if j == (startidx+1) then
-                o1, o2 = dVector(sin1, sin2, cos1, cos2, spacing)
-            elseif j == startidx+p-1 then
-                o3, o4 = dVector(sin1, sin2, cos1, cos2, -spacing)
-            end
-            glVertex(sin1*r1+o1, cos1*r1+o2)
-            glVertex(sin1*r2+o1, cos1*r2+o2)
-            glVertex(sin2*r2+o3, cos2*r2+o4)
-            glVertex(sin2*r1+o3, cos2*r1+o4)
+    glBeginEnd(GL_QUADS, Area, i, vertices, r1, r2, spacing, arr)
+end
+
+local function Circle(r, arr, hole)
+    local vn = areaVertexNumber-1
+    local holeEnd = hole*vn
+    for i=1+holeEnd, #arr do
+        glVertex(arr[i][1]*r, arr[i][2]*r)
+    end
+    if hole ~=0 then
+        local holeStart = (hole-1)*vn+1
+        for i=1, holeStart do
+            glVertex(arr[i][1]*r, arr[i][2]*r)
         end
     end
-    glBeginEnd(GL.QUADS, Area, i, vertices, r1, r2, arr)
 end
 
 local function drawCircleOutline(r, arr, hole)
-    local function Circle()
-        local vn = areaVertexNumber-1
-        local holeStart = (hole-1)*vn+1
-        local holeEnd = hole*vn
-        for i=1+holeEnd, #arr do
-            glVertex(arr[i][1]*r, arr[i][2]*r)
-        end
-        if hole ~=0 then
-            for i=1, holeStart do
-                glVertex(arr[i][1]*r, arr[i][2]*r)
-            end
-        end
+    glBeginEnd(GL_LINE_STRIP, Circle, r, arr, hole)
+end
+
+-- draw a triangle at the right angle for selection
+-- also push external vertex a bit to the inside so we leave
+-- some space between sections
+local function CirclePart(i, p, r, dir, spacing, arr)
+    local o1, o2
+    local startidx = (i-1)*(p-1)+1
+    local endidx = startidx+p-1
+    if dir == -1 then
+        startidx, endidx = endidx, startidx
     end
-    glBeginEnd(GL.LINE_STRIP, Circle)
+    for j=startidx, endidx, dir do
+        o1, o2 = 0, 0
+        local sin1, cos1 = unpack(arr[j])
+        if (j == startidx and dir == 1) or (j == endidx and dir == -1) then
+            o1, o2 = dVector(sin1, arr[j+1][1], cos1, arr[j+1][2], spacing)
+        elseif (j == endidx and dir == 1) or (j == startidx and dir == -1) then
+            o1, o2 = dVector(sin1, arr[j-1][1], cos1, arr[j-1][2], spacing)
+        end
+        glVertex(sin1*r+o1, cos1*r+o2)
+    end
+end
+
+local function AreaOutline(i, p, r1, r2, spacing, arr)
+    CirclePart(i, p, r2, 1, spacing, arr)
+    CirclePart(i, p, r1, -1, spacing, arr)
 end
 
 local function drawAreaOutline(vertices, i, r1, r2, spacing, arr)
-    -- draw a triangle at the right angle for selection
-    -- also push external vertex a bit to the inside so we leave
-    -- some space between sections
-    local function CirclePart(i, p, r, dir, arr)
-        local o1, o2
-        local startidx = (i-1)*(p-1)+1
-        local endidx = startidx+p-1
-        if dir == -1 then
-            startidx, endidx = endidx, startidx
-        end
-        for j=startidx, endidx, dir do
-            o1, o2 = 0, 0
-            local sin1, cos1 = unpack(arr[j])
-            if (j == startidx and dir == 1) or (j == endidx and dir == -1) then
-                o1, o2 = dVector(sin1, arr[j+1][1], cos1, arr[j+1][2], spacing)
-            elseif (j == endidx and dir == 1) or (j == startidx and dir == -1) then
-                o1, o2 = dVector(sin1, arr[j-1][1], cos1, arr[j-1][2], spacing)
-            end
-            glVertex(sin1*r+o1, cos1*r+o2)
-        end
-    end
-    local function AreaOutline(i, p, r1, r2, arr)
-        CirclePart(i, p, r2, 1, arr)
-        CirclePart(i, p, r1, -1, arr)
-    end
-    glBeginEnd(GL_LINE_LOOP, AreaOutline, i, vertices, r1, r2, arr)
+    glBeginEnd(GL_LINE_LOOP, AreaOutline, i, vertices, r1, r2, spacing, arr)
 end
 
 local function drawIcon(img, pos, size, offset)
@@ -1058,11 +1085,11 @@ end
 local function drawWheel()
     local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
     local borderWidth = pingWheelBorderWidth
-    local borderMargin = 0.75*borderWidth/wheelRadius
     local outerCircleRatio = defaults['outerCircleRatio']
 
     -- circle positions cache
     local arr = baseCircleArrays[#pingWheel]
+
     -- a ring around the wheel
     glColor(pingWheelRingColor)
     glLineWidth(pingWheelRingWidth)
@@ -1082,16 +1109,15 @@ local function drawWheel()
     glLineWidth(borderWidth)
     -- item area backgrounds
     glColor(pingWheelBaseColor)
+    glPushMatrix()
     for i=1, #pingWheel do
         if i~=mainSelection then
-            glColor(pingWheelBaseColor)
-            drawArea(areaVertexNumber, i, r1, r2, spacing, arr)
-            glColor(pingWheelAreaOutlineColor)
-            drawAreaOutline(areaVertexNumber, i, r1, r2, spacing, arr)
-            glColor(pingWheelAreaInlineColor)
-            drawAreaOutline(areaVertexNumber, i, r1+borderMargin, r2-borderMargin, spacing+borderMargin, arr)
+            glCallList(areaDlist)
         end
+        gl.Rotate(360/#pingWheel, 0, 0, -1)
     end
+    glPopMatrix()
+
     -- selected part
     if mainSelection ~= 0 then
         r2 = selOuterRatio
@@ -1119,12 +1145,13 @@ local function drawWheel()
 end
 
 local function drawDottedLine()
-    local function line(x1, y1, x2, y2)
-        glVertex(x1, y1)
-        glVertex(x2, y2)
-    end
     -- draw a dotted line connecting from center of wheel to the mouse location
     if draw_line and (mainSelection > 0 or centerSelected) then
+        local function line(x1, y1, x2, y2)
+            glVertex(x1, y1)
+            glVertex(x2, y2)
+        end
+
         glColor({1, 1, 1, 0.5})
         glLineWidth(pingWheelThickness / 4)
         local mx, my = spGetMouseState()
@@ -1142,7 +1169,7 @@ local function drawCloseHint()
     local hintTextSize = 0.9*closeHintSize
     local drawIconSize = wheelRadius * iconSize * hintIconSize
     local w = gl.GetTextWidth(cancelText)*pingWheelTextSize*hintTextSize
-    x_offset = (w+drawIconSize)/2.0
+    local x_offset = (w+drawIconSize)/2.0
     drawIcon(defaults.rclickIcon, {x-x_offset, y}, hintIconSize)
     glColor({1, 1, 1, 0.7})
     glBeginText()
@@ -1194,41 +1221,74 @@ local function drawItem(selItem, posRadius, angle, isSelected, useColors, flashB
         y = y - dist/2 - halfSize
     end
     glColor(color)
-    glText(text, screenLocation[1]+x,
-        screenLocation[2]+y,
+    glBeginText()
+    glText(text, x,
+        y,
         pingWheelTextSize*textScale, "cvos")
+    glEndText()
+end
+
+local function drawCenterItem(isSelected, flashBlack)
+    glBeginText()
+        local v = (deadZoneRatio+centerAreaRatio)/2
+        if isSelected and flashBlack then
+            glColor({ 0, 0, 0, 0 })
+        else
+            glColor(pingWheelTextColor)
+        end
+        local textScale = isSelected and selectedScaleFactor or 1
+        glText('Ping', 0,
+            -v*wheelRadius,
+            pingWheelTextSize*textScale*0.8, "cvos")
+    glEndText()
+end
+
+local function drawItemWrapped(selItem, textAlignRadius, useColors, nItems, i)
+    local isSelected = mainSelection == i
+    if not selItem.dlist then
+        local angle = (i - 1) * 2 * pi / nItems
+        selItem.dlist = gl.CreateList(function()
+            drawItem(selItem, textAlignRadius, angle, false, useColors, false)
+        end)
+        selItem.selDlist = gl.CreateList(function()
+            drawItem(selItem, textAlignRadius, angle, true, useColors, false)
+        end)
+    end
+    local dlist = isSelected and selItem.selDlist or selItem.dlist
+    if flashing and (flashFrame % 2 == 0) and isSelected then
+        local angle = (i - 1) * 2 * pi / nItems
+        drawItem(selItem, textAlignRadius, angle, true, useColors, true)
+    else
+        glCallList(dlist)
+    end
 end
 
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
-    local useColors = WG['pingwheel'] and WG['pingwheel'].getUseColors()
-    local flashBlack = false
-    if flashing and (flashFrame % 2 == 0) then
-        flashBlack = true
-    end
+    local useColors = use_colors
     local textAlignRadius = textAlignRatio*wheelRadius
+    local nItems = #pingWheel
 
-    glBeginText()
-    for i = 1, #pingWheel do
-        local isSelected = mainSelection == i
-        local selItem = pingWheel[i]
-        local angle = (i - 1) * 2 * pi / #pingWheel
-        drawItem(selItem, textAlignRadius, angle, isSelected, useColors, flashBlack)
+    for i = 1, nItems do
+        drawItemWrapped(pingWheel[i], textAlignRadius, useColors, nItems, i)
     end
+
     if hasCenterAction then
-        local v = (deadZoneRatio+centerAreaRatio)/2
-        if centerSelected and flashBlack then
-            glColor({ 0, 0, 0, 0 })
-        else
-            glColor(pingWheelTextColor)
+        if not centerDlist then
+            centerDlist = gl.CreateList(function()
+                drawCenterItem(false)
+            end)
+            centerSelDlist = gl.CreateList(function()
+                drawCenterItem(true)
+            end)
         end
-        local textScale = centerSelected and selectedScaleFactor or 1
-        glText('Ping', screenLocation[1],
-            screenLocation[2]-v*wheelRadius,
-            pingWheelTextSize*textScale*0.8, "cvos")
+        if flashing and (flashFrame % 2 == 0) and centerSelected then
+            drawCenterItem(true, true)
+        else
+            glCallList(centerSelected and centerSelDlist or centerDlist)
+        end
     end
-    glEndText()
 
     -- Close hint at the bottom
     drawCloseHint()
@@ -1270,10 +1330,10 @@ local function drawCenterDot()
     if flashing or globalFadeOut > 0 then return end
     -- draw the center dot
     glPointSize(centerDotSize)
-    glBeginEnd(GL_POINTS, glVertex, 0, 0)
+    glBeginEnd(GL.POINTS, glVertex, 0, 0)
     glColor(playerColor)
     glPointSize(centerDotSize*0.8)
-    glBeginEnd(GL_POINTS, glVertex, 0, 0)
+    glBeginEnd(GL.POINTS, glVertex, 0, 0)
 end
 
 local function drawImgCenterDot()
@@ -1394,25 +1454,34 @@ local function prepareBlur()
 end
 
 local function drawWheelBase()
+    if not areaDlist then
+        local r1, r2, spacing = 0.3, baseOuterRatio, 0.008 -- hardcoded for now
+        local borderWidth = pingWheelBorderWidth
+        local borderMargin = 0.75*borderWidth/wheelRadius
+        local arr = baseCircleArrays[#pingWheel]
+
+        areaDlist = gl.CreateList(function()
+            glColor(pingWheelBaseColor)
+            drawArea(areaVertexNumber, 1, r1, r2, spacing, arr)
+            glColor(pingWheelAreaOutlineColor)
+            drawAreaOutline(areaVertexNumber, 1, r1, r2, spacing, arr)
+            glColor(pingWheelAreaInlineColor)
+            drawAreaOutline(areaVertexNumber, 1, r1+borderMargin, r2-borderMargin, spacing+borderMargin, arr)
+        end)
+    end
+
     if not baseDlist then
         baseDlist = gl.CreateList(drawWheel)
     end
-
     glCallList(baseDlist)
+
 end
 
 local function drawWheelForeground()
     drawDottedLine() -- Dotted line to mouse needs to be updated all the time so no cooking
 
     shader:SetUniform("useTex", 1)
-    if flashing then
-        drawItems()
-    else
-        if not itemsDlist then
-            itemsDlist = gl.CreateList(drawItems)
-        end
-        glCallList(itemsDlist)
-    end
+    drawItems()
 end
 
 function widget:DrawScreen()
@@ -1424,17 +1493,15 @@ function widget:DrawScreen()
     -- Main wheel
     if displayPingWheel then
         local vsx, vsy, vpx, vpy = Spring.GetViewGeometry()
-        local mmx = screenLocation[1]*2 - vsx
-        local mmy = screenLocation[2]*2 - vsy
 
-        local scale1 = (vsy/vsx)*defaults.baseWheelSize -- for items in -1, 1
-        local scale2 = 2/vsx           -- for items in screen space
+        local scale = defaults.baseWheelSize*vsy/2
 
         shader:Activate()
-        shader:SetUniform("scale", scale1)
         shader:SetUniform("useTex", 0)
         shader:SetUniform("alpha", globalDim)
-        shader:SetUniform("mousePosition", mmx/vsx, mmy/vsx, 1.0, 1.0)
+        shader:SetUniform("scale", scale)
+
+        glTranslate(screenLocation[1], screenLocation[2], 0)
 
         glBlending(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         -- The new style base
@@ -1455,8 +1522,10 @@ function widget:DrawScreen()
         end
         glCallList(decorationsDlist)
 
-        shader:SetUniform("scale", scale2)
+        shader:SetUniform("scale", 1)
+
         drawWheelForeground()
+        glTranslate(-screenLocation[1], -screenLocation[2], 0)
 
         -- Reset state
         shader:Deactivate()
