@@ -1,12 +1,10 @@
 return {
 	armpship = {
-		airsightdistance = 470,
 		autoheal = 1.5,
 		blocking = true,
 		buildpic = "ARMPSHIP.DDS",
 		buildtime = 4250,
 		canmove = true,
-		category = "ALL NOTLAND MOBILE WEAPON NOTSUB SHIP NOTAIR NOTHOVER SURFACE EMPABLE",
 		collisionvolumeoffsets = "0 -4 1",
 		collisionvolumescales = "26 26 76",
 		collisionvolumetype = "CylZ",
