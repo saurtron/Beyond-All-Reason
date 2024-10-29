@@ -749,13 +749,10 @@ function widget:Shutdown()
     destroyBlurDlist()
     destroyChoiceDlist()
     destroyShaders()
-<<<<<<< HEAD
     if standaloneMode and WG['options'] then
         WG['options'].removeOptions(table.map(standaloneOptions, function(option) return 'pingwheel_'..option.id end))
     end
-=======
     destroyItemsDlists()
->>>>>>> add-ping-wheel-widget
 end
 
 function widget:ViewResize(vsx, vsy)
