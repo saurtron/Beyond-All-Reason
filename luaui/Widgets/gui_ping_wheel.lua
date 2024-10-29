@@ -147,7 +147,7 @@ local defaults = {
 
 -- On/Off switches
 local standaloneMode = true -- adds settings inside custom tab, does non-local (and non i18n) mapmarkers
-local use_colors = false    -- only for standalone mode, otherwise controlled elsewhere
+local use_colors = false    -- normally controlled from mapmark rendering module
 local draw_line = false     -- set to true to draw a line from the center to the cursor during selection
 local draw_deadzone = false -- set to true to draw a circle around the dead zone (for debugging purposes)
 local do_blur = true        -- set to false to avoid doing blur
@@ -1393,7 +1393,7 @@ end
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
-    local useColors = (standaloneMode and use_colors) or (not standaloneMode and WG['pingwheel'] and WG['pingwheel'].getUseColors())
+    local useColors = use_colors
     local textAlignRadius = textAlignRatio*wheelRadius
     local nItems = #pingWheel
 
