@@ -86,6 +86,10 @@ function widget:Initialize()
     end
     WG['pingwheel'].setUseColors = function(value)
         use_colors = value
+        -- notify gui
+        if WG['pingwheel_gui'] and WG['pingwheel_gui'].setUseColors then
+            WG['pingwheel_gui'].setUseColors(value)
+        end
     end
 end
 
