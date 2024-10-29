@@ -729,7 +729,7 @@ function widget:Initialize()
     end
     WG['pingwheel_gui'].setUseColors = function(value)
         use_colors = value
-        destroyItemsDlist()
+        destroyItemsDlists()
     end
 
     addStandaloneSettings()
