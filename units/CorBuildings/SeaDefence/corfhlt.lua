@@ -5,7 +5,6 @@ return {
 		buildpic = "CORFHLT.DDS",
 		buildtime = 11400,
 		canrepeat = false,
-		category = "ALL NOTLAND WEAPON NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE EMPABLE",
 		collisionvolumeoffsets = "0 -3 0",
 		collisionvolumescales = "73 67 73",
 		collisionvolumetype = "CylY",
@@ -28,7 +27,7 @@ return {
 		selfdestructas = "mediumBuildingExplosionGenericSelfd",
 		sightdistance = 630,
 		waterline = 3,
-		yardmap = "wwwwwwwww",
+		yardmap = "wwwwwwwwwwwwwwww",
 		customparams = {
 			model_author = "Mr Bob",
 			normaltex = "unittextures/cor_normal.dds",
