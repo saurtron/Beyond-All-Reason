@@ -357,6 +357,11 @@ local function destroyItemDlists(item)
         gl.DeleteList(item.selDlist)
         item.dlist = false
         item.selDlist = false
+        if item.children then
+            for i = 1, #item.children do
+                destroyItemDlists(item.children[i])
+            end
+        end
     end
 end
 
@@ -1344,8 +1349,7 @@ local function drawCenterItem(isSelected, flashBlack)
     glEndText()
 end
 
-local function drawItemWrapped(selItem, textAlignRadius, useColors, nItems, i)
-    local isSelected = mainSelection == i
+local function drawItemWrapped(selItem, textAlignRadius, useColors, nItems, i, isSelected, hotSelection)
     if not selItem.dlist then
         local angle = (i - 1) * 2 * pi / nItems
         selItem.dlist = gl.CreateList(function()
@@ -1356,7 +1360,7 @@ local function drawItemWrapped(selItem, textAlignRadius, useColors, nItems, i)
         end)
     end
     local dlist = isSelected and selItem.selDlist or selItem.dlist
-    if flashing and (flashFrame % 2 == 0) and isSelected then
+    if flashing and hotSelection and (flashFrame % 2 == 0) and isSelected then
         local angle = (i - 1) * 2 * pi / nItems
         drawItem(selItem, textAlignRadius, angle, true, useColors, true)
     else
@@ -1372,7 +1376,7 @@ local function drawItems()
     local nItems = #pingWheel
 
     for i = 1, nItems do
-        drawItemWrapped(pingWheel[i], textAlignRadius, useColors, nItems, i)
+        drawItemWrapped(pingWheel[i], textAlignRadius, useColors, nItems, i, mainSelection == i, secondarySelection == 0)
     end
 
     if hasCenterAction then
@@ -1394,10 +1398,8 @@ local function drawItems()
         local secondaryRadius = 1.17*wheelRadius
         for i = 1, 3 do
             local idx = mainSelection*2+i-3
-            local isSelected = secondarySelection == i
             local selItem = pingWheel[mainSelection].children[i]
-            local angle = (idx - 1) * pi / #pingWheel
-            drawItem(selItem, secondaryRadius, angle, isSelected, useColors, flashBlack)
+            drawItemWrapped(selItem, secondaryRadius, useColors, #pingWheel*2, idx, secondarySelection == i, true)
         end
     end
 
