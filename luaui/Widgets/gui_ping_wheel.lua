@@ -146,6 +146,7 @@ local defaults = {
 }
 
 -- On/Off switches
+local use_colors = false    -- normally controlled from mapmark rendering module
 local draw_line = false     -- set to true to draw a line from the center to the cursor during selection
 local draw_deadzone = false -- set to true to draw a circle around the dead zone (for debugging purposes)
 local do_blur = true        -- set to false to avoid doing blur
@@ -618,6 +619,13 @@ function widget:Initialize()
         destroyDecorationsDlist()
         destroyBaseDlist()
         destroyAreaDlist()
+    end
+    WG['pingwheel_gui'].getUseColors = function()
+        return use_colors
+    end
+    WG['pingwheel_gui'].setUseColors = function(value)
+        use_colors = value
+        destroyItemsDlists()
     end
 
     -- add the action handler with argument for press and release using the same function call
@@ -1258,7 +1266,7 @@ end
 local function drawItems()
     -- draw the text for each slice and highlight the selected one
     -- also flash the text color to indicate ping was issued
-    local useColors = WG['pingwheel'] and WG['pingwheel'].getUseColors()
+    local useColors = use_colors
     local textAlignRadius = textAlignRatio*wheelRadius
     local nItems = #pingWheel
 
