@@ -44,6 +44,7 @@ return {
 			removewait = true,
 			solar = true,
 			subfolder = "Legion/economy",
+			conditionalenergymake = true,
 		},
 		featuredefs = {
 			dead = {

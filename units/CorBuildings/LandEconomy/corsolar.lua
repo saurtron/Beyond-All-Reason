@@ -44,6 +44,7 @@ return {
 			subfolder = "CorBuildings/LandEconomy",
 			unitgroup = "energy",
 			usebuildinggrounddecal = true,
+			conditionalenergymake = true,
 		},
 		featuredefs = {
 			dead = {
