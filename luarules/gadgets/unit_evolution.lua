@@ -347,6 +347,8 @@ if gadgetHandler:IsSyncedCode() then
 
 					if not inCombat and (currentTime-evolutionMetaList[unitID].combatTimer) >= 5 then
 						Evolve(unitID, evolutionMetaList[unitID].evolution_target)
+						-- Evolve will destroy the unit and thus invalidate evolutionMetaList[unitID], so return here
+						return
 					end
 				end
 				if evolutionMetaList[unitID].evolution_condition == "timer_global" and currentTime >= evolutionMetaList[unitID].evolution_timer then
