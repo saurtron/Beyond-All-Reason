@@ -361,6 +361,7 @@ if gadgetHandler:IsSyncedCode() then
 
 					if not inCombat and (currentTime-evolutionMetaList[unitID].combatTimer) >= 5 then
 						Evolve(unitID, evolutionMetaList[unitID].evolution_target)
+						return
 					end
 				end
 			end
