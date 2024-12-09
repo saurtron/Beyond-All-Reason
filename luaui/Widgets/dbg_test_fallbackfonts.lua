@@ -13,13 +13,22 @@ end
 
 local fenabled = false
 
+-- to test color use the second fontfile here
+local fontfile = 'fonts2/NotoEmoji-VariableFont_wght.ttf'
+--local fontfile = 'fonts2/NotoColorEmoji.ttf'
+
+function widget:Initialize()
+	if not gl.ClearFallbackFonts then
+		widgetHandler:RemoveWidget()
+	end
+end
+
 function widget:MousePress(x, y, button)
 	if button == 1 then
 		if gl.ClearFallbackFonts then
 			if not fenabled then
 				fenabled = true
-				--gl.AddFallbackFont('fonts2/NotoColorEmoji.ttf')
-				local res = gl.AddFallbackFont('fonts2/NotoEmoji-VariableFont_wght.ttf')
+				local res = gl.AddFallbackFont(fontfile)
 				if not res then
 					Spring.Echo("No fallback font")
 				end
@@ -34,5 +43,22 @@ function widget:MousePress(x, y, button)
 				Spring.Echo("Fallback fonts", fenabled)
 			end
 		end
+	end
+end
+
+function widget:GameFrame(gf)
+	if gf == 3 then
+		Spring.SendCommands("say test")
+		Spring.SendCommands("say hello 🔥")
+	elseif gf == 150 then
+		gl.AddFallbackFont(fontfile)
+	elseif gf == 152 then
+		Spring.SendCommands("say fallbacks enabled")
+		Spring.SendCommands("say fallback 🔥")
+	elseif gf == 450 then
+		gl.ClearFallbackFonts()
+	elseif gf == 452 then
+		Spring.SendCommands("say fallbacks disabled")
+		Spring.SendCommands("say system 🔥")
 	end
 end
