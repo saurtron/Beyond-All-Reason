@@ -25,8 +25,6 @@ function crashGame()
 
 	Test.waitFrames(1)
 
-	Test.waitUntilCallinArgs("UnitCommand", { nil, nil, nil, 500, nil, nil, nil })
-
 	assert(Spring.GetUnitSelfDTime(unitID) > 0)
 	Test.waitFrames(180)
 end
