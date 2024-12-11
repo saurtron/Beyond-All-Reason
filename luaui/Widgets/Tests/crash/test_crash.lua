@@ -11,7 +11,6 @@ function cleanup()
 end
 
 function crashGame()
-	-- test waitUntilCallinArgs with and without expectCallin preregister
 	local myTeamID = Spring.GetMyTeamID()
 
 	local unitID = SyncedRun(function(locals)
