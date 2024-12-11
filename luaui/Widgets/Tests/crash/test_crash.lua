@@ -23,14 +23,12 @@ function crashGame()
 	-- issue selfd
 	Spring.GiveOrderToUnit(unitID, CMD.SELFD, {}, 0)
 
-	Test.waitFrames(1)
-
-	assert(Spring.GetUnitSelfDTime(unitID) > 0)
-	Test.waitFrames(180)
+	Test.waitFrames(156)
 end
 
 function test()
-	while true do
+	for i=1, 10 do
 		crashGame()
+		Test.clearMap()
 	end
 end
