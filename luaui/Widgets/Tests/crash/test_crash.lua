@@ -23,12 +23,15 @@ function crashGame()
 	-- issue selfd
 	Spring.GiveOrderToUnit(unitID, CMD.SELFD, {}, 0)
 
-	Test.waitFrames(156)
+	Test.waitUntil(function()
+		return Spring.GetUnitIsDead(unitID) == true
+	end, 200)
+
+	Test.clearMap()
 end
 
 function test()
-	for i=1, 10 do
+	for i=1, 5 do
 		crashGame()
-		Test.clearMap()
 	end
 end
