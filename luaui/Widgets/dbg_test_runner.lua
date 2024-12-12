@@ -263,7 +263,7 @@ end
 function resumeRecordingCallin(name, target, depth)
 	callinState.recording[name] = nil
 	callinState.callins[name] = nil
-	startRecordingCallin(name, target, depth)
+	startRecordingCallin(name, target, depth + 1)
 end
 
 -- Unhook callin
