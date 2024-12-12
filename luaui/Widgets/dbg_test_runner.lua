@@ -256,7 +256,7 @@ function startRecordingCallin(name, target, depth)
 		local args = {...}
 		buffer[#buffer+1] = args
 	end
-	callinState.recording[name] = true --need to set this before registerCallin
+	callinState.recording[name] = true
 	trackCallin(target, name, recorderFunc)
 end
 
