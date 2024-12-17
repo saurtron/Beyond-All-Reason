@@ -19,6 +19,8 @@ local fontfile = 'fonts2/NotoEmoji-VariableFont_wght.ttf'
 
 function widget:Initialize()
 	if not gl.ClearFallbackFonts then
+		Spring.SendCommands("say not the right engine version!!")
+		Spring.Echo("Not the right engine version!")
 		widgetHandler:RemoveWidget()
 	end
 end
@@ -48,10 +50,6 @@ end
 
 function widget:GameFrame(gf)
 	if gf == 3 then
-		if not gl.AddFallbackFont then
-			Spring.SendCommands("say not the right spring version!!")
-			widgetHandler:RemoveWidget()
-		end
 		Spring.SendCommands("say test")
 		Spring.SendCommands("say hello 🔥")
 	elseif gf == 150 then
