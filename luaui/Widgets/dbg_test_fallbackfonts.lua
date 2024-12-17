@@ -49,7 +49,7 @@ end
 function widget:GameFrame(gf)
 	if gf == 3 then
 		if not gl.AddFallbackFont then
-			Spring.SendCommands("not the right spring version!!")
+			Spring.SendCommands("say not the right spring version!!")
 			widgetHandler:RemoveWidget()
 		end
 		Spring.SendCommands("say test")
