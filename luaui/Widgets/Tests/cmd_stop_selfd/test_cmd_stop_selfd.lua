@@ -23,22 +23,22 @@ function test()
 	end)
 
 	-- issue selfd and then issue stop
-	Spring.GiveOrderToUnit(unitID, CMD.SELFD, {}, 0)
+	Spring.GiveOrderToUnit(unitID, CMD.SELFD)
 	Test.waitUntilCallinArgs("UnitCommand", { nil, nil, nil, CMD.SELFD, nil, nil, nil })
 	assert(Spring.GetUnitSelfDTime(unitID) > 0)
 
-	Spring.GiveOrderToUnit(unitID, CMD.STOP, {}, 0)
+	Spring.GiveOrderToUnit(unitID, CMD.STOP, nil, nil)
 	Test.waitUntilCallinArgs("UnitCommand", { nil, nil, nil, CMD.SELFD, nil, nil, nil })
 	assert(Spring.GetUnitSelfDTime(unitID) == 0)
 	assert(#(Spring.GetCommandQueue(unitID, 1)) == 0)
 
 	-- issue {move, selfd}, then issue stop
 	Spring.GiveOrderToUnit(unitID, CMD.MOVE, { 1, 1, 1 }, 0)
-	Spring.GiveOrderToUnit(unitID, CMD.SELFD, {}, { "shift" })
+	Spring.GiveOrderToUnit(unitID, CMD.SELFD, nil, { "shift" })
 	Test.waitUntilCallinArgs("UnitCommand", { nil, nil, nil, CMD.SELFD, nil, nil, nil })
 	assert(Spring.GetUnitSelfDTime(unitID) == 0)
 
-	Spring.GiveOrderToUnit(unitID, CMD.STOP, {}, 0)
+	Spring.GiveOrderArrayToUnit(unitID, {{CMD.STOP}})
 	Test.waitUntilCallinArgs("UnitCommand", { nil, nil, nil, CMD.STOP, nil, nil, nil })
 	assert(Spring.GetUnitSelfDTime(unitID) == 0)
 	assert(#(Spring.GetCommandQueue(unitID, 1)) == 0)
