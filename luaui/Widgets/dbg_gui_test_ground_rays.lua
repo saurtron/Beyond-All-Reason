@@ -33,11 +33,16 @@ function widget:MousePress(x, y, button)
 		units = Spring.GetAllUnits()
 		Spring.Echo(Json.encode(units))
 	end
-	local ux, uy, uz = Spring.GetUnitPosition(units[1])
-	local dist2, x2, y2, z2 = spTraceRayGroundBetweenPositions(fx, fy+10, fz, ux, uy-10, uz, false)
+	local ux, uy, uz = 0,0,0
+	if #units > 0 then
+		ux, uy, uz = Spring.GetUnitPosition(units[1])
+	end
 	local dist3, x3, y3, z3 = spTraceRayGroundBetweenPositions(cpx, cpy, cpz, cpx+dx*10000, cpy+dy*10000, cpz+dz*10000, false)
 	Spring.Echo(string.format("ground1: %.1f %.1f %.1f %.1f water: %.1f %.1f %.1f %.1f", x, y, z, dist, wx, wy, wz, wdist))
 	Spring.Echo(string.format("ground2: %.1f %.1f %.1f %.1f depth: %.1f", x3, y3, z3, dist3, dist-wdist))
-	Spring.GiveOrderToUnit(units[1], CMD.ATTACK, {x2, y2, z2}, 0)
+	if #units > 0 then
+		local dist2, x2, y2, z2 = spTraceRayGroundBetweenPositions(fx, fy+10, fz, ux, uy-10, uz, false)
+		Spring.GiveOrderToUnit(units[1], CMD.ATTACK, {x2, y2, z2}, 0)
+	end
 end
 
