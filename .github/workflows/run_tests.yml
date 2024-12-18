@@ -4,7 +4,6 @@ on:
 #  pull_request
   workflow_dispatch:
   pull_request:
-    types: [opened, reopened]
 
 jobs:
   upload-event_file:
