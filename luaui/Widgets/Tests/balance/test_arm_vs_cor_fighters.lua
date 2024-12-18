@@ -48,12 +48,16 @@ function test()
 		Spring.GiveOrderToUnitArray(Spring.GetTeamUnits(0), CMD.FIGHT, { midX, 0, midZ }, 0)
 		Spring.GiveOrderToUnitArray(Spring.GetTeamUnits(1), CMD.FIGHT, { midX, 0, midZ }, 0)
 	else
-		for _, unitID in ipairs(Spring.GetAllUnits()) do
-			local ux, uy, uz = Spring.GetUnitPosition(unitID)
+		SyncedRun(function()
+			local midX = locals.midX
+			local midZ = locals.midZ
+			for _, unitID in ipairs(Spring.GetAllUnits()) do
+				local ux, uy, uz = Spring.GetUnitPosition(unitID)
 
-			Spring.GiveOrderToUnit(unitID, CMD.FIGHT, { 2 * midX - ux, 0, uz }, 0)
-			Spring.GiveOrderToUnit(unitID, CMD.FIGHT, { midX, 0, midZ }, { "shift" })
-		end
+				Spring.GiveOrderToUnit(unitID, CMD.FIGHT, { 2 * midX - ux, 0, uz }, 0)
+				Spring.GiveOrderToUnit(unitID, CMD.FIGHT, { midX, 0, midZ }, { "shift" })
+			end
+		end)
 	end
 
 	Spring.SendCommands("setspeed " .. 5)
