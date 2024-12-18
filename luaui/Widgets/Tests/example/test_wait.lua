@@ -1,5 +1,6 @@
 function setup()
 	Test.clearMap()
+	Text.expectCallin("UnitCreated")
 end
 
 function cleanup()
