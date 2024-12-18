@@ -54,4 +54,4 @@ extendPlatform()
 
 Spring.Echo("PLATFORM", isSyncedCode)
 Spring.Echo("PLATFORM GL", hasGL, hasGL4, hasShaders, hasFBO)
-Spring.Echo("PLATFORM ATTRS", Platform.glHaveGLSL, Platform.glHaveGL4, gl.GetString(), Platform.glVendor, Platform.glVersion, Platform.glRenderer)
+Spring.Echo("PLATFORM ATTRS", Platform.glHaveGLSL, Platform.glHaveGL4, gl and gl.GetString(0x1F00), Platform.glVendor, Platform.glVersion, Platform.glRenderer)
