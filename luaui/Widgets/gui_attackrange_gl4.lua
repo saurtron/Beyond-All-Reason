@@ -9,10 +9,9 @@ function widget:GetInfo()
 		"[v" .. string.format("%s", versionNumber ) .. "] Displays attack ranges of selected units. Alt+, and alt+. (alt comma and alt period) to cycle backward and forward through display config of current unit (saved through games!). Custom keybind to toggle cursor unit range on and off.",
 		author  = "Errrrrrr, Beherith",
 		date    = "July 20, 2023",
-		license = "GPLv2",
+		license = "Lua: GPLv2, GLSL: (c) Beherith (mysterme@gmail.com)",
 		layer   = -99,
 		enabled = true,
-		handler = true,
 	}
 end
 
@@ -20,8 +19,10 @@ end
 -- Bindable action:   cursor_range_toggle
 -- The widget's individual unit type's display setup is saved in LuaUI/config/AttackRangeConfig2.lua
 ---------------------------------------------------------------------------------------------------------------------------
-local shift_only = false                -- only show ranges when shift is held down
-local cursor_unit_range = true          -- displays the range of the unit at the mouse cursor (if there is one)
+local shift_only = false -- only show ranges when shift is held down
+local cursor_unit_range = true -- displays the range of the unit at the mouse cursor (if there is one)
+local selectionDisableThreshold = 90	-- turns off when selection is above this number
+local selectionDisableThresholdMult = 0.7
 
 ---------------------------------------------------------------------------------------------------------------------------
 ------------------ CONFIGURABLES --------------
@@ -32,16 +33,14 @@ local buttonConfig = {
 }
 
 local colorConfig = {
-	drawStencil = true,            -- wether to draw the outer, merged rings (quite expensive!)
-	cannon_separate_stencil = false,  -- set to true to have cannon and ground be on different stencil mask
-	drawInnerRings = true,         -- wether to draw inner, per attack rings (very cheap)
+	drawStencil = true,  -- whether to draw the outer, merged rings (quite expensive!)
+	cannon_separate_stencil = false, -- set to true to have cannon and ground be on different stencil mask
+	drawInnerRings = true, -- whether to draw inner, per attack rings (very cheap)
 
 	externalalpha = 0.80, -- alpha of outer rings
 	internalalpha = 0.20, -- alpha of inner rings
-	fill_alpha = 0.10,  -- this is the solid color in the middle of the stencil
+	fill_alpha = 0.10, -- this is the solid color in the middle of the stencil
 	outer_fade_height_difference = 2500, -- this is the height difference at which the outer ring starts to fade out compared to inner rings
-	--distanceScaleStart = 1500,     -- Linewidth is 100% up to this camera height
-	--distanceScaleEnd = 5000,       -- Linewidth becomes 50% above this camera height
 	ground = {
 		color = { 1.0, 0.22, 0.05, 0.60 },
 		fadeparams = { 1500, 2200, 1.0, 0.0 }, -- FadeStart, FadeEnd, StartAlpha, EndAlpha
@@ -74,19 +73,9 @@ local colorConfig = {
 
 ----------------------------------
 local show_selected_weapon_ranges = true
-local buttonconfigmap = { 'ground', 'nano', 'AA', 'cannon' }
-local DEBUG = false --generates debug message
 local weaponTypeMap = { 'ground', 'nano', 'AA', 'cannon' }
 
-local unitDefRings = {} --each entry should be  a unitdefIDkey to very specific table:
--- a list of tables, ideally ranged from 0 where
-
-local mobileAntiUnitDefs = {
-	[UnitDefNames.armscab.id] = true,
-	[UnitDefNames.armcarry.id] = true,
-	[UnitDefNames.cormabm.id] = true,
-	[UnitDefNames.corcarry.id] = true,
-}
+local unitDefRings = {} --each entry should be a unitdefIDkey to a table:
 
 local vtoldamagetag = Game.armorTypes['vtol']
 local defaultdamagetag = Game.armorTypes['default']
@@ -123,7 +112,6 @@ for udid, ud in pairs(UnitDefs) do
 	end
 end
 
-
 local chunk, err = loadfile("LuaUI/config/AttackRangeConfig2.lua")
 if chunk then
 	local tmp = {}
@@ -132,69 +120,6 @@ if chunk then
 end
 
 --helpers
-local function tableToString(t)
-	local result = ""
-
-	if type(t) ~= "table" then
-		result = tostring(t)
-	elseif t == nil then
-		result = "nil"
-	else
-		for k, v in pairs(t) do
-			result = result .. "[" .. tostring(k) .. "] = "
-
-			if type(v) == "table" then
-				result = result .. "{"
-
-				for k2, v2 in pairs(v) do
-					result = result .. "[" .. tostring(k2) .. "] = "
-
-					if type(v2) == "table" then
-						result = result .. "{"
-
-						for k3, v3 in pairs(v2) do
-							result = result .. "[" .. tostring(k3) .. "] = " .. tostring(v3) .. ", "
-						end
-
-						result = result .. "}, "
-					else
-						result = result .. tostring(v2) .. ", "
-					end
-				end
-
-				result = result .. "}, "
-			else
-				result = result .. tostring(v) .. ", "
-			end
-			result = result .. "  "
-		end
-	end
-
-	return "{" .. result:sub(1, -3) .. "}"
-end
-local function dumpToFile(obj, prefix, filename)
-	local file = assert(io.open(filename, "w"))
-	if type(obj) == "table" then
-		for k, v in pairs(obj) do
-			local key = prefix and (prefix .. "." .. tostring(k)) or tostring(k)
-			if type(v) == "function" then
-				local info = debug.getinfo(v, "S")
-				file:write(key .. " (function) defined in " .. info.source .. " at line " .. info.linedefined .. "\n")
-			elseif type(v) == "table" then
-				file:write(key .. " (table):\n")
-				dumpToFile(v, key, filename)
-			else
-				file:write(key .. " = " .. tostring(v) .. "\n")
-			end
-		end
-	end
-	if type(obj) == "string" then
-		file:write(obj)
-	end
-
-	file:close()
-end
-
 local function convertToBitmap(statusTable)
 	if type(statusTable) ~= "table" then
 		return 0
@@ -242,7 +167,7 @@ local function initializeUnitDefRing(unitDefID)
 		local range = weaponDef.range
 		local dps = 0
 		local weaponType = unitDefRings[unitDefID]['weapons'][weaponNum]
-		--Spring.Echo(weaponType)
+
 		if weaponType ~= nil and weaponType > 0 then
 			local damage = 0
 			if weaponType == 3 then --AA
@@ -256,19 +181,74 @@ local function initializeUnitDefRing(unitDefID)
 
 			local isCylinder = weaponDef.cylinderTargeting and 1 or 0
 			local isDgun = (weaponDef.type == "DGun") and 1 or 0
-			if isDgun == 1 then
-				--Spring.Echo("dgun found, range in weaponDef is: "..weaponDef.range)
-			end
 
-
-			local customParams = weaponDef.customParams
 			local wName = weaponDef.name
 			if (weaponDef.type == "AircraftBomb") or (wName:find("bogus")) then
-				--Spring.Echo("bogus weapon found: "..tostring(wName))
 				range = 0
 			end
 			--Spring.Echo("weaponNum: ".. weaponNum ..", name: " .. tableToString(weaponDef.name))
 			local groupselectionfadescale = colorConfig[weaponTypeMap[weaponType]].groupselectionfadescale
+
+			--local udwp = UnitDefs[unitDefID].weapons
+			local maxangledif = (weapons[weaponNum].maxAngleDif or -1)
+			-- weapons[weaponNum].maxAngleDif is :
+			-- 0 for 180
+			-- -1 for 360
+			-- 0.707 for 90
+
+			-- Because I cant be assed to calculate the full 3d cone-ground intersection slice within the vertex shader:
+			-- We are only going to display angles for weapons that actually point forward, e.g. mainDirXYZ of 0 0 1
+			-- we need to output two numbers here, and pack it into one float
+			-- The integer part will be the offset around the circle, from forward dir, in degrees, +-180
+			-- the fractional part will be the max left-right attack angle around the ground plane.
+			-- maindir = "0 0 1" is forward
+			-- exactly zero means no angle limits!
+			-- maindir "0 1 0" is designed for shooting at feet prevention!
+
+			local maxangledif = 0
+			if weapons[weaponNum].maxAngleDif > -1 then
+				local offsetdegrees = 0
+				local difffract = 0
+
+				local weaponParams = weapons[weaponNum]
+				local mdx = weaponParams.mainDirX
+				local mdy = weaponParams.mainDirY
+				local mdz = weaponParams.mainDirZ
+				local angledif = math.acos(weapons[weaponNum].maxAngleDif) / math.pi
+				local angledeg = angledif * 180
+
+				-- Normalize maindir
+				local length = math.diag(mdx,mdy,mdz)
+				mdx = mdx/length
+				mdy = mdy/length
+				mdz = mdz/length
+
+				offsetdegrees = math.atan2(mdx,mdz) * 180 / math.pi
+				difffract = angledif --(1.0 - angledif ) * (0.5) -- So 0.001 is tiny aim angle, 0.9999 is full aim angle
+
+				maxangledif = math.floor(offsetdegrees)
+
+				if math.abs(mdy) > 0.01 and math.abs(mdy) < 0.99 then -- its off the Y plane
+					local modifier = math.sqrt ( 1.0 - mdy*mdy)
+					difffract  = difffract * modifier
+					maxangledif = maxangledif + difffract
+				elseif  math.abs(mdy) < 0.99 then
+					maxangledif = maxangledif  + difffract
+				else
+
+				end
+
+
+
+				--Spring.Echo(string.format("%s has params offsetdegrees = %.2f MAD = %.3f (%.1f deg), diffract = %.3f md(xyz) = (%.3f,%.3f,%.3f)", weaponDef.name, offsetdegrees, weapons[weaponNum].maxAngleDif, angledif*180,  difffract, mdx,mdy,mdz))
+
+
+				--Spring.Echo("weapons[weaponNum].maxAngleDif",weapons[weaponNum].maxAngleDif, maxangledif)
+				--for k,v in pairs(weapons[weaponNum]) do Spring.Echo(k,v)end
+			end
+
+			--if weapons[weaponNum].maxAngleDif then	Spring.Echo(weapons[weaponNum].maxAngleDif,'for',weaponDef.name ) end
+
 			local ringParams = { range, color[1], color[2], color[3], color[4],
 				fadeparams[1], fadeparams[2], fadeparams[3], fadeparams[4],
 				weaponDef.projectilespeed or 1,
@@ -277,10 +257,10 @@ local function initializeUnitDefRing(unitDefID)
 				weaponDef.heightMod or 0,
 				groupselectionfadescale,
 				weaponType,
-				isDgun
+				isDgun,
+				maxangledif
 			}
 			unitDefRings[unitDefID]['rings'][weaponNum] = ringParams
-			--Spring.Echo("Added ringParams: "..tableToString(ringParams))
 		end
 	end
 
@@ -302,7 +282,6 @@ local function initializeUnitDefRing(unitDefID)
 			0
 		}
 		unitDefRings[unitDefID]['rings'][weaponCount + 1] = ringParams -- weaponCount + 1 is nano
-		--Spring.Echo("added builder! "..tableToString(unitDefRings[unitDef.id]))
 	end
 end
 
@@ -312,44 +291,13 @@ local function initUnitList()
 	for unitDefID, _ in pairs(unitDefRings) do
 		initializeUnitDefRing(unitDefID)
 	end
-	-- Initialize Colors too
-	--[[ 	local scavlist = {}
-	for k,_ in pairs(unitDefRings) do
-		scavlist[k] = true
-	end
-	-- add scavs
-	for k,_ in pairs(scavlist) do
-		--Spring.Echo(k, UnitDefs[k].name)
-		if UnitDefNames[UnitDefs[k].name .. '_scav'] then
-			unitDefRings[UnitDefNames[UnitDefs[k].name .. '_scav'].id] = unitDefRings[k]
-		end
-	end
-
-	local scavlist = {}
-	for k,_ in pairs(mobileAntiUnitDefs) do
-		scavlist[k] = true
-	end
-	for k,v in pairs(scavlist) do
-		mobileAntiUnitDefs[UnitDefNames[UnitDefs[k].name .. '_scav'].id] = mobileAntiUnitDefs[k]
-	end
-
-	-- Initialize featureDefIDtoUnitDefID
-	local wreckheaps = {"_dead","_heap"}
-	for unitDefID,_ in pairs(unitDefRings) do
-		local unitDefName = UnitDefs[unitDefID].name
-		for i, suffix in pairs(wreckheaps) do
-			if FeatureDefNames[unitDefName..suffix] then
-				featureDefIDtoUnitDefID[FeatureDefNames[unitDefName..suffix].id] = unitDefID
-				--Spring.Echo(FeatureDefNames[unitDefName..suffix].id, unitDefID)
-			end
-		end
-	end ]]
 end
 
 --Button display configuration
 --position only relevant if no saved config data found
 
 local myAllyTeam            = Spring.GetMyAllyTeamID()
+local myTeamID              = Spring.GetMyTeamID()
 
 --------------------------------------------------------------------------------
 
@@ -368,13 +316,12 @@ local GL_LEQUAL             = GL.LEQUAL
 local GL_LINE_LOOP          = GL.LINE_LOOP
 local GL_NOTEQUAL           = GL.NOTEQUAL
 
-local GL_KEEP               = 0x1E00     --GL.KEEP
+local GL_KEEP               = 0x1E00 --GL.KEEP
 local GL_REPLACE            = GL.REPLACE --GL.KEEP
 
 local spGetUnitDefID        = Spring.GetUnitDefID
 local spGetUnitPosition     = Spring.GetUnitPosition
 local spGetUnitAllyTeam     = Spring.GetUnitAllyTeam
-local spFindUnitCmdDesc     = Spring.FindUnitCmdDesc
 local spGetMouseState       = Spring.GetMouseState
 local spTraceScreenRay      = Spring.TraceScreenRay
 local GetModKeyState        = Spring.GetModKeyState
@@ -439,6 +386,24 @@ local LuaShader = VFS.Include(luaShaderDir .. "LuaShader.lua")
 VFS.Include(luaShaderDir .. "instancevbotable.lua")
 local attackRangeShader = nil
 
+local shaderSourceCache = {
+	shaderName = 'Attack Range GL4',
+	vssrcpath = "LuaUI/Widgets/Shaders/attack_range_gl4.vert.glsl",
+	fssrcpath = "LuaUI/Widgets/Shaders/attack_range_gl4.frag.glsl",
+	shaderConfig = {MYGRAVITY = Game.gravity + 0.1,},
+	uniformInt = {
+		heightmapTex = 0,
+		losTex = 1,
+	},
+	uniformFloat = {
+		lineAlphaUniform = 1,
+		cannonmode = 0,
+		fadeDistOffset = 0,
+		drawMode = 0,
+		selBuilderCount = 1.0,
+		selUnitCount = 1.0,
+	},
+}
 
 local function goodbye(reason)
 	Spring.Echo("AttackRange GL4 widget exiting with reason: " .. reason)
@@ -456,10 +421,10 @@ local function makeCircleVBO(circleSegments)
 
 	local VBOData = {}
 
-	for i = 0, circleSegments do                                     -- this is +1
+	for i = 0, circleSegments do -- this is +1
 		VBOData[#VBOData + 1] = math.sin(math.pi * 2 * i / circleSegments) -- X
 		VBOData[#VBOData + 1] = math.cos(math.pi * 2 * i / circleSegments) -- Y
-		VBOData[#VBOData + 1] = i / circleSegments                   -- circumference [0-1]
+		VBOData[#VBOData + 1] = i / circleSegments -- circumference [0-1]
 		VBOData[#VBOData + 1] = 0
 	end
 
@@ -470,316 +435,6 @@ local function makeCircleVBO(circleSegments)
 	circleVBO:Upload(VBOData)
 	return circleVBO
 end
-
-local vsSrc = [[
-	#version 420
-	#extension GL_ARB_uniform_buffer_object : require
-	#extension GL_ARB_shader_storage_buffer_object : require
-	#extension GL_ARB_shading_language_420pack: require
-	#line 10000
-
-	//__DEFINES__
-
-	layout (location = 0) in vec4 circlepointposition;
-	layout (location = 1) in vec4 posscale;
-	layout (location = 2) in vec4 color1;
-	layout (location = 3) in vec4 visibility; // FadeStart, FadeEnd, StartAlpha, EndAlpha
-	layout (location = 4) in vec4 projectileParams; // projectileSpeed, iscylinder!!!! , heightBoostFactor , heightMod
-	layout (location = 5) in vec4 additionalParams; // groupselectionfadescale, weaponType, +2 reserved
-	layout (location = 6) in uvec4 instData;
-
-	uniform float lineAlphaUniform = 1.0;
-	uniform float cannonmode = 0.0;
-	uniform float fadeDistOffset = 0.0;
-
-	uniform sampler2D heightmapTex;
-	uniform sampler2D losTex; // hmm maybe?
-
-	out DataVS {
-		flat vec4 blendedcolor;
-		vec4 circleprogress;
-		float groupselectionfadescale;
-		float weaponType;
-	};
-
-	//__ENGINEUNIFORMBUFFERDEFS__
-
-
-	struct SUniformsBuffer {
-		uint composite; //     u8 drawFlag; u8 unused1; u16 id;
-
-		uint unused2;
-		uint unused3;
-		uint unused4;
-
-		float maxHealth;
-		float health;
-		float unused5;
-		float unused6;
-
-		vec4 drawPos;
-		vec4 speed;
-		vec4[4] userDefined; //can't use float[16] because float in arrays occupies 4 * float space
-	};
-
-	layout(std140, binding=1) readonly buffer UniformsBuffer {
-		SUniformsBuffer uni[];
-	};
-
-	#define UNITID (uni[instData.y].composite >> 16)
-
-
-	#line 11000
-
-	float heightAtWorldPos(vec2 w){
-		vec2 uvhm =  heighmapUVatWorldPos(w);
-		return textureLod(heightmapTex, uvhm, 0.0).x;
-	}
-
-	float GetRangeFactor(float projectileSpeed) { // returns >0 if weapon can shoot here, <0 if it cannot, 0 if just right
-		// on first run, with yDiff = 0, what do we get?
-		float speed2d = projectileSpeed * 0.707106;
-		float gravity =  120.0 	* (0.001111111);
-		return ((speed2d * speed2d) * 2.0 ) / (gravity);
-	}
-
-	float GetRange2DCannon(float yDiff,float projectileSpeed,float rangeFactor,float heightBoostFactor) { // returns >0 if weapon can shoot here, <0 if it cannot, 0 if just right
-		// on first run, with yDiff = 0, what do we get?
-
-		//float factor = 0.707106;
-		float smoothHeight = 100.0;
-		float speed2d = projectileSpeed*0.707106;
-		float speed2dSq = speed2d * speed2d;
-		float gravity = -1.0*  (120.0 /900);
-
-		if (heightBoostFactor < 0){
-			heightBoostFactor = (2.0 - rangeFactor) / sqrt(rangeFactor);
-		}
-
-		if (yDiff < -100.0){
-			yDiff = yDiff * heightBoostFactor;
-		}else {
-			if (yDiff < 0.0) {
-				yDiff = yDiff * (1.0 + (heightBoostFactor - 1.0 ) * (-1.0 * yDiff) * 0.01);
-			}
-		}
-
-		float root1 = speed2dSq + 2 * gravity *yDiff;
-		if (root1 < 0.0 ){
-			return 0.0;
-		}else{
-			return rangeFactor * ( speed2dSq + speed2d * sqrt( root1 ) ) / (-1.0 * gravity);
-		}
-	}
-
-	//float heightMod  default: 0.2 (0.8 for #Cannon, 1.0 for #BeamLaser and #LightningCannon)
-	//Changes the spherical weapon range into an ellipsoid. Values above 1.0 mean the weapon cannot target as high as it can far, values below 1.0 mean it can target higher than it can far. For example 0.5 would allow the weapon to target twice as high as far.
-
-	//float heightBoostFactor default: -1.0
-	//Controls the boost given to range by high terrain. Values > 1.0 result in increased range, 0.0 means the cannon has fixed range regardless of height difference to target. Any value < 0.0 (i.e. the default value) result in an automatically calculated value based on range and theoretical maximum range.
-
-	#define RANGE posscale.w
-	#define PROJECTILESPEED projectileParams.x
-	#define ISCYLINDER projectileParams.y
-	#define HEIGHTBOOSTFACTOR projectileParams.z
-	#define HEIGHTMOD projectileParams.w
-	#define YGROUND posscale.y
-
-	#define OUTOFBOUNDSALPHA alphaControl.y
-	#define FADEALPHA alphaControl.z
-	#define MOUSEALPHA alphaControl.w
-
-	#define ISDGUN additionalParams.z
-
-	void main() {
-		// Get the center pos of the unit
-		vec3 modelWorldPos = uni[instData.y].drawPos.xyz;
-
-		circleprogress.xy = circlepointposition.xy;
-		circleprogress.w = circlepointposition.z;
-		blendedcolor = color1;
-		groupselectionfadescale = additionalParams.x;
-		weaponType = additionalParams.y;
-
-		// translate to world pos:
-		vec4 circleWorldPos = vec4(1.0);
-		float range2 = RANGE;
-		if (ISDGUN > 0.5) {
-			circleWorldPos.xz = circlepointposition.xy * RANGE * 1.05 + modelWorldPos.xz;
-		} else {
-			circleWorldPos.xz = circlepointposition.xy * RANGE +  modelWorldPos.xz;
-		}
-
-		vec4 alphaControl = vec4(1.0);
-
-		// get heightmap
-		circleWorldPos.y = heightAtWorldPos(circleWorldPos.xz);
-
-
-		if (cannonmode > 0.5){
-
-			// BAR only has 3 distinct ballistic projectiles, heightBoostFactor is only a handful from -1 to 2.8 and 6 and 8
-			// gravity we can assume to be linear
-
-			float heightDiff = (circleWorldPos.y - YGROUND) * 0.5;
-
-			float rangeFactor = RANGE /  GetRangeFactor(PROJECTILESPEED); //correct
-			if (rangeFactor > 1.0 ) rangeFactor = 1.0;
-			if (rangeFactor <= 0.0 ) rangeFactor = 1.0;
-			float radius = RANGE;// - heightDiff;
-			float adjRadius = GetRange2DCannon(heightDiff * HEIGHTMOD, PROJECTILESPEED, rangeFactor, HEIGHTBOOSTFACTOR);
-			float adjustment = radius * 0.5;
-			float yDiff = 0;
-			float adds = 0;
-			//for (int i = 0; i < mod(timeInfo.x/8,16); i ++){ //i am a debugging god
-			for (int i = 0; i < 16; i ++){
-					if (adjRadius > radius){
-						radius = radius + adjustment;
-						adds = adds + 1;
-					}else{
-						radius = radius - adjustment;
-						adds = adds - 1;
-					}
-					adjustment = adjustment * 0.5;
-					circleWorldPos.xz = circlepointposition.xy * radius + modelWorldPos.xz;
-					float newY = heightAtWorldPos(circleWorldPos.xz );
-					yDiff = abs(circleWorldPos.y - newY);
-					circleWorldPos.y = max(0, newY);
-					heightDiff = circleWorldPos.y - modelWorldPos.y;
-					adjRadius = GetRange2DCannon(heightDiff * HEIGHTMOD, PROJECTILESPEED, rangeFactor, HEIGHTBOOSTFACTOR);
-			}
-		}else{
-			if (ISCYLINDER < 0.5){ // isCylinder
-				//simple implementation, 4 samples per point
-				//for (int i = 0; i<mod(timeInfo.x/4,30); i++){
-				for (int i = 0; i<8; i++){
-					// draw vector from centerpoint to new height point and normalize it to range length
-					vec3 tonew = circleWorldPos.xyz - modelWorldPos.xyz;
-					tonew.y *= HEIGHTMOD;
-
-					tonew = normalize(tonew) * RANGE;
-					circleWorldPos.xz = modelWorldPos.xz + tonew.xz;
-					circleWorldPos.y = heightAtWorldPos(circleWorldPos.xz);
-				}
-			}
-		}
-
-		circleWorldPos.y += 6; // lift it from the ground
-
-		// -- MAP OUT OF BOUNDS
-		vec2 mymin = min(circleWorldPos.xz,mapSize.xy - circleWorldPos.xz);
-		float inboundsness = min(mymin.x, mymin.y);
-		OUTOFBOUNDSALPHA = 1.0 - clamp(inboundsness*(-0.02),0.0,1.0);
-
-
-		//--- DISTANCE FADE ---
-		vec4 camPos = cameraViewInv[3];
-		float distToCam = length(modelWorldPos.xyz - camPos.xyz); //dist from cam
-		// FadeStart, FadeEnd, StartAlpha, EndAlpha
-		float fadeDist = visibility.y - visibility.x;
-		if (ISDGUN > 0.5) {
-			FADEALPHA  = clamp((visibility.y + fadeDistOffset + 1000 - distToCam)/(fadeDist),visibility.w,visibility.z);
-		} else {
-			FADEALPHA  = clamp((visibility.y + fadeDistOffset - distToCam)/(fadeDist),visibility.w,visibility.z);
-		}
-		//FADEALPHA  = clamp((visibility.y + fadeDistOffset - distToCam)/(fadeDist),visibility.w,visibility.z);
-
-		//--- Optimize by anything faded out getting transformed back to origin with 0 range?
-		//seems pretty ok!
-		if (FADEALPHA < 0.001) {
-			circleWorldPos.xyz = modelWorldPos.xyz;
-		}
-
-		if (cannonmode > 0.5){
-		// cannons should fade distance based on their range
-			//float cvmin = max(visibility.x+fadeDistOffset, 2* RANGE);
-			//float cvmax = max(visibility.y+fadeDistOffset, 4* RANGE);
-			//FADEALPHA = clamp((cvmin - distToCam)/(cvmax - cvmin + 1.0),visibility.z,visibility.w);
-		}
-
-		blendedcolor = color1;
-
-		// -- DARKEN OUT OF LOS
-		//vec4 losTexSample = texture(losTex, vec2(circleWorldPos.x / mapSize.z, circleWorldPos.z / mapSize.w)); // lostex is PO2
-		//float inlos = dot(losTexSample.rgb,vec3(0.33));
-		//inlos = clamp(inlos*5 -1.4	, 0.5,1.0); // fuck if i know why, but change this if LOSCOLORS are changed!
-		//blendedcolor.rgb *= inlos;
-
-		// --- YES FOG
-		float fogDist = length((cameraView * vec4(circleWorldPos.xyz,1.0)).xyz);
-		float fogFactor = clamp((fogParams.y - fogDist) * fogParams.w, 0, 1);
-		blendedcolor.rgb = mix(fogColor.rgb, vec3(blendedcolor), fogFactor);
-
-
-		// -- IN-SHADER MOUSE-POS BASED HIGHLIGHTING
-		float disttomousefromunit = 1.0 - smoothstep(48, 64, length(modelWorldPos.xz - mouseWorldPos.xz));
-		// this will be positive if in mouse, negative else
-		float highlightme = clamp( (disttomousefromunit ) + 0.0, 0.0, 1.0);
-		MOUSEALPHA = 0.1* highlightme;
-
-		// ------------ dump the stuff for FS --------------------
-		//worldPos = circleWorldPos;
-		//worldPos.a = RANGE;
-		alphaControl.x = circlepointposition.z; // save circle progress here
-		gl_Position = cameraViewProj * vec4(circleWorldPos.xyz, 1.0);
-
-		//lets blend the alpha here, and save work in FS:
-		float outalpha = OUTOFBOUNDSALPHA * (MOUSEALPHA + FADEALPHA *  lineAlphaUniform);
-		blendedcolor.a *= outalpha ;
-		if (ISDGUN > 0.5) {
-			blendedcolor.a = clamp(blendedcolor.a * 3, 0.1, 1.0);
-		}
-		//blendedcolor.rgb = vec3(fract(distToCam/100));
-	}
-	]]
-
-local fsSrc = [[
-	#version 330
-
-	#extension GL_ARB_uniform_buffer_object : require
-	#extension GL_ARB_shading_language_420pack: require
-
-	//_DEFINES__
-
-	#line 20000
-
-	uniform float selUnitCount = 1.0;
-	uniform float selBuilderCount = 1.0;
-	uniform float drawAlpha = 1.0;
-	uniform float drawMode = 0.0;
-
-	//_ENGINEUNIFORMBUFFERDEFS__
-
-	in DataVS {
-		flat vec4 blendedcolor;
-		vec4 circleprogress;
-		float groupselectionfadescale;
-		float weaponType;
-	};
-
-	out vec4 fragColor;
-
-	void main() {
-		// -- we need to mod alpha based on groupselectionfadescale and weaponType
-		// -- innerRingDim = group_selection_fade_scale * 0.1 * numUnitsSelected
-		float numUnitsSelected = selUnitCount;
-
-		// -- nano is 2
-		if(weaponType == 2.0) {
-			numUnitsSelected = selBuilderCount;
-		}
-		numUnitsSelected = clamp(numUnitsSelected, 1, 25);
-
-		float innerRingDim = groupselectionfadescale * 0.1 * numUnitsSelected;
-		float finalAlpha = drawAlpha;
-		if(drawMode == 2.0) {
-			finalAlpha = drawAlpha / pow(innerRingDim, 2);
-		}
-		finalAlpha = clamp(finalAlpha, 0.0, 1.0);
-
-		fragColor = vec4(blendedcolor.x, blendedcolor.y, blendedcolor.z, blendedcolor.w * finalAlpha);
-	}
-]]
 
 local cacheTable = {}
 for i = 1, 24 do cacheTable[i] = 0 end
@@ -810,12 +465,10 @@ local function AddSelectedUnit(unitID, mouseover)
 	if collections[unitID] ~= nil then return end
 
 	--- if unittype is toggled off we don't proceed at all
-	local unitName = unitName[unitDefID]
+	local currentUnitName = unitName[unitDefID]
 	local alliedUnit = (spGetUnitAllyTeam(unitID) == myAllyTeam)
 	local allystring = alliedUnit and "ally" or "enemy"
 
-	--local alliedUnit = (spGetUnitAllyTeam(unitID) == myAllyTeam)
-	--local x, y, z, mpx, mpy, mpz, apx, apy, apz = spGetUnitPosition(unitID, true, true)
 	local weapons = unitWeapons[unitDefID]
 	if (not weapons or #weapons == 0) and not unitBuilder[unitDefID] then return end -- no weapons and not builder, nothing to add
 	-- we want to add to unitDefRings here if it doesn't exist
@@ -825,21 +478,11 @@ local function AddSelectedUnit(unitID, mouseover)
 		for weaponNum = 1, #weapons do
 			local weaponDefID = weapons[weaponNum].weaponDef
 			local weaponDef = WeaponDefs[weaponDefID]
-			local range = weaponDef.range
 			local weapon = weapons[weaponNum]
 
-			-- debug shit
-			--[[ 			local weaponTable = {}
-			for name,param in pairs(weapon.onlyTargets) do--:pairs() do
-				weaponTable[name]=param
-			end ]]
-			--Spring.Echo("----------weaponDef:   "..tableToString(weaponTable))
 			if true then --range > 0 then -- trying something different
-				--if weaponDef.description:find("g2a") and not weaponDef.description:find("g2g") then
 				if weapon.onlyTargets and weapon.onlyTargets.vtol then
-					--Spring.Echo("AA? " .. weaponDef.name..": "..tostring(weaponDef.description))
 					entry.weapons[weaponNum] = 3 -- weaponTypeMap[3] is "AA"
-					--Spring.Echo("added AA weapon: ".. weaponDef.name)
 				elseif weaponDef.type == "Cannon" then
 					entry.weapons[weaponNum] = 4 -- weaponTypeMap[4] is "cannon"
 				else
@@ -854,7 +497,6 @@ local function AddSelectedUnit(unitID, mouseover)
 		end
 
 		unitDefRings[unitDefID] = entry -- we insert the entry so we can reuse existing code
-		--Spring.Echo("unitDefRings entry added: "..tableToString(entry))
 		-- we need to initialize the other params
 		initializeUnitDefRing(unitDefID)
 	end
@@ -864,45 +506,44 @@ local function AddSelectedUnit(unitID, mouseover)
 
 	--for weaponNum = 1, #weapons do
 	local addedRings = 0
-	local weapons = unitDefRings[unitDefID]['weapons']
-	for j, weaponType in pairs(weapons) do
+	local weaponTypes = unitDefRings[unitDefID]['weapons']
+	for j, weaponType in pairs(weaponTypes) do
 		local drawIt = true
 		-- we need to check if the unit has on/off weapon states, and only add the one active
 		local weaponOnOff
-		-- on off can be set on a building, we need to check that		--spFindUnitCmdDesc(unitID, 85) ~= nil	-- if this unit can toggle weapons
+		-- on off can be set on a building, we need to check that
 		if unitOnOffable[unitDefID] and not unitOnOffName[unitDefID] then -- if it's a building with actual on/off, we display range if it's on
 			weaponOnOff = unitsOnOff[unitID] or 1
 			drawIt = (weaponOnOff == 1)
-		elseif unitOnOffable[unitDefID] and unitOnOffName[unitDefID] then         -- this is a unit or building with 2 weapons
+		elseif unitOnOffable[unitDefID] and unitOnOffName[unitDefID] then -- this is a unit or building with 2 weapons
 			weaponOnOff = unitsOnOff[unitID] or 0
 			drawIt = ((weaponOnOff + 1) == j) or
-			#weapons == 1                             -- remember weaponOnOff is 0 or 1, weapon number starts from 1
+			#weaponTypes == 1 -- remember weaponOnOff is 0 or 1, weapon number starts from 1
 		end
 
 		-- we add checks here for the display toggle status from config
-		if unitToggles[unitName] then -- only if there's a config, else default is to draw it
-			local wToggleStatuses = unitToggles[unitName][allystring]
+		if unitToggles[currentUnitName] then -- only if there's a config, else default is to draw it
+			local wToggleStatuses = unitToggles[currentUnitName][allystring]
 			if type(wToggleStatuses) == 'table' then
 				drawIt = wToggleStatuses[j] and drawIt
 			else
 				-- fixing the unitToggles table since something was corrupted
 				local entry = {}
-				for i=1, #weapons do
+				for i=1, #weaponTypes do
 					entry[i] = true
 				end
-				unitToggles[unitName][allystring] = entry
+				unitToggles[currentUnitName][allystring] = entry
 			end
 		end
 
 		local ringParams = unitDefRings[unitDefID]['rings'][j]
 		if drawIt and ringParams[1] > 0 then
-			--local weaponType = unitDefRings[unitDefID]['weapons'][weaponNum]
 			cacheTable[1] = mpx
 			cacheTable[2] = mpy
 			cacheTable[3] = mpz
 			local vaokey = allystring .. weaponTypeToString[weaponType]
 
-			for i = 1, 16 do
+			for i = 1, 17 do
 				cacheTable[i + 3] = ringParams[i]
 			end
 
@@ -919,7 +560,6 @@ local function AddSelectedUnit(unitID, mouseover)
 			local instanceID = 10000000 * (mouseover and 1 or 0) + 1000000 * weaponType + unitID +
 				100000 *
 				j -- weapon index needs to be included here for uniqueness
-			--Spring.Echo("instanceID created: "..tostring(instanceID))
 			pushElementInstance(attackRangeVAOs[vaokey], cacheTable, instanceID, true, false, unitID)
 			addedRings = addedRings + 1
 			if collections[unitID] == nil then
@@ -936,7 +576,6 @@ local function AddSelectedUnit(unitID, mouseover)
 			collections[unitID].vaokeys[instanceID] = vaokey
 		end
 	end
-	--Spring.Echo("Rings added: " ..tostring(addedRings))
 	-- we cheat here and update builder count
 	if unitBuilder[unitDefID] and addedRings > 0 then
 		selBuilderCount = selBuilderCount + 1
@@ -957,19 +596,16 @@ local function RemoveSelectedUnit(unitID, mouseover)
 			popElementInstance(attackRangeVAOs[vaoKey], instanceKey)
 			removedRings = removedRings + 1
 		end
-		--Spring.Echo("Rings removed: "..tostring(removedRings))
 		-- before we get rid of the definition we cheat again
 		if unitBuilder[collections[unitID].unitDefID] then
 			selBuilderCount = selBuilderCount - 1
 		end
 		collections[unitID] = nil
-		--Spring.Echo("removed rings from unitID: "..tostring(unitID))
 	end
 end
 
 function widget:SelectionChanged(sel)
 	updateSelection = true
-	--Spring.Echo("selection changed!")
 end
 
 local function InitializeBuilders()
@@ -982,27 +618,8 @@ local function InitializeBuilders()
 end
 
 local function makeShaders()
-	local engineUniformBufferDefs = LuaShader.GetEngineUniformBufferDefs()
-	vsSrc = vsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
-	fsSrc = fsSrc:gsub("//__ENGINEUNIFORMBUFFERDEFS__", engineUniformBufferDefs)
-	attackRangeShader = LuaShader(
-		{
-			vertex = vsSrc:gsub("//__DEFINES__", "#define MYGRAVITY " .. tostring(Game.gravity + 0.1)),
-			fragment = fsSrc,
-			--geometry = gsSrc, no geom shader for now
-			uniformInt = {
-				heightmapTex = 0,
-				losTex = 1,
-			},
-			uniformFloat = {
-				lineAlphaUniform = 1,
-				cannonmode = 0,
-			},
-		},
-		"attackRangeShader GL4"
-	)
-	shaderCompiled = attackRangeShader:Initialize()
-	if not shaderCompiled then
+	attackRangeShader = LuaShader.CheckShaderUpdates(shaderSourceCache, 0)
+	if not attackRangeShader then
 		goodbye("Failed to compile attackRangeShader GL4 ")
 		return false
 	end
@@ -1035,9 +652,21 @@ local function initGL4()
 	return makeShaders()
 end
 
-function ToggleCursorRange(_, _, args)
+local function toggleShowSelectedRanges(on)
+	if show_selected_weapon_ranges == on then return end
+	show_selected_weapon_ranges = on
+end
+
+local function toggleCursorRange(_, _, args)
 	cursor_unit_range = not cursor_unit_range
 	Spring.Echo("Cursor unit range set to: " .. (cursor_unit_range and "ON" or "OFF"))
+end
+
+function widget:PlayerChanged(playerID)
+    myAllyTeamID = Spring.GetLocalAllyTeamID()
+    myTeamID = Spring.GetLocalTeamID()
+
+	InitializeBuilders()
 end
 
 function widget:Initialize()
@@ -1048,6 +677,7 @@ function widget:Initialize()
 	initUnitList()
 
 	if initGL4() == false then
+		widgetHandler:RemoveWidget(self)
 		return
 	end
 
@@ -1056,17 +686,15 @@ function widget:Initialize()
 		unitToggles[i] = v
 	end
 
-	widgetHandler.actionHandler:AddAction(self, "cursor_range_toggle", ToggleCursorRange, nil, "p")
+	widgetHandler:AddAction("cursor_range_toggle", toggleCursorRange, nil, "p")
 
 	myAllyTeam = Spring.GetMyAllyTeamID()
-	local allyteamlist = Spring.GetAllyTeamList()
-	--Spring.Echo("# of allyteams = ", #allyteamlist)
-	numallyteams = #allyteamlist
+	myTeamID = Spring.GetMyTeamID()
 
 	updateSelection = true
 	local _, _, _, shift = GetModKeyState()
 	if shift_only and not shift then
-		Toggle(false)
+		toggleShowSelectedRanges(false)
 	end
 	InitializeBuilders()
 
@@ -1085,6 +713,16 @@ function widget:Initialize()
 		cursor_unit_range = value
 		widget:Initialize()
 	end
+	WG.attackrange.getNumRangesMult = function()
+		return selectionDisableThresholdMult
+	end
+	WG.attackrange.setNumRangesMult = function(value)
+		selectionDisableThresholdMult = value
+	end
+end
+
+function widget:Shutdown()
+	widgetHandler:RemoveAction("cursor_range_toggle", "p")
 end
 
 local gameFrame = 0
@@ -1093,21 +731,11 @@ function widget:GameFrame(gf)
 	gameFrame = gf
 end
 
-local function GetModKeys()
-	local alt, ctrl, meta, shift = GetModKeyState()
-
-	if GetInvertQueueKey() then -- Shift inversion
-		shift = not shift
-	end
-
-	return alt, ctrl, meta, shift
-end
-
 local function RefreshSelectedUnits()
 	local newSelUnits = {}
 	for i, unitID in ipairs(selectedUnits) do
 		newSelUnits[unitID] = true
-		if not selUnits[unitID] then
+		if not selUnits[unitID] and selUnitCount < math.floor(selectionDisableThreshold * selectionDisableThresholdMult) then
 			AddSelectedUnit(unitID)
 		end
 	end
@@ -1123,20 +751,12 @@ local function UpdateSelectedUnits()
 	selectedUnits = GetSelectedUnits()
 	selUnitCount = #selectedUnits
 	updateSelection = false
-	--[[ 	if innerRingDim ~= 0 then
-		local numUnitsSelected = #selectedUnits
-		if numUnitsSelected == 0 then numUnitsSelected = 1 end
-		if numUnitsSelected > 25 then numUnitsSelected = 25 end
-		innerRingDim = group_selection_fade_scale * 0.1 * numUnitsSelected
-	end ]]
 
 	RefreshSelectedUnits()
-	--Spring.Echo("selUnitCount: ".. tostring(selUnitCount)..", selBuilderCount: ".. tostring(selBuilderCount))
 end
 
 -- whether to draw the build range of all builders - only happens when isBuilding
 local function DrawBuilders()
-	--Spring.Echo("drawing all builders..."..tostring(isBuilding))
 	if isBuilding then
 		for unitID, _ in pairs(builders) do
 			if not selUnits[unitID] then
@@ -1154,27 +774,6 @@ end
 
 -- refresh all display according to toggle status
 local function RefreshEverything()
-	--[[ 	local units = Spring.GetAllUnits()
-
-    for i = 1, #units do
-		local unitID = units[i]
-		local unitDef = UnitDefs[spGetUnitDefID(unitID)]
-
-		if unitDef and unitDef.maxWeaponRange > 0 then	-- there actually is a range to display
-			local alliedUnit = (spGetUnitAllyTeam(unitID) == myAllyTeam)
-			local allystring = alliedUnit and "ally" or "enemy"
-			local name = unitDef.name
-			-- if it's toggled off we remove it here
-			if unitToggles[unitName] and unitToggles[unitName][allystring] == 0 then
-				RemoveSelectedUnit(unitID)
-			else	-- if it isn't toggled off and it's selected, we need to add it
-				if selections[unitID] then
-					AddSelectedUnit(unitID)
-				end
-			end
-		end
-	end ]]
-
 	-- what about just reinitialize?
 	attackRangeVAOs = {}
 	selections = {}
@@ -1208,7 +807,7 @@ local function CycleUnitDisplay(direction)
 	unitToggles[name] = unitToggles[name] or {}
 	if not unitToggles[name][allystring] then -- default toggle is on, we set it to off (0)
 		for i = 1, #unitDefRings[unitDefID].weapons do
-			wToggleStatuses[i] = true      -- every ring defined weapon is on by default
+			wToggleStatuses[i] = true -- every ring defined weapon is on by default
 		end
 		newToggleStatuses = getNextWeaponCombination(wToggleStatuses, direction)
 		unitToggles[name][allystring] = newToggleStatuses
@@ -1222,7 +821,7 @@ local function CycleUnitDisplay(direction)
 	-- some crude info display for now
 	Spring.Echo("Changed range display of " .. name ..
 		" to config " .. tostring(bitmap) ..
-		": " .. tableToString(unitToggles[name][allystring]))
+		": " .. table.toString(unitToggles[name][allystring]))
 
 	-- write toggle changes to file
 	table.save(unitToggles, "LuaUI/config/AttackRangeConfig2.lua", "--Attack Range Display Configuration (v2)")
@@ -1241,13 +840,6 @@ local function CycleUnitDisplay(direction)
 	Spring.PlaySoundFile(soundEffect, volume, 'ui')
 
 	RefreshEverything()
-end
-
-function Toggle(on)
-	if show_selected_weapon_ranges == on then return end
-	--Spring.Echo("toggled ".. tostring(on))
-	show_selected_weapon_ranges = on
-	--UpdateSelectedUnits()
 end
 
 function widget:KeyPress(key, mods, isRepeat)
@@ -1299,10 +891,10 @@ function widget:Update(dt)
 		local cmdIndex, cmdID, cmdType, cmdName = GetActiveCommand()
 		if shift_only then
 			if shifted then
-				Toggle(true)
+				toggleShowSelectedRanges(true)
 			else
-				if cmdID == 20 then Toggle(true) end
-				if not cmdID or cmdID ~= 20 then Toggle(false) end
+				if cmdID == 20 then toggleShowSelectedRanges(true) end
+				if not cmdID or cmdID ~= 20 then toggleShowSelectedRanges(false) end
 			end
 		end
 		local isBuildingNow = (cmdID ~= nil) and (cmdID < 0) -- we're building, need to draw builder ranges
@@ -1346,12 +938,12 @@ local function DRAWRINGS(primitiveType, linethickness)
 			local iT = attackRangeVAOs[atkRangeClass]
 			stencilMask = 2 ^ (4 * (i - 1) + (j - 1)) -- from 1 to 128
 			drawcounts[stencilMask] = iT.usedElements
-			if iT.usedElements > 0 then      --and buttonConfig[allyState][wt] then
+			if iT.usedElements > 0 then --and buttonConfig[allyState][wt] then
 				if linethickness then
 					glLineWidth(colorConfig[wt][linethickness] * cameraHeightFactor)
 				end
-				glStencilMask(stencilMask)                                  -- only allow these bits to get written
-				glStencilFunc(GL_NOTEQUAL, stencilMask, stencilMask)        -- what to do with the stencil
+				glStencilMask(stencilMask) -- only allow these bits to get written
+				glStencilFunc(GL_NOTEQUAL, stencilMask, stencilMask) -- what to do with the stencil
 				iT.VAO:DrawArrays(primitiveType, iT.numVertices, 0, iT.usedElements, 0) -- +1!!!
 			end
 		end
@@ -1364,7 +956,7 @@ local function DRAWRINGS(primitiveType, linethickness)
 		local stencilOffset = colorConfig.cannon_separate_stencil and 3 or 0
 		stencilMask = 2 ^ (4 * (i - 1) + stencilOffset) -- if 0 then it's on the same as "ground"
 		drawcounts[stencilMask] = iT.usedElements
-		if iT.usedElements > 0 then               --and buttonConfig[allyState]["ground"] then
+		if iT.usedElements > 0 then
 			if linethickness then
 				glLineWidth(colorConfig['cannon'][linethickness] * cameraHeightFactor)
 			end
@@ -1381,14 +973,12 @@ function widget:DrawWorldPreUnit()
 		cameraHeightFactor = GetCameraHeightFactor() * 0.5 + 0.5
 		glTexture(0, "$heightmap")
 		glTexture(1, "$info")
-		--glTexture(2, texture)
 
 		-- Stencil Setup
 		-- 	-- https://learnopengl.com/Advanced-OpenGL/Stencil-testing
 		if colorConfig.drawStencil then
 			glClear(GL_STENCIL_BUFFER_BIT)   -- clear prev stencil
 			glDepthTest(false)               -- always draw
-			--glColorMask(false, false, false, false) -- disable color drawing
 			glStencilTest(true)              -- enable stencil test
 			glStencilMask(255)               -- all 8 bits
 			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE) -- Set The Stencil Buffer To 1 Where Draw Any Polygon
@@ -1422,14 +1012,8 @@ function widget:DrawWorldPreUnit()
 		end
 
 		if colorConfig.drawInnerRings then
-			--[[ 			local drawDim = 1
-			if innerRingDim ~= 0 then
-				drawDim = colorConfig.internalalpha / innerRingDim
-				if drawDim > 1.0 then drawDim = 1.0 end
-			end ]]
 			attackRangeShader:SetUniform("lineAlphaUniform", colorConfig.internalalpha)
 			attackRangeShader:SetUniform("drawMode", 2.0)
-			--attackRangeShader:SetUniform("drawAlpha", 1.0)
 			attackRangeShader:SetUniform("fadeDistOffset", 0)
 			DRAWRINGS(GL_LINE_LOOP, 'internallinethickness') -- DRAW THE INNER RINGS
 		end
@@ -1439,15 +1023,12 @@ function widget:DrawWorldPreUnit()
 		glTexture(0, false)
 		glTexture(1, false)
 		glDepthTest(false)
-		if false and Spring.GetDrawFrame() % 60 == 0 then
-			local s = 'drawcounts: '
-			for k, v in pairs(drawcounts) do s = s .. " " .. tostring(k) .. ":" .. tostring(v) end
-			Spring.Echo(s)
-		end
 	end
 end
 
 -- Need to add all the callins for handling unit creation/destruction/gift of builders
+
+--[[
 function widget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
 	if unitTeam == myAllyTeam and unitBuilder[unitDefID] then
 		builders[unitID] = true
@@ -1465,6 +1046,21 @@ function widget:UnitDestroyed(unitID, unitDefID, unitTeam, attackerID, attackerD
 		builders[unitID] = nil
 		RemoveSelectedUnit(unitID, false)
 	end
+end
+]]--
+
+
+function widget:VisibleUnitAdded(unitID, unitDefID, unitTeam)
+	if unitTeam == myTeamID and unitBuilder[unitDefID] then
+		builders[unitID] = true
+	end
+end
+
+function widget:VisibleUnitRemoved(unitID, unitDefID, unitTeam)
+	unitDefID = unitDefID or spGetUnitDefID(unitID)
+	unitTeam = unitTeam or Spring.GetUnitTeam(unitID)
+	RemoveSelectedUnit(unitID, false)
+	builders[unitID] = nil
 end
 
 --SAVE / LOAD CONFIG FILE
@@ -1487,7 +1083,7 @@ function widget:GetConfigData()
 	return {
 		shift_only = shift_only,
 		cursor_unit_range = cursor_unit_range,
-		--colorConfig = colorConfig,
+		selectionDisableThresholdMult = selectionDisableThresholdMult,
 	}
 end
 
@@ -1498,7 +1094,7 @@ function widget:SetConfigData(data)
 	if data.cursor_unit_range ~= nil then
 		cursor_unit_range = data.cursor_unit_range
 	end
-	--if data.colorConfig ~= nil then
-	--	colorConfig = data.colorConfig
-	--end
+	if data.selectionDisableThresholdMult ~= nil then
+		selectionDisableThresholdMult = data.selectionDisableThresholdMult
+	end
 end

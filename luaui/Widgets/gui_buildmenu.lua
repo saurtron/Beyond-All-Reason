@@ -6,12 +6,13 @@ function widget:GetInfo()
 		date = "April 2020",
 		license = "GNU GPL, v2 or later",
 		layer = 0,
-		enabled = true,
+		enabled = false,
 		handler = true,
 	}
 end
 
 include("keysym.h.lua")
+VFS.Include('luarules/configs/customcmds.h.lua')
 
 SYMKEYS = table.invert(KEYSYMS)
 
@@ -77,8 +78,8 @@ local vsx, vsy = Spring.GetViewGeometry()
 local ordermenuLeft = vsx / 5
 local advplayerlistLeft = vsx * 0.8
 
-local ui_opacity = tonumber(Spring.GetConfigFloat("ui_opacity", 0.7) or 0.6)
-local ui_scale = tonumber(Spring.GetConfigFloat("ui_scale", 1) or 1)
+local ui_opacity = Spring.GetConfigFloat("ui_opacity", 0.7)
+local ui_scale = Spring.GetConfigFloat("ui_scale", 1)
 
 local units = VFS.Include("luaui/configs/unit_buildmenu_config.lua")
 
@@ -120,20 +121,28 @@ local unitMetal_extractor = {}
 local unitTranslatedHumanName = {}
 local unitTranslatedTooltip = {}
 local iconTypes = {}
-local orgIconTypes = VFS.Include("gamedata/icontypes.lua")
-for udid, ud in pairs(UnitDefs) do
-	unitName[udid] = ud.name
-	unitBuildOptions[udid] = ud.buildOptions
-	unitTranslatedHumanName[udid] = ud.translatedHumanName
-	unitTranslatedTooltip[udid] = ud.translatedTooltip
-	if ud.customParams.metal_extractor then
-		unitMetal_extractor[udid] = ud.customParams.metal_extractor
-	end
-	if ud.iconType and orgIconTypes[ud.iconType] and orgIconTypes[ud.iconType].bitmap then
-		iconTypes[ud.name] = orgIconTypes[ud.iconType].bitmap
+local function refreshUnitDefs()
+	unitName = {}
+	unitBuildOptions = {}
+	unitMetal_extractor = {}
+	unitTranslatedHumanName = {}
+	unitTranslatedTooltip = {}
+	iconTypes = {}
+	local orgIconTypes = VFS.Include("gamedata/icontypes.lua")
+	for udid, ud in pairs(UnitDefs) do
+		unitName[udid] = ud.name
+		unitBuildOptions[udid] = ud.buildOptions
+		unitTranslatedHumanName[udid] = ud.translatedHumanName
+		unitTranslatedTooltip[udid] = ud.translatedTooltip
+		if ud.customParams.metal_extractor then
+			unitMetal_extractor[udid] = ud.customParams.metal_extractor
+		end
+		if ud.iconType and orgIconTypes[ud.iconType] and orgIconTypes[ud.iconType].bitmap then
+			iconTypes[ud.name] = orgIconTypes[ud.iconType].bitmap
+		end
 	end
 end
-orgIconTypes = nil
+refreshUnitDefs()
 
 local spIsUnitSelected = Spring.IsUnitSelected
 local spGetSelectedUnitsCount = Spring.GetSelectedUnitsCount
@@ -144,7 +153,7 @@ local spGetCmdDescIndex = Spring.GetCmdDescIndex
 local spGetUnitDefID = Spring.GetUnitDefID
 local spGetTeamRulesParam = Spring.GetTeamRulesParam
 local spGetMouseState = Spring.GetMouseState
-local spGetUnitHealth = Spring.GetUnitHealth
+local spGetUnitIsBeingBuilt = Spring.GetUnitIsBeingBuilt
 local spGetUnitIsBuilding = Spring.GetUnitIsBuilding
 
 local SelectedUnitsCount = spGetSelectedUnitsCount()
@@ -190,6 +199,12 @@ local groups = {
 	sub = folder..'sub.png',
 	nuke = folder..'nuke.png',
 	antinuke = folder..'antinuke.png',
+}
+
+local modKeyMultiplier = {
+	ctrl = 20,
+	shift = 5,
+	right = -1
 }
 
 local disableWind = ((Game.windMin + Game.windMax) / 2) < 5
@@ -365,6 +380,12 @@ function widget:ViewResize()
 	doUpdate = true
 end
 
+function widget:LanguageChanged()
+	refreshUnitDefs()
+	clear()
+	doUpdate = true
+end
+
 -- update queue number
 function widget:UnitFromFactory(unitID, unitDefID, unitTeam, factID, factDefID, userOrders)
 	if spIsUnitSelected(factID) then
@@ -534,6 +555,39 @@ local function drawCell(cellRectID, usedZoom, cellColor, disabled, colls)
 			cellInnerSize * 0.29, "ro"
 		)
 	end
+
+	
+	local quotaNumber, builderID
+	for _, factoryID in ipairs(spGetSelectedUnits()) do
+		if WG.Quotas and WG.Quotas.getQuotas()[factoryID] and WG.Quotas.getQuotas()[factoryID][uDefID] then
+			quotaNumber = WG.Quotas.getQuotas()[factoryID][uDefID]
+			builderID = factoryID
+			break
+		end
+	end
+
+	if quotaNumber and quotaNumber ~= 0 then
+		local quotaText = WG.Quotas.getUnitAmount(builderID, uDefID) .. "/" .. quotaNumber
+		local quotaFontSize = cellInnerSize * 0.29
+		local textWidth = font2:GetTextWidth(quotaText .. "  ") * quotaFontSize
+		local pad = math_floor(cellInnerSize * 0.03)
+		if textWidth > 0.75 * cellInnerSize then
+			local newFontSize = quotaFontSize * 0.75 * cellInnerSize / textWidth
+			textWidth = font2:GetTextWidth(quotaText .. "  ") * newFontSize
+			quotaFontSize = newFontSize
+		end
+		local pad2 = 0
+		RectRound(cellRects[cellRectID][3] - cellPadding - iconPadding - textWidth - pad2, cellRects[cellRectID][2] + cellPadding + iconPadding, cellRects[cellRectID][3] - cellPadding - iconPadding, cellRects[cellRectID][2] + cellPadding + iconPadding + math_floor(cellInnerSize * 0.365) + pad2, cornerSize * 3.3, 1, 0, 0, 0, { 0.15, 0.15, 0.15, 0.95 }, { 0.25, 0.25, 0.25, 0.95 })
+		RectRound(cellRects[cellRectID][3] - cellPadding - iconPadding - textWidth - pad2, cellRects[cellRectID][2] + cellPadding + iconPadding, cellRects[cellRectID][3] - cellPadding - iconPadding, cellRects[cellRectID][2] + cellPadding + iconPadding + math_floor(cellInnerSize * 0.15) + pad2, 0, 0, 0, 0, 0, { 1, 1, 1, 0 }, { 1, 1, 1, 0.05 })
+		RectRound(cellRects[cellRectID][3] - cellPadding - iconPadding - textWidth - pad2 + pad, cellRects[cellRectID][2] + cellPadding + iconPadding, cellRects[cellRectID][3] - cellPadding - iconPadding - pad2, cellRects[cellRectID][2] + cellPadding + iconPadding + math_floor(cellInnerSize * 0.365) + pad2 - pad, cornerSize * 2.6, 1, 0, 0, 0, { 0.7, 0.7, 0.7, 0.1 }, { 1, 1, 1, 0.1 })
+		font2:Print(
+			"\255\255\130\190" .. quotaText,
+			cellRects[cellRectID][1] + cellPadding + math_floor(cellInnerSize * 0.96) - pad2,
+			cellRects[cellRectID][2] + cellPadding + (math_floor(cellInnerSize * 0.365) - font2:GetTextHeight(quotaNumber)*quotaFontSize)/2,
+			quotaFontSize,
+			"ro"
+		)
+	end
 end
 
 function drawBuildmenu()
@@ -689,10 +743,11 @@ function widget:DrawScreen()
 
 	-- refresh buildmenu if active cmd changed
 	local prevActiveCmd = activeCmd
+
 	if Spring.GetGameFrame() == 0 and WG['pregame-build'] then
-		activeCmd = WG['pregame-build'].selectedID
+		activeCmd = WG["pregame-build"] and WG["pregame-build"].getPreGameDefID()
 		if activeCmd then
-			activeCmd = units.unitName[activeCmd]
+			activeCmd = unitName[activeCmd]
 		end
 	else
 		activeCmd = select(4, spGetActiveCommand())
@@ -763,7 +818,11 @@ function widget:DrawScreen()
 								else
 									text = UnitDefs[uDefID].translatedHumanName
 								end
-								WG['tooltip'].ShowTooltip('buildmenu', "\255\240\240\240"..unitTranslatedTooltip[uDefID], nil, nil, text)
+								local tooltip = unitTranslatedTooltip[uDefID]
+								if unitMetal_extractor[uDefID] then
+									tooltip = tooltip .. "\n" .. Spring.I18N("ui.buildMenu.areamex_tooltip")
+								end
+								WG['tooltip'].ShowTooltip('buildmenu', "\255\240\240\240"..tooltip, nil, nil, text)
 							end
 
 							-- highlight --if b and not disableInput then
@@ -898,7 +957,8 @@ function widget:DrawScreen()
 									local cellUnitDefID = cmds[cellRectID].id * -1
 									if unitBuildDefID == cellUnitDefID then
 										drawncellRectIDs[cellRectID] = true
-										local progress = 1 - select(5, spGetUnitHealth(unitBuildID))
+										local _, progress = spGetUnitIsBeingBuilt(unitBuildID)
+										progress = 1 - progress -- make the effect wind counter-clockwise
 										RectRoundProgress(cellRects[cellRectID][1] + cellPadding + iconPadding, cellRects[cellRectID][2] + cellPadding + iconPadding, cellRects[cellRectID][3] - cellPadding - iconPadding, cellRects[cellRectID][4] - cellPadding - iconPadding, cellSize * 0.03, progress, { 0.08, 0.08, 0.08, 0.6 })
 									end
 								end
@@ -934,6 +994,13 @@ function widget:UnitCommand(unitID, unitDefID, unitTeam, cmdID, cmdOpts, cmdPara
 			doUpdateClock = os_clock() + 0.01
 		end
 	end
+	if cmdID == CMD_STOP_PRODUCTION then
+		if WG.Quotas then
+			local quotas = WG.Quotas.getQuotas()
+			quotas[unitID] = nil
+			doUpdate = true
+		end
+	end
 end
 
 function widget:SelectionChanged(sel)
@@ -958,7 +1025,49 @@ end
 
 local function setPreGamestartDefID(uDefID)
 	selBuildQueueDefID = uDefID
-	WG['pregame-build'].setPreGamestartDefID(uDefID)
+	if WG['pregame-build'] then
+		WG['pregame-build'].setPreGamestartDefID(uDefID)
+	end
+end
+
+local function isOnQuotaBuildMode(targetDefID)
+	for _, unitID in ipairs(spGetSelectedUnits()) do
+		local uDefID = spGetUnitDefID(unitID)
+		if units.isFactory[uDefID] and table.contains(unitBuildOptions[uDefID], targetDefID) then
+			return WG.Quotas and WG.Quotas.isOnQuotaMode(unitID) 
+		end
+	end
+	return false
+end
+
+local function updateQuotaNumber(unitDefID, count)
+	if WG.Quotas then
+		local quotaChanged = false
+		for _, builderID in ipairs(Spring.GetSelectedUnits()) do
+			local uDefID = spGetUnitDefID(builderID)
+			if units.isFactory[uDefID] and table.contains(unitBuildOptions[uDefID], unitDefID) then
+				local quotas = WG.Quotas.getQuotas()
+				quotas[builderID] = quotas[builderID] or {}
+				quotas[builderID][unitDefID] = quotas[builderID][unitDefID] or 0
+				local prev = quotas[builderID][unitDefID]
+				quotas[builderID][unitDefID] = math.max(quotas[builderID][unitDefID] + (count or 0), 0)
+				quotaChanged = quotaChanged or prev ~= quotas[builderID][unitDefID]
+			end
+		end
+		doUpdate = true
+		return quotaChanged
+	end
+end
+
+local function changeQuotas(uDefID, quantity)
+	local alt, ctrl, meta, shift = Spring.GetModKeyState()
+	if ctrl then
+		quantity = quantity * modKeyMultiplier.ctrl
+	end
+	if shift then
+		quantity = quantity * modKeyMultiplier.shift
+	end
+	return updateQuotaNumber(uDefID, quantity)
 end
 
 function widget:MousePress(x, y, button)
@@ -989,30 +1098,41 @@ function widget:MousePress(x, y, button)
 			if not disableInput then
 				for cellRectID, cellRect in pairs(cellRects) do
 					if cmds[cellRectID].id and unitTranslatedHumanName[-cmds[cellRectID].id] and math_isInRect(x, y, cellRect[1], cellRect[2], cellRect[3], cellRect[4]) and not (units.unitRestricted[-cmds[cellRectID].id]) then
-						local uDefID = cmds[cellRectID].id
+						local uDefID = cmds[cellRectID].id  --WARNING: THIS IS -unitDefID, not unitDefID
+						local setQuotas = isOnQuotaBuildMode(-uDefID)
 						if button ~= 3 then
 							if playSounds then
 								Spring.PlaySoundFile(sound_queue_add, 0.75, 'ui')
 							end
-							if preGamestartPlayer then
-								setPreGamestartDefID(-uDefID)
-							elseif spGetCmdDescIndex(uDefID) then
-								local isRepeatMex = unitMetal_extractor[-uDefID] and unitName[-uDefID] == activeCmd
-								local cmd = isRepeatMex and "areamex" or spGetCmdDescIndex(uDefID)
-								if isRepeatMex then
-									WG['areamex'].setAreaMexType(uDefID)
+							if setQuotas then
+								changeQuotas(-uDefID, 1)
+							else
+								if preGamestartPlayer then
+									setPreGamestartDefID(-uDefID)
+								elseif spGetCmdDescIndex(uDefID) then
+									local isRepeatMex = unitMetal_extractor[-uDefID] and unitName[-uDefID] == activeCmd
+									local cmd = isRepeatMex and "areamex" or spGetCmdDescIndex(uDefID)
+									if isRepeatMex then
+										WG['areamex'].setAreaMexType(uDefID)
+									end
+									Spring.SetActiveCommand(cmd, 1, true, false, Spring.GetModKeyState())
 								end
-								Spring.SetActiveCommand(cmd, 1, true, false, Spring.GetModKeyState())
 							end
 						else
 							if cmds[cellRectID].params[1] and playSounds then
 								-- has queue
 								Spring.PlaySoundFile(sound_queue_rem, 0.75, 'ui')
 							end
-							if preGamestartPlayer then
-								setPreGamestartDefID(cmds[cellRectID].id * -1)
-							elseif spGetCmdDescIndex(cmds[cellRectID].id) then
-								Spring.SetActiveCommand(spGetCmdDescIndex(cmds[cellRectID].id), 3, false, true, Spring.GetModKeyState())
+							if setQuotas then
+								if changeQuotas(-uDefID, modKeyMultiplier.right) and playSounds then
+									Spring.PlaySoundFile(sound_queue_rem, 0.75, 'ui')
+								end
+							else
+								if preGamestartPlayer then
+									setPreGamestartDefID(cmds[cellRectID].id * -1)
+								elseif spGetCmdDescIndex(cmds[cellRectID].id) then
+									Spring.SetActiveCommand(spGetCmdDescIndex(cmds[cellRectID].id), 3, false, true, Spring.GetModKeyState())
+								end
 							end
 						end
 						doUpdateClock = os_clock() + 0.01
@@ -1073,9 +1193,11 @@ local function buildUnitHandler(_, _, _, data)
 		if string.sub(keybind.command, 1, 10) == 'buildunit_' then
 			local uDefName = string.sub(keybind.command, 11)
 			local uDef = UnitDefNames[uDefName]
-			if comBuildOptions[unitName[startDefID]][uDef.id] and not units.unitRestricted[uDef.id] then
-				table.insert(buildCycle, uDef.id)
-			end
+	        if uDef then -- prevents crashing when trying to access unloaded units (legion)
+	            if comBuildOptions[unitName[startDefID]][uDef.id] and not units.unitRestricted[uDef.id] then
+	                table.insert(buildCycle, uDef.id)
+	            end
+        	end
 		end
 	end
 
@@ -1124,7 +1246,9 @@ end
 
 function widget:Initialize()
 	if widgetHandler:IsWidgetKnown("Grid menu") then
-		widgetHandler:DisableWidget("Grid menu")
+		-- Grid menu needs to be disabled right now and before we recreate
+		-- WG['buildmenu'] since its Shutdown will destroy it.
+		widgetHandler:DisableWidgetRaw("Grid menu")
 	end
 
 	units.checkGeothermalFeatures()
@@ -1256,7 +1380,7 @@ function widget:GetConfigData()
 		defaultColls = defaultColls,
 		stickToBottom = stickToBottom,
 		maxPosY = maxPosY,
-		gameID = Game.gameID,
+		gameID = Game.gameID and Game.gameID or Spring.GetGameRulesParam("GameID"),
 		alwaysShow = alwaysShow,
 	}
 end

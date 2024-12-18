@@ -14,7 +14,7 @@ return {
 		canpatrol = true,
 		canstop = "1",
 		capturable = false,
-		category = "BOT MOBILE WEAPON ALL NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE RAPTOR EMPABLE",
+		category = "RAPTOR",
 		collisionvolumeoffsets = "0 -5 0",
 		collisionvolumescales = "27 48 60",
 		collisionvolumetype = "box",
@@ -31,7 +31,7 @@ return {
 		maxwaterdepth = 0,
 		movementclass = "RAPTORBIGHOVER",
 		noautofire = false,
-		nochasecategory = "VTOL SPACE",
+		nochasecategory = "VTOL",
 		objectname = "Raptors/raptoracidassault.s3o",
 		script = "Raptors/raptora1.cob",
 		seismicsignature = 0,
@@ -58,10 +58,16 @@ return {
 			normalmaps = "yes",
 			normaltex = "unittextures/chicken_l_normals.png",
 			paralyzemultiplier = 0,
+			area_ondeath_ceg = "acid-area-150-repeat",
+			area_ondeath_damageCeg = "acid-damage-gen",
+			area_ondeath_time = 10,
+			area_ondeath_damage = 100,
+			area_ondeath_range = 150,
+			area_ondeath_resistance = "_RAPTORACID_",
 		},
 		sfxtypes = {
 			explosiongenerators = {
-				[1] = "custom:blood_spray", --cob 1024
+				[1] = "custom:blood_spray",
 				[2] = "custom:blood_explode",
 				[3] = "custom:dirt",
 				[4] = "custom:blob_fire",
@@ -86,12 +92,10 @@ return {
 				burst = 2,
 				burstrate = 0.5,
 				cegtag = "blob_trail_green",
-				collidefriendly = 0,
 				craterboost = 0,
 				cratermult = 0,
 				edgeeffectiveness = 0.63,
 				explosiongenerator = "custom:acid-explosion-xl",
-				impulseboost = 0,
 				impulsefactor = 0.4,
 				intensity = 0.7,
 				interceptedbyshieldtype = 1,
@@ -112,6 +116,14 @@ return {
 				turret = true,
 				weapontimer = 0.2,
 				weaponvelocity = 520,
+				customparams = {
+					area_onhit_ceg = "acid-area-150-repeat",
+					area_onhit_damageCeg = "acid-damage-gen",
+					area_onhit_time = 10,
+					area_onhit_damage = 100,
+					area_onhit_range = 150,
+					area_onhit_resistance = "_RAPTORACID_",
+				},
 				damage = {
 					default = 1, --damage done in unit_area_timed_damage.lua
 					shields = 160,
@@ -120,7 +132,7 @@ return {
 		},
 		weapons = {
 			[1] = {
-				badtargetcategory = "VTOL SPACE",
+				badtargetcategory = "VTOL",
 				def = "acidspit",
 				maindir = "0 0 1",
 				maxangledif = 125,

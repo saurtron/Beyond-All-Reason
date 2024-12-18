@@ -95,8 +95,7 @@ end
 
 
 local function isFinished(UnitID)
-  local _,_,_,_,buildProgress = Spring.GetUnitHealth(UnitID)
-  return (buildProgress==nil)or(buildProgress>=1)
+  return not Spring.GetUnitIsBeingBuilt(UnitID)
 end
 
 local function HeadingToFacing(heading)
@@ -550,12 +549,6 @@ local function FinishMorph(unitID, morphData)
   Spring.SetUnitBlocking(unitID, false)
   morphUnits[unitID] = nil
 
-  local oldHealth,oldMaxHealth,paralyzeDamage,captureProgress,buildProgress = Spring.GetUnitHealth(unitID)
-  local isBeingBuilt = false
-  if buildProgress < 1 then
-    isBeingBuilt = true
-  end
-
   local newUnit
   local face = HeadingToFacing(h)
 
@@ -723,6 +716,19 @@ end
     -- end
   end
 
+local function RegisterAllowCommands()
+  -- CMD_EZ_MORPH, CMD.STOP, CMD.ONOFF, CMD.SELFD, CMD_MORPH->CMD_MORPH+MAX_MORPH-1, CMD_STOP_MORPH+MAX_MORPH-1
+  -- careful MAX_MORPH increases during Initialize
+  gadgetHandler:RegisterAllowCommand(CMD_EZ_MORPH)
+  gadgetHandler:RegisterAllowCommand(CMD.STOP)
+  gadgetHandler:RegisterAllowCommand(CMD.ONOFF)
+  gadgetHandler:RegisterAllowCommand(CMD.SELFD)
+  for number = 0, MAX_MORPH-1 do
+    gadgetHandler:RegisterAllowCommand(CMD_MORPH+number)
+    gadgetHandler:RegisterAllowCommand(CMD_STOP_MORPH+number)
+  end
+
+end
 
 function gadget:Initialize()
   --// RankApi linking
@@ -761,6 +767,7 @@ function gadget:Initialize()
     gadgetHandler:RegisterCMDID(CMD_MORPH + number)
     gadgetHandler:RegisterCMDID(CMD_MORPH_STOP + number)
   end
+  RegisterAllowCommands()
 
   local allUnits = Spring.GetAllUnits()
   for i = 1, #allUnits do

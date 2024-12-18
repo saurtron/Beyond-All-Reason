@@ -6,7 +6,7 @@ function gadget:GetInfo()
 		date = "15 Dec 2008",
 		license = "GNU GPL, v2 or later",
 		layer = 0,
-		enabled = true  --  loaded by default?
+		enabled = true
 	}
 end
 
@@ -23,18 +23,30 @@ local CMD_AUTOREPAIRLEVEL = CMD.AUTOREPAIRLEVEL
 local CMD_IDLEMODE = CMD.IDLEMODE
 
 local isAirplane = {}
-local isAirplant = {
-	[UnitDefNames.corap.id] = true,
-	[UnitDefNames.coraap.id] = true,
-	[UnitDefNames.corplat.id] = true,
-	[UnitDefNames.armap.id] = true,
-	[UnitDefNames.armaap.id] = true,
-	[UnitDefNames.armplat.id] = true,
-	[UnitDefNames.legap.id] = true,
-	[UnitDefNames.legaap.id] = true,
-	[UnitDefNames.armapt3.id] = true,
-	[UnitDefNames.corapt3.id] = true
+local isAirplantNames = {
+	['corap'] = true,
+	['coraap'] = true,
+	['corplat'] = true,
+	['corapt3'] = true,
+
+	['armap'] = true,
+	['armaap'] = true,
+	['armplat'] = true,
+	['armapt3'] = true,
+
+	['legap'] = true,
+	['legaap'] = true,
+	['legapt3'] = true,
 }
+-- convert unitname -> unitDefID
+local isAirplant = {}
+for unitName, params in pairs(isAirplantNames) do
+	if UnitDefNames[unitName] then
+		isAirplant[UnitDefNames[unitName].id] = params
+	end
+end
+isAirplantNames = nil
+
 for udid, ud in pairs(UnitDefs) do
 	for id, v in pairs(isAirplant) do
 		if ud.name == UnitDefs[id].name..'_scav' then
@@ -91,8 +103,13 @@ function gadget:UnitFinished(unitID, unitDefID, unitTeam)
 	end
 end
 
+function gadget:Initialize()
+	gadgetHandler:RegisterAllowCommand(34569) -- LandAt
+	gadgetHandler:RegisterAllowCommand(34570) -- AirRepair
+end
+
 function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOptions, cmdTag, playerID, fromSynced, fromLua)
-	if (cmdID == 34569 or cmdID == 34570) and isAirplant[unitDefID] and plantList[unitID] then
+	if isAirplant[unitDefID] and plantList[unitID] then
 		if cmdID == 34569 then
 			local cmdDescID = FindUnitCmdDesc(unitID, 34569)
 			landCmd.params[1] = cmdParams[1]

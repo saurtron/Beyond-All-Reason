@@ -6,7 +6,7 @@ function gadget:GetInfo()
 		date = "Jul 24, 2007",
 		license = "GNU GPL, v2 or later",
 		layer = 0,
-		enabled = true  --  loaded by default?
+		enabled = true
 	}
 end
 
@@ -18,6 +18,11 @@ local spGiveOrderToUnit = Spring.GiveOrderToUnit
 local spGetGroundHeight = Spring.GetGroundHeight
 local CMD_ATTACK = CMD.ATTACK
 local CMD_INSERT = CMD.INSERT
+
+function gadget:Initialize()
+	gadgetHandler:RegisterAllowCommand(CMD_INSERT)
+	gadgetHandler:RegisterAllowCommand(CMD_ATTACK)
+end
 
 function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOptions, cmdTag, playerID, fromSynced, fromLua)
 	if fromSynced then

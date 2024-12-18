@@ -1,7 +1,22 @@
 -- see alldefs.lua for documentation
+VFS.Include("gamedata/unitdefrenames.lua")
 VFS.Include("gamedata/alldefs_post.lua")
 VFS.Include("gamedata/post_save_to_customparams.lua")
 local system = VFS.Include("gamedata/system.lua")
+
+local scavengersEnabled = false
+if Spring.GetTeamList then
+	local teamList = Spring.GetTeamList()
+	for _, teamID in ipairs(teamList) do
+		local luaAI = Spring.GetTeamLuaAI(teamID)
+		if luaAI and luaAI:find("Scavengers") then
+			scavengersEnabled = true
+		end
+	end
+end
+if Spring.GetModOptions().ruins == "enabled" or Spring.GetModOptions().forceallunits == true then
+	scavengersEnabled = true
+end
 
 local regularUnitDefs = {}
 local scavengerUnitDefs = {}
@@ -31,11 +46,11 @@ local function bakeUnitDefs()
 	for name, unitDef in pairs(regularUnitDefs) do
 		-- usable when baking ... keeping subfolder structure
 		local filepath = getFilePath(name .. ".lua", "units/")
-
 		if filepath then
-			unitDef.customparams.subfolder = string.sub(filepath, 7, #filepath - 1)
+			if not unitDef.customparams.subfolder or string.sub(filepath, 7, #filepath - 1) ~= string.lower(unitDef.customparams.subfolder) then
+				unitDef.customparams.subfolder = string.sub(filepath, 7, #filepath - 1)		-- not that this always gets to be lowercase despite whatever it is in the repo
+			end
 		end
-
 		SaveDefToCustomParams("UnitDefs", name, unitDef)
 	end
 end
@@ -213,20 +228,24 @@ local function preProcessTweakOptions()
 	do
 		local append = false
 		local name = "tweakdefs"
-		while modOptions[name] and modOptions[name] ~= "" do
-			local postsFuncStr = string.base64Decode(modOptions[name])
-			local postfunc, err = loadstring(postsFuncStr)
-			if err then
-				Spring.Echo("Error parsing modoption", name, "from string", postsFuncStr, "Error: " .. err)
-			else
-				Spring.Echo("Loading tweakdefs modoption", append or 0)
-				Spring.Echo(postsFuncStr)
-				if postfunc then
-					local success, result = pcall(postfunc)
-					if not success then
-						Spring.Echo("Error executing tweakdef", name, postsFuncStr, "Error :" .. result)
+		while modOptions[name] and string.len(modOptions[name]) > 1 do
+			local decodeSucess, postsFuncStr = pcall(string.base64Decode, modOptions[name])
+			if decodeSucess then
+				local postfunc, err = loadstring(postsFuncStr)
+				if err then
+					Spring.Echo("Error parsing modoption", name, "from string", postsFuncStr, "Error: " .. err)
+				else
+					Spring.Echo("Loading tweakdefs modoption", append or 0)
+					Spring.Echo(postsFuncStr)
+					if postfunc then
+						local success, result = pcall(postfunc)
+						if not success then
+							Spring.Echo("Error executing tweakdef", name, postsFuncStr, "Error :" .. result)
+						end
 					end
 				end
+			else
+				Spring.Echo("Error parsing and decoding tweakdef", name, modOptions[name], "Error :" .. postsFuncStr)
 			end
 
 			append = (append or 0) + 1
@@ -291,9 +310,12 @@ if SaveDefsToCustomParams then
 	bakeUnitDefs()
 end
 
+
 preProcessTweakOptions()
 preProcessUnitDefs()
-createScavengerUnitDefs()
+if scavengersEnabled then
+	createScavengerUnitDefs()
+end
 postProcessAllUnitDefs()
 postProcessRegularUnitDefs()
 postProcessScavengerUnitDefs()

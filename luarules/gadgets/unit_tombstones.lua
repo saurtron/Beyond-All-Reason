@@ -18,7 +18,13 @@ end
 local isCommander = {}
 for defID, def in ipairs(UnitDefs) do
 	if def.customParams.iscommander ~= nil and not string.find(def.name, "scav") then
-		isCommander[defID] = def.name == 'corcom' and FeatureDefNames.corstone.id or FeatureDefNames.armstone.id
+		if string.sub(def.name, 1, 6) == 'corcom' and FeatureDefNames.corstone then
+			isCommander[defID] = FeatureDefNames.corstone.id
+		elseif string.sub(def.name, 1, 6) == 'armcom' and FeatureDefNames.armstone then
+			isCommander[defID] = FeatureDefNames.armstone.id
+		elseif string.sub(def.name, 1, 6) == 'legcom' and FeatureDefNames.legstone then
+			isCommander[defID] = FeatureDefNames.legstone.id
+		end
 	end
 end
 
@@ -26,7 +32,7 @@ function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDef
 	if isCommander[unitDefID] then
 		local px,py,pz = Spring.GetUnitPosition(unitID)
 		pz = pz - 40
-		if not (Spring.GetUnitRulesParam(unitID, "unit_evolved") == "true") then
+		if not Spring.GetUnitRulesParam(unitID, "unit_evolved") then
 			local tombstoneID = Spring.CreateFeature(isCommander[unitDefID], px, Spring.GetGroundHeight(px,pz), pz, 0, teamID)
 			if tombstoneID then
 				local rx,ry,rz = Spring.GetFeatureRotation(tombstoneID)

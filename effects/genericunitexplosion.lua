@@ -2935,7 +2935,7 @@ local types = {
     --sparks = { properties = {colormap           = [[0.93 0.9 0.20 0.015   0.8 0.8 0.1 0.01   0 0 0 0]]}},
   },
   uw = {
-    groundflash_small = false,
+   -- groundflash_small = false,
     groundflash_large = false,
     groundflash_white = false,
     explosion = {ground=false, water=false, air=false, underwater=false, properties={colormap=[[0 0 0 0   1 0.75 0.9 0.09   0.45 0.4 0.66 0.066   0.33 0.3 0.05 0.033   0 0 0 0]]}},
@@ -2947,7 +2947,7 @@ local types = {
     --sparks = false,
   },
   phib = {
-    groundflash_small = false,
+    --groundflash_small = false,
     groundflash_large = false,
     groundflash_white = false,
     dirt = true,
@@ -3058,7 +3058,7 @@ definitions['decoycommander'].confetti = {
 	unit               = false,
 	properties = {
 		airdrag            = 0.95,
-		colormap           = [[1 0 0 0.01  0 1 0 0.01 0.1  1 0 0 0.01 0.1  0 1 0.5 0.01  1 0 0.01  0 1 0 0.01  1 1 0 0.01  1 0 0.01   1 0.6 0.01  0 1 0 0.01 0.1   0.1 0.7 0.01   0.6 0.3 0.6 0.01   0.6 0.6 0.6 0.01   0 0 0 0.01  ]],
+		colormap           = [[1 0 0 0.01  0 1 0 0.01  1 0 0 0.01  0 1 0.5 0.01  1 0 0 0.01  0 1 0 0.01  1 1 0 0.01  0 1 0 0.01  0 1 0.6 0.01  0 1 0 0.01  1 0.1 0.7 0.01  0.6 0.3 0.6 0.01  0.6 0.6 0.6 0.01   0 0 0 0.01]],
 		directional        = true,
 		emitrot            = 17,
 		emitrotspread      = 22,
@@ -3143,8 +3143,8 @@ definitions['decoycommander-selfd'].confetti = {
     unit               = false,
     properties = {
         airdrag            = 0.95,
-        colormap           = [[1 0 0 0.01  0 1 0 0.01 0.1  1 0 0 0.01 0.1  0 1 0.5 0.01  1 0 0.01  0 1 0 0.01  1 1 0 0.01  1 0 0.01   1 0.6 0.01  0 1 0 0.01 0.1   0.1 0.7 0.01   0.6 0.3 0.6 0.01   0.6 0.6 0.6 0.01   0 0 0 0.01  ]],
-        directional        = true,
+        colormap           = [[1 0 0 0.01  0 1 0 0.01  1 0 0 0.01  0 1 0.5 0.01  1 0 0 0.01  0 1 0 0.01  1 1 0 0.01  0 1 0 0.01  0 1 0.6 0.01  0 1 0 0.01  1 0.1 0.7 0.01  0.6 0.3 0.6 0.01  0.6 0.6 0.6 0.01   0 0 0 0.01]],
+		    directional        = true,
         emitrot            = 17,
         emitrotspread      = 22,
         emitvector         = [[0, 1, 0]],

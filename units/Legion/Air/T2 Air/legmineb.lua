@@ -9,7 +9,6 @@ return {
 		buildtime = 26000,
 		canfly = true,
 		canmove = true,
-		category = "ALL NOTLAND MOBILE WEAPON VTOL NOTSUB NOTSHIP NOTHOVER",
 		collide = false,
 		cruisealtitude = 150,
 		explodeas = "mediumExplosionGeneric",
@@ -44,7 +43,7 @@ return {
 			unitgroup = 'weapon',
 			model_author = "Beherith",
 			normaltex = "unittextures/cor_normal.dds",
-			subfolder = "corseaplanes",
+			subfolder = "CorSeaplanes",
 		},
 		sfxtypes = {
 			crashexplosiongenerators = {
@@ -88,7 +87,6 @@ return {
 			cor_seaadvbomb = {
 				areaofeffect = 40,
 				avoidfeature = false,
-				--bounceexplosiongenerator = "custom:genericshellexplosion-small",
 				bounceexplosiongenerator = "custom:dirt",
 				bouncerebound = 0.15,
 				bounceslip = 0.75,
@@ -101,10 +99,8 @@ return {
 				edgeeffectiveness = 0.65,
 				metalpershot = 30,
 				energypershot = 1620,
-				--explosiongenerator = "custom:genericshellexplosion-small-bomb",
 				explosiongenerator = "custom:dirtpopup",
 				gravityaffected = "true",
-				impulseboost = 0.123,
 				impulsefactor = 0.123,
 				intensity = 0.01,
 				model = "cormine1.s3o",

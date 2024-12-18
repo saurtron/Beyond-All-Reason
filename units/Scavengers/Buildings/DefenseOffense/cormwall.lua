@@ -6,7 +6,6 @@ return {
 		buildpic = "CORMWALL.DDS",
 		buildtime = 14000, -- was 12214
 		canrepeat = false,
-		category = "ALL NOTLAND WEAPON NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE EMPABLE",
 		collisionvolumeoffsets = "0 -3 0",
 		collisionvolumescales = "32 50 32",
 		collisionvolumetype = "CylY",
@@ -46,7 +45,7 @@ return {
 			model_author = "Beherith",
 			normaltex = "unittextures/cor_normal.dds",
 			removewait = true,
-			subfolder = "corbuildings/landdefenceoffence",
+			subfolder = "CorBuildings/LandDefenceOffence",
 			techlevel = 2,
 		},
 		featuredefs = {
@@ -58,18 +57,13 @@ return {
 				collisionvolumescales = "32 50 32",
 				collisionvolumetype = "CylY",
 				damage = 540,
-				energy = 0,
 				featuredead = "ROCKTEETH",
-				featurereclamate = "SMUDGE01",
 				footprintx = 2,
 				footprintz = 2,
 				height = 20,
-				hitdensity = 100,
 				metal = 205,
 				object = "Units/corfort.s3o",
 				reclaimable = true,
-				seqnamereclamate = "TREE1RECLAMATE",
-				world = "All Worlds",
 			},
 			rockteeth = {
 				animating = 0,
@@ -82,13 +76,11 @@ return {
 				footprintx = 2,
 				footprintz = 2,
 				height = 20,
-				hitdensity = 100,
 				metal = 2,
 				object = "Units/cor1X1A.s3o",
 				reclaimable = true,
 				resurrectable = 0,
 				shadtrans = 1,
-				world = "greenworld",
 			},
 		},
 		sfxtypes = {
@@ -183,7 +175,6 @@ return {
 				explosiongenerator = "custom:genericshellexplosion-catapult",
 				firestarter = 70,
 				flighttime = 3.2,
-				impulseboost = 0.123,
 				impulsefactor = 0.123,
 				metalpershot = 0,
 				model = "catapultmissile.s3o",
@@ -216,6 +207,9 @@ return {
 				damage = {
 					default = 450,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 		},
 		weapons = {

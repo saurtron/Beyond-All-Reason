@@ -6,7 +6,7 @@ function gadget:GetInfo()
 		date      = "08/03/2014",
 		license   = "GNU GPL, v2 or later, Horses",
 		layer     = 0,
-		enabled   = true  --  loaded by default?
+		enabled   = true
 	}
 end
 
@@ -22,7 +22,7 @@ local countChanged  = true
 
 local isCommander = {}
 for unitDefID, unitDef in pairs(UnitDefs) do
-	if unitDef.customParams.iscommander then
+	if unitDef.customParams.iscommander or unitDef.customParams.isscavcommander then
 		isCommander[unitDefID] = true
 	end
 end

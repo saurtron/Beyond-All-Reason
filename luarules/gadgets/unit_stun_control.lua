@@ -9,7 +9,7 @@ function gadget:GetInfo()
 		date      = "Apr 13, 2014",
 		license   = "GNU GPL, v2 or later",
 		layer     = 0,
-		enabled   = true  --  loaded by default?
+		enabled   = true
 	}
 end
 
@@ -25,9 +25,13 @@ end
 
 local CMD_ONOFF = CMD.ONOFF
 
+function gadget:Initialize()
+	gadgetHandler:RegisterAllowCommand(CMD_ONOFF)
+end
 
 function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOptions, cmdTag, playerID, fromSynced, fromLua)
-	if (cmdID == CMD_ONOFF) and Spring.GetUnitIsStunned(unitID) then
+	-- accepts: CMD.ONOFF
+	if Spring.GetUnitIsStunned(unitID) then
 		return false
 	else
 		return true

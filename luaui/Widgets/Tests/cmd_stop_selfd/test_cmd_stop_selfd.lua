@@ -1,9 +1,11 @@
 function skip()
-	return Game.mapName ~= "Full Metal Plate 1.5"
+	return Game.mapName ~= "Full Metal Plate 1.5" or Spring.GetGameFrame() <= 0
 end
 
 function setup()
 	Test.clearMap()
+	-- Enable UnitCommand callin for tests
+	Test.expectCallin("UnitCommand")
 end
 
 function cleanup()

@@ -6,7 +6,6 @@ return {
 		buildpic = "ARMLWALL.DDS",
 		buildtime = 14000, --3x armclaw
 		canrepeat = false,
-		category = "ALL NOTLAND WEAPON NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE EMPABLE",
 		collisionvolumeoffsets = "0 -3 0",
 		collisionvolumescales = "32 50 32",
 		collisionvolumetype = "CylY",
@@ -47,7 +46,7 @@ return {
 			model_author = "Beherith",
 			normaltex = "unittextures/Arm_normal.dds",
 			removewait = true,
-			subfolder = "armbuildings/landdefenceoffence",
+			subfolder = "ArmBuildings/LandDefenceOffence",
 			techlevel = 2,
 		},
 		featuredefs = {
@@ -59,18 +58,13 @@ return {
 				collisionvolumescales = "32 50 32",
 				collisionvolumetype = "CylY",
 				damage = 540,
-				energy = 0,
 				featuredead = "ROCKTEETH",
-				featurereclamate = "SMUDGE01",
 				footprintx = 2,
 				footprintz = 2,
 				height = 20,
-				hitdensity = 100,
 				metal = 205,
 				object = "Units/armfort.s3o",
 				reclaimable = true,
-				seqnamereclamate = "TREE1RECLAMATE",
-				world = "All Worlds",
 			},
 			rockteeth = {
 				animating = 0,
@@ -83,13 +77,11 @@ return {
 				footprintx = 2,
 				footprintz = 2,
 				height = 20,
-				hitdensity = 100,
 				metal = 2,
 				object = "Units/arm1X1A.s3o",
 				reclaimable = true,
 				resurrectable = 0,
 				shadtrans = 1,
-				world = "greenworld",
 			},
 		},
 		sfxtypes = {
@@ -140,7 +132,6 @@ return {
 				explosiongenerator = "custom:genericshellexplosion-medium-lightning2",
 				firestarter = 50,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				intensity = 28, --was 24
 				name = "Medium Lightning Cannon",
@@ -157,6 +148,7 @@ return {
 				weapontype = "LightningCannon",
 				weaponvelocity = 400,
 				customparams = {
+					exclude_preaim = true,
 					spark_ceg = "genericshellexplosion-splash-lightning",
 					spark_forkdamage = "0.3", --was 0.5
 					spark_maxunits = "3", --2x armclaw

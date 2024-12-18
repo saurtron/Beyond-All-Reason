@@ -78,3 +78,8 @@ function widget:SetConfigData(data)
 		pointsToErase = data.pointsToErase
 	end
 end
+
+function widget:ClearMapMarks()
+	pointsToErase = {}
+	recentlyErased = {}
+end

@@ -15,7 +15,7 @@ return {
 		canstop = "1",
 		capturable = false,
 		cancloak = true,
-		category = "BOT MOBILE WEAPON ALL NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE RAPTOR EMPABLE",
+		category = "RAPTOR",
 		cloakcost = 0,
 		cloakcostmoving = 0,
 		collisionvolumeoffsets = "0 -3 -3",
@@ -37,7 +37,7 @@ return {
 		mincloakdistance = 50,
 		movementclass = "RAPTORSMALLHOVER",
 		noautofire = false,
-		nochasecategory = "VTOL SPACE",
+		nochasecategory = "VTOL",
 		objectname = "Raptors/raptor1x_spectre.s3o",
 		script = "Raptors/raptor1x.cob",
 		seismicsignature = 2,
@@ -63,7 +63,6 @@ return {
 			model_author = "KDR_11k, Beherith",
 			normalmaps = "yes",
 			normaltex = "unittextures/chicken_s_normals.png",
-			--treeshader = "no",
 		},
 		sfxtypes = {
 			explosiongenerators = {
@@ -89,7 +88,6 @@ return {
 				edgeeffectiveness = 0.3,
 				explosiongenerator = "custom:raptorspike-small-sparks-burn",
 				firesubmersed = true,
-				impulseboost = 2.2,
 				impulsefactor = 1,
 				interceptedbyshieldtype = 0,
 				model = "Raptors/spike.s3o",

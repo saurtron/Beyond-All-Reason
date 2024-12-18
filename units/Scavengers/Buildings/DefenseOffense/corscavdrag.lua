@@ -10,7 +10,6 @@ return {
 		buildtime = 255,
 		canattack = false,
 		canrepeat = false,
-		category = "ALL NOTLAND NOTSUB NOWEAPON NOTSHIP NOTAIR NOTHOVER SURFACE",
 		collisionvolumeoffsets = "0 0 0",
 		collisionvolumescales = "32 22 32",
 		collisionvolumetype = "CylY",
@@ -45,7 +44,7 @@ return {
 			paralyzemultiplier = 0,
 			removestop = true,
 			removewait = true,
-			subfolder = "corbuildings/landutil",
+			subfolder = "CorBuildings/LandUtil",
 		},
 		featuredefs = {
 			rockteeth = {
@@ -60,13 +59,11 @@ return {
 				footprintx = 2,
 				footprintz = 2,
 				height = 20,
-				hitdensity = 100,
 				metal = 2,
 				object = "Units/cor1X1A.s3o",
 				reclaimable = true,
 				resurrectable = 0,
 				shadtrans = 1,
-				world = "greenworld",
 			},
 		},
 		sfxtypes = {

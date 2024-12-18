@@ -64,19 +64,15 @@ if not tonumber(Spring.GetConfigInt("LuaShaders",0) or 0) then
 	Spring.SetConfigInt("LuaShaders", 1)
 end
 
--- Disable PBO for intel GFX
-if Platform.gpuVendor ~= 'Nvidia' and Platform.gpuVendor ~= 'AMD' then
-	Spring.SetConfigInt("UsePBO", 0)
-else
-	Spring.SetConfigInt("UsePBO", 1)
-end
-
 -- Disable dynamic model lights
 Spring.SetConfigInt("MaxDynamicModelLights", 0)
 
 -- Enable deferred map/model rendering
 Spring.SetConfigInt("AllowDeferredMapRendering", 1)
 Spring.SetConfigInt("AllowDeferredModelRendering", 1)
+
+-- Enables the DrawGroundDeferred event, which is needed for deferred map edge rendering
+Spring.SetConfigInt("AllowDrawMapDeferredEvents", 1)
 
 -- Disable LoadingMT because: crashes on load, but fixed in 105.1.1-1422, redisable in 105.1.1-1432
 --Spring.SetConfigInt("LoadingMT", 0)
@@ -193,3 +189,8 @@ Spring.SetConfigInt("MouseDragSelectionThreshold", baseDragThreshold)
 Spring.SetConfigInt("MouseDragCircleCommandThreshold", baseDragThreshold + 16)
 Spring.SetConfigInt("MouseDragBoxCommandThreshold", baseDragThreshold + 16)
 Spring.SetConfigInt("MouseDragFrontCommandThreshold", baseDragThreshold + 16)
+
+-- These config ints control some multithreading functionality, and are now set to their enabled state for performance
+Spring.SetConfigInt("AnimationMT", 1)
+Spring.SetConfigInt("UpdateBoundingVolumeMT", 1)
+Spring.SetConfigInt("UpdateWeaponVectorsMT", 1)

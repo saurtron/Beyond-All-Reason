@@ -26,7 +26,7 @@ local teamCount = 0
 local teamList = Spring.GetTeamList()
 for i = 1, #teamList do
 	local luaAI = Spring.GetTeamLuaAI(teamList[i])
-	if (luaAI and (luaAI:find("Raptors") or luaAI:find("Scavengers") or luaAI:find("ScavReduxAI"))) or Spring.GetModOptions().scoremode ~= "disabled" then
+	if (luaAI and (luaAI:find("Raptors") or luaAI:find("Scavengers") or luaAI:find("ScavReduxAI"))) then
 		ignoredTeams[teamList[i]] = true
 
 		-- ignore all other teams in this allyteam as well
@@ -49,7 +49,7 @@ local commanderDeathQueue = {}
 
 local isCommander = {}
 for unitDefID, unitDef in pairs(UnitDefs) do
-	if (unitDef.customParams.iscommander) or (Spring.GetModOptions().deathmode == "builders" and ((unitDef.buildOptions and #unitDef.buildOptions > 0) or unitDef.canResurrect == true)) then
+	if (unitDef.customParams.iscommander) or (unitDef.customParams.isscavcommander) or (Spring.GetModOptions().deathmode == "builders" and ((unitDef.buildOptions and #unitDef.buildOptions > 0) or unitDef.canResurrect == true)) then
 		isCommander[unitDefID] = true
 	end
 end

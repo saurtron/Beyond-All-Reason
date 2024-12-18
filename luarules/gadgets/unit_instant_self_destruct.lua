@@ -9,7 +9,7 @@ function gadget:GetInfo()
     date      = "21 September, 2013",
     license   = "GNU GPL, v2 or later",
     layer     = 0,
-    enabled   = true  --  loaded by default?
+    enabled   = true
   }
 end
 
@@ -49,7 +49,8 @@ local function QueueUnitDestruction(unitID, skipChecks)
 end
 
 function gadget:AllowCommand(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions)
-	if cmdID == CMD_SELFD and selfddefs[unitDefID] and cmdOptions.coded == 0 then
+	-- accepts: CMD.SELFD
+	if selfddefs[unitDefID] and cmdOptions.coded == 0 then
 		QueueUnitDestruction(unitID)
 	end
 	return true
@@ -65,5 +66,6 @@ function gadget:GameFrame(n)
 end
 
 function gadget:Initialize()
+	gadgetHandler:RegisterAllowCommand(CMD_SELFD)
 	GG.QueueUnitDestruction = QueueUnitDestruction
 end

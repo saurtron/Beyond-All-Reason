@@ -1,22 +1,17 @@
 local widgetName = "Self-Destruct Icons"
 
+function skip()
+	return Spring.GetGameFrame() <= 0
+end
+
 function setup()
 	Test.clearMap()
 
-	initialWidgetActive = widgetHandler.knownWidgets[widgetName].active
-	if initialWidgetActive then
-		widgetHandler:DisableWidget(widgetName)
-	end
-	widgetHandler:EnableWidget(widgetName, true)
+	Test.prepareWidget(widgetName)
 end
 
 function cleanup()
 	Test.clearMap()
-
-	widgetHandler:DisableWidget(widgetName)
-	if initialWidgetActive then
-		widgetHandler:EnableWidget(widgetName, false)
-	end
 end
 
 function test()
@@ -56,10 +51,9 @@ function test()
 	assert(table.count(widget.activeSelfD) == 0)
 	assert(table.count(widget.queuedSelfD) == 1)
 
-	-- currently fails
-	---- remove move order
-	--Spring.GiveOrderToUnit(unitID, CMD.REMOVE, { CMD.MOVE }, { "alt" })
-	--Test.waitFrames(1)
-	--assert(table.count(widget.activeSelfD) == 1)
-	--assert(table.count(widget.queuedSelfD) == 0)
+	-- remove move order
+	Spring.GiveOrderToUnit(unitID, CMD.REMOVE, { CMD.MOVE }, { "alt" })
+	Test.waitFrames(1)
+	assert(table.count(widget.activeSelfD) == 1)
+	assert(table.count(widget.queuedSelfD) == 0)
 end

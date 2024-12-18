@@ -7,7 +7,7 @@ function gadget:GetInfo()
 		date      = "Nov 25, 2009", -- Major rework 12 Feb 2014
 		license   = "GNU GPL, v2 or later",
 		layer     = 0,
-		enabled   = true  --  loaded by default?
+		enabled   = true
 	}
 end
 
@@ -206,10 +206,9 @@ function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOpt
 			SetWantedCloaked(unitID, cmdParams[1])
 		end
 		return true
-	elseif cmdID == CMD_CLOAK then
+	else -- cmdID == CMD_CLOAK
 		return false
 	end
-	return true
 end
 
 function gadget:UnitCreated(unitID, unitDefID)
@@ -228,6 +227,8 @@ function gadget:UnitCreated(unitID, unitDefID)
 end
 
 function gadget:Initialize()
+	gadgetHandler:RegisterAllowCommand(CMD_CLOAK)
+	gadgetHandler:RegisterAllowCommand(CMD_WANT_CLOAK)
 	for _, unitID in ipairs(Spring.GetAllUnits()) do
 		gadget:UnitCreated(unitID, spGetUnitDefID(unitID))
 	end

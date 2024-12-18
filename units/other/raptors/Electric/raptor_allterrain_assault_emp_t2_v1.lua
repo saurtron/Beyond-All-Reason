@@ -14,7 +14,7 @@ return {
 		canpatrol = true,
 		canstop = "1",
 		capturable = false,
-		category = "BOT MOBILE WEAPON ALL NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE RAPTOR EMPABLE",
+		category = "RAPTOR",
 		collisionvolumeoffsets = "0 2 0",
 		collisionvolumescales = "27 38 60",
 		collisionvolumetype = "box",
@@ -31,7 +31,7 @@ return {
 		maxwaterdepth = 0,
 		movementclass = "RAPTORALLTERRAINBIGHOVER",
 		noautofire = false,
-		nochasecategory = "VTOL SPACE",
+		nochasecategory = "VTOL",
 		objectname = "Raptors/raptorelectricallterrainassault.s3o",
 		script = "Raptors/raptorallterraina1.cob",
 		seismicsignature = 0,
@@ -61,7 +61,7 @@ return {
 		},
 		sfxtypes = {
 			explosiongenerators = {
-				[1] = "custom:blood_spray", --cob 1024
+				[1] = "custom:blood_spray",
 				[2] = "custom:blood_explode",
 				[3] = "custom:dirt",
 				[4] = "custom:blob_fire",
@@ -79,7 +79,6 @@ return {
 			raptorparalyzerbig = {
 				areaofeffect = 100,
 				collidefriendly = false,
-				collidefriendly = 0,
 				collidefeature = 0,
 				avoidfeature = 0,
 				avoidfriendly = 0,
@@ -96,7 +95,6 @@ return {
 				firestarter = 50,
 				firesubmersed = true,
 				impactonly = 0,
-				impulseboost = 0,
 				impulsefactor = 0,
 				intensity = 24,
 				laserFlareSize = 5,
@@ -107,8 +105,6 @@ return {
 				range = 400,
 				reloadtime = 4.5,
 				rgbcolor = "0.5 0.5 1",
-				--soundhit = "xplomed3",
-				--soundhitwet = "sizzle",
 				soundstart = "alien_electric_xl",
 				soundstartvolume = 65,
 				soundtrigger = true,
@@ -125,7 +121,7 @@ return {
 		},
 		weapons = {
 			[1] = {
-				badtargetcategory = "VTOL SPACE",
+				badtargetcategory = "VTOL",
 				def = "raptorparalyzerbig",
 				maindir = "0 0 1",
 				maxangledif = 125,

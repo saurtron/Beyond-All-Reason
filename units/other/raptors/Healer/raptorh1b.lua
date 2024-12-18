@@ -19,7 +19,7 @@ return {
 		canreclaim = 1,
 		canstop = 1,
 		capturable = false,
-		category = "BOT MOBILE WEAPON ALL NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE RAPTOR EMPABLE",
+		category = "RAPTOR",
 		collide = 0,
 		collisionvolumeoffsets = "0 -1 0",
 		collisionvolumescales = "15 18 22",
@@ -70,7 +70,6 @@ return {
 			model_author = "KDR_11k, Beherith",
 			normalmaps = "yes",
 			normaltex = "unittextures/chicken_s_normals.png",
-			--treeshader = "no",
 		},
 		sfxtypes = {
 			explosiongenerators = {

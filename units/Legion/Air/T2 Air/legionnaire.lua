@@ -10,7 +10,6 @@ return {
 		buildtime = 10000,
 		canfly = true,
 		canmove = true,
-		category = "ALL NOTLAND MOBILE WEAPON VTOL NOTSUB NOTSHIP NOTHOVER",
 		collide = false,
 		cruisealtitude = 160,
 		explodeas = "smallExplosionGenericAir",
@@ -43,7 +42,7 @@ return {
 			unitgroup = 'aa',
 			model_author = "Hornet",
 			normaltex = "unittextures/cor_normal.dds",
-			subfolder = "coraircraft/t2",
+			subfolder = "CorAircraft/T2",
 			techlevel = 2,
 			fighter = 1,
 		},
@@ -97,7 +96,6 @@ return {
 				explosiongenerator = "custom:plasmahit-sparkonly",
 				fallOffRate = 0.0,
 				firestarter = 0,
-				impulseboost = 0.4,
 				impulsefactor = 1.5,
 				intensity = 0.8,
 				minIntensity = 0.8,
@@ -105,11 +103,10 @@ return {
 				noselfdamage = true,
 				ownerExpAccWeight = 8.0,
 				predictboost = 1,
-				proximitypriority = 3,
+				proximitypriority = 1,
 				range = 600,
 				reloadtime = 1,
 				rgbcolor = "1 0.4 0.95",
-				--size = 2.25,
 				soundhit = "bimpact3",
 				soundhitwet = "splshbig",
 				soundstart = "minigun3",
@@ -118,7 +115,6 @@ return {
 				thickness = 0.6,
 				tolerance = 2400,
 				turret = true,
-				--weapontimer = 1,
 				weapontype = "LaserCannon",
 				weaponvelocity = 2500,
 				damage = {
@@ -127,7 +123,7 @@ return {
 					vtol = 80,
 				},
 			},
-		
+
 		},
 		weapons = {
 			[1] = {

@@ -272,7 +272,7 @@ local barTypeMap = { -- WHERE SHOULD WE STORE THE FUCKING COLORS?
 		maxcolor = {1.0, 1.0, 1.0, 1.0},
 		--bartype = 3,
 		bartype = bitShowGlyph + bitUseOverlay + bitPercentage,
-		hidethreshold = 0.99,
+		hidethreshold = 0.999,
 		uniformindex = 0, -- if its >20, then its health/maxhealth
 		uvoffset = 0.9375, -- the X offset of the icon for this bar
 	},
@@ -689,12 +689,16 @@ local function addBarsForUnit(unitID, unitDefID, unitTeam, unitAllyTeam, reason)
 	if health ~= nil then
 		if build < 1 then
 			addBarForUnit(unitID, unitDefID, "building", reason)
-			unitBeingBuiltWatch[unitID] = build
-			uniformcache[1] = build
-			gl.SetUnitBufferUniforms(unitID, uniformcache, 0)
+			-- moved to CUS gl4
+			--uniformcache[1] = build
+			--unitBeingBuiltWatch[unitID] = build
+			--gl.SetUnitBufferUniforms(unitID, uniformcache, 0) 
+			--uniformcache[1] = Spring.GetUnitHeight(unitID)
+			--gl.SetUnitBufferUniforms(unitID, uniformcache, 11)
 		else
-			uniformcache[1] = -1.0 -- mean that the unit has been built, we init it to -1 always
-			gl.SetUnitBufferUniforms(unitID, uniformcache, 0)
+			-- Moved to CUS GL4:
+			--uniformcache[1] = -1.0 -- mean that the unit has been built, we init it to -1 always
+			--gl.SetUnitBufferUniforms(unitID, uniformcache, 0)
 		end
 		--Spring.Echo(unitID, unitDefID, unitDefCanStockpile[unitDefID])
 		if debugmode then
@@ -746,7 +750,7 @@ local function removeBarsFromUnit(unitID, reason)
 	unitCaptureWatch[unitID] = nil
 	unitEmpDamagedWatch[unitID] = nil
 	unitParalyzedWatch[unitID] = nil
-	unitBeingBuiltWatch[unitID] = nil
+	--unitBeingBuiltWatch[unitID] = nil
 	unitStockPileWatch[unitID] = nil
 	unitReloadWatch[unitID] = nil
 	unitBars[unitID] = nil
@@ -763,15 +767,12 @@ local function addBarToFeature(featureID,  barname)
 	if barname == 'featurereclaim' then targetVBO = featureReclaimVBO end
 	if barname == 'featureresurrect' then targetVBO = featureResurrectVBO end
 
-	--Spring.Echo("addBarToFeature", featureID,  barname, featureDefHeights[featureDefID])
 	if targetVBO.instanceIDtoIndex[featureID] then return end -- already exists, bail
 	if featureBars[featureID] == nil then
-		--Spring.Echo("this feature did not exist yet?", FeatureDefs[Spring.GetFeatureDefID(featureID)].name, Spring.GetFeaturePosition(featureID))
 		featureBars[featureID] = 0
 	end
 	featureBars[featureID] = featureBars[featureID] + 1
 
-	--Spring.Debug.TableEcho(bt)
 	pushElementInstance(
 		targetVBO, -- push into this Instance VBO Table
 			{featureDefHeights[featureDefID] + additionalheightaboveunit,  -- height
@@ -814,7 +815,7 @@ end
 local function init()
 	clearInstanceTable(healthBarVBO)
 	unitEmpWatch = {}
-	unitBeingBuiltWatch = {}
+	--unitBeingBuiltWatch = {}
 	unitCaptureWatch = {}
 	unitShieldWatch = {} -- maps unitID to last shield value
 	unitEmpDamagedWatch = {}
@@ -899,6 +900,8 @@ local function UnitCaptureStartedHealthbars(unitID, step) -- step is negative fo
 	if debugmode then Spring.Echo("UnitCaptureStartedHealthbars", unitID) end
     --gl.SetFeatureBufferUniforms(featureID, 0.5, 2) -- update GL
 	local capture = select(4, Spring.GetUnitHealth(unitID))
+	uniformcache[1] = capture
+	gl.SetUnitBufferUniforms(unitID, uniformcache, 5)
 	unitCaptureWatch[unitID] = capture
 	addBarForUnit(unitID, Spring.GetUnitDefID(unitID), 'capture', 'UnitCaptureStartedHealthbars')
 
@@ -1046,7 +1049,7 @@ function widget:VisibleUnitsChanged(extVisibleUnits, extNumVisibleUnits)
 	unitCaptureWatch = {}
 	unitEmpDamagedWatch = {}
 	unitParalyzedWatch = {}
-	unitBeingBuiltWatch = {}
+	--unitBeingBuiltWatch = {}
 	unitStockPileWatch = {}
 	unitReloadWatch = {}
 	spec, fullview = Spring.GetSpectatingState()
@@ -1162,26 +1165,26 @@ function widget:GameFrame(n)
 	end
 
 	-- check build progress
+	--[[ -- DISABLED FOR CUS GL4 path
 	if (n % 1 == 0) then
-		for unitID, buildprogress in pairs(unitBeingBuiltWatch) do
-			local health, maxHealth, paralyzeDamage, capture, build = Spring.GetUnitHealth(unitID)
-			if build and build ~= buildprogress then
-				uniformcache[1] = build
+		for unitID, prevProgress in pairs(unitBeingBuiltWatch) do
+			local _, progress = Spring.GetUnitIsBeingBuilt(unitID)
+			if progress and progress ~= prevProgress then
+				uniformcache[1] = progress
 				--Spring.Echo("Health", health/maxHealth, build, math.abs(build - health/maxHealth))
 				--if math.abs(build - health/maxHealth) < 0.005 then uniformcache[1] = 1.0 end
 				gl.SetUnitBufferUniforms(unitID,uniformcache, 0)
-				unitBeingBuiltWatch[unitID] = buildProgress
-				if build == 1 then
+				unitBeingBuiltWatch[unitID] = progress
+				if progress == 1 then
 					removeBarFromUnit(unitID, "building", 'unitBeingBuiltWatch')
 					unitBeingBuiltWatch[unitID] = nil
 				else
 					unitBeingBuiltWatch[unitID] = 1.0
 				end
 			end
-
 		end
-
 	end
+	]]--
 
 	-- check capture progress?
 	if (n % 1) == 0 then

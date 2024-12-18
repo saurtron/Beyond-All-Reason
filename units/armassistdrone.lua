@@ -12,7 +12,6 @@ return {
 		cancapture = true,
 		canfly = true,
 		canmove = true,
-		category = "ALL MOBILE NOTLAND NOTSUB VTOL NOWEAPON NOTSHIP NOTHOVER",
 		collide = true,
 		cruisealtitude = 100,
 		explodeas = "smallexplosiongeneric-builder",
@@ -57,7 +56,6 @@ return {
 			"armtide",
 			"armuwms",
 			"armuwes",
-			--"armuwmex",
 			"armfmkr",
 			"armsy",
 			"armfdrag",
@@ -70,10 +68,9 @@ return {
 		},
 		customparams = {
 			unitgroup = 'builder',
-			area_mex_def = "armmex",
 			model_author = "FireStorm, Flaka",
 			normaltex = "unittextures/Arm_normal.dds",
-			subfolder = "armaircraft",
+			subfolder = "ArmAircraft",
 		},
 		sfxtypes = {
 			crashexplosiongenerators = {

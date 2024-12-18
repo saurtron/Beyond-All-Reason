@@ -14,6 +14,10 @@ if not gadgetHandler:IsSyncedCode() then
 	return
 end
 
+--use weaponDef.customparams.exclude_preaim = true to exclude units from being able to pre-aim at targets almost within firing range.
+--this is a good idea for pop-up turrets so they don't prematurely reveal themselves.
+--also when proximityPriority is heavily biased toward far targets
+
 local weaponRange = {}
 local isPreaimUnit = {}
 for unitDefID, unitDef in pairs(UnitDefs) do
@@ -21,41 +25,16 @@ for unitDefID, unitDef in pairs(UnitDefs) do
 		local weapons = unitDef.weapons
 		if #weapons > 0 then
 			for i=1, #weapons do
-				if not isPreaimUnit[unitDefID] then
-					isPreaimUnit[unitDefID] = {}
+				if not WeaponDefs[weapons[i].weaponDef].customParams.exclude_preaim then
+					isPreaimUnit[unitDefID] = isPreaimUnit[unitDefID] or {}
+
+					local weaponDefID = weapons[i].weaponDef
+					isPreaimUnit[unitDefID][i] = weaponDefID
+					weaponRange[weaponDefID] = WeaponDefs[weaponDefID].range
 				end
-				local weaponDefID = weapons[i].weaponDef
-				isPreaimUnit[unitDefID][i] = weaponDefID
-				weaponRange[weaponDefID] = WeaponDefs[weaponDefID].range
 			end
 		end
 	end
-end
-
-local exludedUnits = {    -- exclude auto target range boost for popup units
-	[UnitDefNames.armclaw.id] = true,
-	[UnitDefNames.armpb.id] = true,
-	[UnitDefNames.armamb.id] = true,
-	[UnitDefNames.cormaw.id] = true,
-	[UnitDefNames.corvipe.id] = true,
-	[UnitDefNames.corpun.id] = true,
-	[UnitDefNames.corexp.id] = true,
-
-	[UnitDefNames.corllt.id] = true,
-	[UnitDefNames.corhllt.id] = true,
-	[UnitDefNames.armllt.id] = true,
-	[UnitDefNames.leginc.id] = true,
-}
-local scavengerPopups = {}
-for k, v in pairs(exludedUnits) do
-	scavengerPopups[k .. '_scav'] = v
-end
-for k, v in pairs(scavengerPopups) do
-	exludedUnits[k] = v
-end
-scavengerPopups = nil
-for k, v in pairs(exludedUnits) do
-	isPreaimUnit[k] = nil
 end
 
 function gadget:UnitCreated(unitID, unitDefID)

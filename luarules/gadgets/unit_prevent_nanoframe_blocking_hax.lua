@@ -6,7 +6,7 @@ function gadget:GetInfo()
 		date      = "",
 		license   = "Hornswaggle",
 		layer     = 0,
-		enabled   = true  --  loaded by default?
+		enabled   = true
 	}
 end
 
@@ -70,9 +70,8 @@ local function CheckUnit(unitID)
 		return true
 	end
 
-	local _,_,_,_,buildProgress = Spring.GetUnitHealth(unitID)
+	local _, buildProgress = Spring.GetUnitIsBeingBuilt(unitID)
 	if buildProgress >= blockingBuildProgress then
-		--Spring.Echo("to remove (bp)", unitID)
 		return true
 	end
 
@@ -80,8 +79,8 @@ local function CheckUnit(unitID)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
-	local health,maxHealth,_,_,buildProgress = Spring.GetUnitHealth(unitID)
-	if health/maxHealth < blockingBuildProgress then	-- sadly buildProgress is always 0 even when cheated in
+	--local _,buildProgress = Spring.GetUnitIsBeingBuilt(unitID)
+	if builderID then
 		local _,_,projectileBlocking = Spring.GetUnitBlocking(unitID)
 		if projectileBlocking then
 			AddNanoFrame(unitID)
@@ -103,7 +102,8 @@ end
 
 -- make it not manually or accidentally targetable
 function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOptions)
-	if cmdID == CMD_ATTACK and not cmdParams[2] and newNanoFrameNeutralState[cmdParams[1]] ~= nil then
+	-- accepts: CMD.ATTACK
+	if not cmdParams[2] and newNanoFrameNeutralState[cmdParams[1]] ~= nil then
 		return false
 	else
 		return true
@@ -118,6 +118,7 @@ function gadget:UnitDestroyed(unitID, unitDefID, unitTeam, builderID)
 end
 
 function gadget:Initialize()
+	gadgetHandler:RegisterAllowCommand(CMD_ATTACK)
 	-- handle luarules reload
 	local units = Spring.GetAllUnits()
 	for _,unitID in ipairs(units) do
