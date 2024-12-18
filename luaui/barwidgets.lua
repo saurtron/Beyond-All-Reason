@@ -480,6 +480,13 @@ function widgetHandler:LoadWidget(filename, fromZip, enableLocalsAccess)
 		return nil -- widget asked for a silent death
 	end
 
+	if widget.GetInfo then
+		if not Platform.check(widget:GetInfo().depend) then
+			Spring.Echo('Disabling ' .. widget:GetInfo().name .. ' for missing capabilities')
+			return nil
+		end
+	end
+
 	if enableLocalsAccess then
 		setmetatable(widget, localsAccess.generateLocalsAccessMetatable(getmetatable(widget)))
 	end

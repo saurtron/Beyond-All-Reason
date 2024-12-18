@@ -7,7 +7,8 @@ function gadget:GetInfo()
 		date 	= "20220310",
 		license = "GNU GPL, v2 or later",
 		layer	= 0,
-		enabled	= false,
+		enabled	= true,
+		depends = {'gl4'},
 	}
 end
 
