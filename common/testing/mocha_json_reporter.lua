@@ -47,7 +47,7 @@ function MochaJSONReporter:testResult(label, filePath, success, duration, errorM
 			}
 		else
 			result.err = {
-				message = "<unknown error>",
+				message = "<empty>",
 			}
 		end
 	end
