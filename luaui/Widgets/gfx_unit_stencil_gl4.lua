@@ -393,6 +393,9 @@ end
 
 function widget:Initialize()
 	unitStencilShader = InitDrawPrimitiveAtUnit(shaderConfig, "unitStencils")
+	if not unitStencilShader then
+		return
+	end
     widget:ViewResize()
 
     WG['unitstencilapi'] = {}
