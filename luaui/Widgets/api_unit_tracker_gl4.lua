@@ -824,10 +824,12 @@ function widget:Shutdown()
 	numVisibleUnits = 0
 
 
-	WG['unittrackerapi'].visibleUnits = visibleUnits
-	WG['unittrackerapi'].visibleUnitsTeam = visibleUnitsTeam
-	WG['unittrackerapi'].alliedUnits = alliedUnits
-	WG['unittrackerapi'].alliedUnitsTeam = alliedUnitsTeam
+	if WG['unittrackerapi'] then
+		WG['unittrackerapi'].visibleUnits = visibleUnits
+		WG['unittrackerapi'].visibleUnitsTeam = visibleUnitsTeam
+		WG['unittrackerapi'].alliedUnits = alliedUnits
+		WG['unittrackerapi'].alliedUnitsTeam = alliedUnitsTeam
+	end
 	visibleUnitsChanged()
 	alliedUnitsChanged()
 
