@@ -1070,6 +1070,9 @@ function widget:VisibleUnitRemoved(unitID) -- remove all the lights for this uni
 end
 
 function widget:Shutdown()
+	if not gl.CreateShader then
+		return
+	end
 	-- TODO: delete the VBOs and shaders like a good boy
 	WG['lightsgl4'] = nil
 	widgetHandler:DeregisterGlobal('AddPointLight')
