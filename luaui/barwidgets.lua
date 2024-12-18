@@ -918,6 +918,10 @@ function widgetHandler:InsertWidgetRaw(widget)
 	if widget == nil then
 		return
 	end
+	if widget.GetInfo and not Platform.check(widget:GetInfo().depends) then
+		Spring.Echo('Disabling ' .. widget:GetInfo().name .. ' for missing capabilities')
+		return
+	end
 
 	SafeWrapWidget(widget)
 
@@ -937,6 +941,9 @@ end
 
 function widgetHandler:RemoveWidgetRaw(widget)
 	if widget == nil or widget.whInfo == nil then
+		return
+	end
+	if not Platform.check(widget.whInfo.depends) then
 		return
 	end
 
