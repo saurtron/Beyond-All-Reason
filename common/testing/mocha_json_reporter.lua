@@ -8,6 +8,7 @@ function MochaJSONReporter:new()
 	local obj = {
 		totalTests = 0,
 		totalPasses = 0,
+		totalSkipped = 0,
 		totalFailures = 0,
 		startTime = nil,
 		endTime = nil,
@@ -28,14 +29,17 @@ function MochaJSONReporter:endTests(duration)
 	self.duration = duration
 end
 
-function MochaJSONReporter:testResult(label, filePath, success, duration, errorMessage)
+function MochaJSONReporter:testResult(label, filePath, success, skipped, duration, errorMessage)
 	local result = {
 		title = label,
 		fullTitle = label,
 		file = filePath,
 		duration = duration,
 	}
-	if success then
+	if skipped then
+		self.totalSkipped = self.totalSkipped + 1
+		result.err = {}
+	elseif success then
 		self.totalPasses = self.totalPasses + 1
 		result.err = {}
 	else
@@ -62,6 +66,7 @@ function MochaJSONReporter:report(filePath)
 			["suites"] = 1,
 			["tests"] = self.totalTests,
 			["passes"] = self.totalPasses,
+			["skipped"] = self.totalSkipped,
 			["pending"] = 0,
 			["failures"] = self.totalFailures,
 			["start"] = formatTimestamp(self.startTime),
