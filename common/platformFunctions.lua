@@ -1,4 +1,4 @@
-
+if not Platform then return end
 local hasGL4 = false
 local hasGL = false
 local hasShaders = false
@@ -6,7 +6,10 @@ local hasFBO = false
 local isSyncedCode = (SendToUnsynced ~= nil)
 
 local function determineCapabilities()
-	if not gl.GetString() == "" then
+	if not gl then
+		return
+	end
+	if gl.GetString(0x1F00) ~= "" then
 		hasGL = true
 	end
 	if gl.CreateShader and Platform.glHaveGLSL then
