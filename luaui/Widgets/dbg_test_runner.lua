@@ -921,6 +921,7 @@ local function runTestInternal()
 end
 
 local function initializeTestEnvironment()
+	Spring.Echo("[Test Framework Runner] Initialize test environment")
 	local env = {
 		-- test framework
 		Test = Test,
