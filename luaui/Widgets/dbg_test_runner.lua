@@ -81,7 +81,8 @@ local function logTestResult(testResult)
 	testReporter:testResult(
 		testResult.label,
 		testResult.filename,
-		(testResult.result == TestResults.TEST_RESULT.PASS or testResult.result == TestResults.TEST_RESULT.SKIP),
+		(testResult.result == TestResults.TEST_RESULT.PASS),
+		(testResult.result == TestResults.TEST_RESULT.SKIP),
 		testResult.milliseconds,
 		testResult.error
 	)
