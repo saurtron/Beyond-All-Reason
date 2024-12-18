@@ -187,6 +187,7 @@ void main(void)
 
 local function goodbye(reason)
 	Spring.Echo("Unit Stencil GL4 widget exiting with reason: "..reason)
+	widgetHandler:RemoveWidget()
 end
 local resolution = 4
 local vsx, vsy  
