@@ -48,3 +48,7 @@ end
 
 determineCapabilities()
 extendPlatform()
+
+Spring.Echo("PLATFORM", isSyncedCode)
+Spring.Echo("PLATFORM GL", hasGL, hasGL4, hasShaders, hasFBO)
+Spring.Echo("PLATFORM ATTRS", Platform.glHaveGLSL, Platform.glHaveGL4, gl.GetString(), Platform.glVendor, Platform.glVersion, Platform.glRenderer)
