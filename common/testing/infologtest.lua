@@ -18,7 +18,7 @@ local function infologTest()
 end
 
 
-local function test()
+function test()
 	local errors = infologTest()
 	if #errors > 0 then
 		error(table.concat(errors, "\n"))
