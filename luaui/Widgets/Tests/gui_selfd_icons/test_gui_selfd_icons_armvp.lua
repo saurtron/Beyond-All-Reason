@@ -33,13 +33,13 @@ function test()
 	assert(table.count(widget.queuedSelfD) == 0)
 
 	-- standard selfd command
-	Spring.GiveOrderToUnit(unitID, CMD.SELFD, {}, 0)
+	Spring.GiveOrderToUnit(unitID, CMD.SELFD, 0, 0)
 	Test.waitFrames(1)
 	assert(table.count(widget.activeSelfD) == 1)
 	assert(table.count(widget.queuedSelfD) == 0)
 
 	-- cancel selfd order
-	Spring.GiveOrderToUnit(unitID, CMD.SELFD, {}, 0)
+	Spring.GiveOrderToUnit(unitID, CMD.SELFD, 0, 0)
 	Test.waitFrames(1)
 	assert(table.count(widget.activeSelfD) == 0)
 	assert(table.count(widget.queuedSelfD) == 0)
