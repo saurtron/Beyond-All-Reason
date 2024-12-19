@@ -113,11 +113,13 @@ function test()
 
 	local sx, sy = Spring.WorldToScreenCoords(x, y, z)
 	Spring.WarpMouse(sx, sy)
+	Spring.SetCameraTarget(x, y, z)
 
 	Script.LuaUI.MousePress(sx, sy, 1)
 
-	sx, sy = Spring.WorldToScreenCoords(x, y, z + bpH * (bpCount - 1))
-	Spring.WarpMouse(sx, sy)
+	--sx, sy = Spring.WorldToScreenCoords(x, y, z + bpH * (bpCount - 1))
+	--Spring.WarpMouse(sx, sy)
+	Spring.SetCameraTarget(x, y, z + bpH * (bpCount - 1))
 
 	Test.waitFrames(delay)
 
