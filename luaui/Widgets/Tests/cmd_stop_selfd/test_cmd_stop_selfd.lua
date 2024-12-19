@@ -1,5 +1,5 @@
 function skip()
-	return Game.mapName ~= "Full Metal Plate 1.5" or Spring.GetGameFrame() <= 0
+	return Spring.GetGameFrame() <= 0
 end
 
 function setup()
