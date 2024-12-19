@@ -42,6 +42,7 @@ local config = {
 
 local testReporter = nil
 local headless = false
+local origLogFlushLevel
 
 -- utils
 -- =====
@@ -73,6 +74,7 @@ local function logEndTests(duration)
 
 	testReporter:report(config.testResultsFilePath)
 	headless = false
+	Spring.SetConfigInt("LogFlushLevel", origLogFlushLevel)
 end
 
 local function logTestResult(testResult)
@@ -1265,6 +1267,8 @@ function widget:Initialize()
 		"runtestsheadless",
 		function(cmd, optLine, optWords, data, isRepeat, release, actions)
 			headless = true
+			origLogFlushLevel = Spring.GetConfigInt("LogFlushLevel")
+			Spring.SetConfigInt("LogFlushLevel", 0)
 			config.noColorOutput = true
 			config.quitWhenDone = true
 			config.gameStartTestPatterns = Util.splitPhrases(optLine)
