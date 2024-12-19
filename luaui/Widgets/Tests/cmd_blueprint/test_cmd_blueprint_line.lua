@@ -16,9 +16,9 @@ function setup()
 
 	initialCameraState = Spring.GetCameraState()
 
-	Spring.SetCameraState({
-		mode = 5,
-	})
+	--Spring.SetCameraState({
+	--	mode = 5,
+	--})
 end
 
 function cleanup()
