@@ -738,6 +738,10 @@ function widget:GameStart()
 end
 
 function widget:Initialize()
+	if not gl.CreateShader then -- no shader support, so just remove the widget itself, especially for headless
+		widgetHandler:RemoveWidget()
+		return
+	end
 	gameFrame = Spring.GetGameFrame()
 	spec, fullview = Spring.GetSpectatingState()
 	myTeamID = Spring.GetMyTeamID()
@@ -820,10 +824,12 @@ function widget:Shutdown()
 	numVisibleUnits = 0
 
 
-	WG['unittrackerapi'].visibleUnits = visibleUnits
-	WG['unittrackerapi'].visibleUnitsTeam = visibleUnitsTeam
-	WG['unittrackerapi'].alliedUnits = alliedUnits
-	WG['unittrackerapi'].alliedUnitsTeam = alliedUnitsTeam
+	if WG['unittrackerapi'] then
+		WG['unittrackerapi'].visibleUnits = visibleUnits
+		WG['unittrackerapi'].visibleUnitsTeam = visibleUnitsTeam
+		WG['unittrackerapi'].alliedUnits = alliedUnits
+		WG['unittrackerapi'].alliedUnitsTeam = alliedUnitsTeam
+	end
 	visibleUnitsChanged()
 	alliedUnitsChanged()
 

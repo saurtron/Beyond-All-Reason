@@ -8,13 +8,11 @@ function MochaJSONReporter:new()
 	local obj = {
 		totalTests = 0,
 		totalPasses = 0,
-		totalSkipped = 0,
 		totalFailures = 0,
 		startTime = nil,
 		endTime = nil,
 		duration = nil,
-		tests = {},
-		skipped = {}
+		tests = {}
 	}
 	setmetatable(obj, self)
 	self.__index = self
@@ -30,17 +28,14 @@ function MochaJSONReporter:endTests(duration)
 	self.duration = duration
 end
 
-function MochaJSONReporter:testResult(label, filePath, success, skipped, duration, errorMessage)
+function MochaJSONReporter:testResult(label, filePath, success, duration, errorMessage)
 	local result = {
 		title = label,
 		fullTitle = label,
 		file = filePath,
 		duration = duration,
 	}
-	if skipped then
-		self.totalSkipped = self.totalSkipped + 1
-		result.err = {}
-	elseif success then
+	if success then
 		self.totalPasses = self.totalPasses + 1
 		result.err = {}
 	else
@@ -52,16 +47,13 @@ function MochaJSONReporter:testResult(label, filePath, success, skipped, duratio
 			}
 		else
 			result.err = {
-				message = "<empty>",
+				message = "<unknown error>",
 			}
 		end
 	end
 
 	self.totalTests = self.totalTests + 1
 	self.tests[#(self.tests) + 1] = result
-	if skipped then
-		self.skipped[#(self.skipped) + 1] = {fullTitle = label}
-	end
 end
 
 function MochaJSONReporter:report(filePath)
@@ -71,14 +63,12 @@ function MochaJSONReporter:report(filePath)
 			["tests"] = self.totalTests,
 			["passes"] = self.totalPasses,
 			["pending"] = 0,
-			["skipped"] = self.totalSkipped,
 			["failures"] = self.totalFailures,
 			["start"] = formatTimestamp(self.startTime),
 			["end"] = formatTimestamp(self.endTime),
 			["duration"] = self.duration
 		},
-		["tests"] = self.tests,
-		["pending"] = self.skipped
+		["tests"] = self.tests
 	}
 
 	local encoded = Json.encode(output)
