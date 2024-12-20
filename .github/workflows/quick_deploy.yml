@@ -11,9 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.repository == 'saurtron/Beyond-All-Reason' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event_name == 'push' &&
-      github.head_ref == 'master'
+      github.event.workflow_run.conclusion == 'success'
     permissions:
       id-token: write
     step:
