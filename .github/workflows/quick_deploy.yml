@@ -23,7 +23,7 @@ jobs:
         run: echo "CONTEXT_JSON=$(jq -c . < 'artifacts/Context File/context.json')" >> $GITHUB_ENV
       - id: event_step
         name: Dump event
-        run: echo "`value=${{ fromJson(env.CONTEXT_JSON).event }}" >> "$GITHUB_OUTPUT"
+        run: echo "value=${{ fromJson(env.CONTEXT_JSON).event }}" >> "$GITHUB_OUTPUT"
       - id: branch_step
         name: Dump file
         run: echo "value=${{ fromJson(env.CONTEXT_JSON).branch }}" >> "$GITHUB_OUTPUT"
