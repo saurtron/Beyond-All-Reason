@@ -30,6 +30,19 @@ function MochaJSONReporter:endTests(duration)
 	self.duration = duration
 end
 
+function MochaJSONReporter:extractError(text)
+	local errorIndex = text:match'^%[string "[%p%a%s]*%"]:[%d]+:().*'
+	if errorIndex and errorIndex > 0 then
+		text = text:sub(errorIndex + 1)
+		return text
+	end
+	errorIndex = text:match'^%[t=[%d%.:]*%]%[f=[%-%d]*%] ().*'
+	if errorIndex and errorIndex > 0 then
+		text = text:sub(errorIndex)
+	end
+	return text
+end
+
 function MochaJSONReporter:testResult(label, filePath, success, skipped, duration, errorMessage)
 	local result = {
 		title = label,
@@ -47,7 +60,7 @@ function MochaJSONReporter:testResult(label, filePath, success, skipped, duratio
 		self.totalFailures = self.totalFailures + 1
 		if errorMessage ~= nil then
 			result.err = {
-				message = errorMessage,
+				message = self:extractError(errorMessage),
 				stack = errorMessage
 			}
 		else
