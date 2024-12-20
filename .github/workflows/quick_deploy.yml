@@ -16,6 +16,15 @@ jobs:
       github.head_ref == 'master'
     permissions:
       id-token: write
+    step:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Dump workflow_run
+        env:
+          JOB_CONTEXT: ${{ toJson(github.event.workflow_run) }}
+        run: echo "$JOB_CONTEXT"
     steps:
       - name: Trigger rebuild
         run: |
