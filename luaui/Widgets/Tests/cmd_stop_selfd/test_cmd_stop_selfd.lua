@@ -38,7 +38,8 @@ function test()
 	Spring.GiveOrderToUnit(unitID, CMD.MOVE, { 1, 1, 1 }, 0)
 	Spring.GiveOrderToUnit(unitID, CMD.SELFD, {}, { "shift" })
 	Test.waitUntilCallinArgs("UnitCommand", { nil, nil, nil, CMD.SELFD, nil, nil, nil })
-	assert(Spring.GetUnitSelfDTime(unitID) == 0)
+	assert(Spring.GetUnitSelfDTime(unitID) == 7)
+
 
 	Spring.GiveOrderToUnit(unitID, CMD.STOP, {}, 0)
 	Test.waitUntilCallinArgs("UnitCommand", { nil, nil, nil, CMD.STOP, nil, nil, nil })
