@@ -7,7 +7,8 @@ function widget:GetInfo()
       license   = "GNU GPL, v2 or later",
       layer     = -828888,
 	  handler   = true,
-      enabled   = true
+      enabled   = true,
+      depends   = {'gl4'},
    }
 end
 
@@ -738,10 +739,6 @@ function widget:GameStart()
 end
 
 function widget:Initialize()
-	if not gl.CreateShader then -- no shader support, so just remove the widget itself, especially for headless
-		widgetHandler:RemoveWidget()
-		return
-	end
 	gameFrame = Spring.GetGameFrame()
 	spec, fullview = Spring.GetSpectatingState()
 	myTeamID = Spring.GetMyTeamID()

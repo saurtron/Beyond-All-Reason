@@ -7,6 +7,7 @@ function widget:GetInfo()
 		license = "GNU GPL, v2 or later",
 		layer = -1,
 		enabled = true,
+		depends = {'gl4'},
 	}
 end
 
@@ -87,10 +88,6 @@ function widget:DrawWorldPreUnit()
 end
 
 function widget:Initialize()
-	if not gl.CreateShader then -- no shader support, so just remove the widget itself, especially for headless
-		widgetHandler:RemoveWidget()
-		return
-	end
 	-- Init texture atlas
 	--makeAtlas()
 

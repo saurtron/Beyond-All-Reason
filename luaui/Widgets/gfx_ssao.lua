@@ -20,6 +20,7 @@ function widget:GetInfo()
         license   = "GPL",
         layer     = 999999,
         enabled   = not isPotatoGpu,
+	depends   = {'gl4'},
     }
 end
 
@@ -572,10 +573,6 @@ function widget:ViewResize()
 end
 
 function widget:Initialize()
-	if not gl.CreateShader then -- no shader support, so just remove the widget itself, especially for headless
-		widgetHandler:RemoveWidget()
-		return
-	end
 	WG['ssao'] = {}
 	WG['ssao'].getPreset = function()
 		return preset
@@ -634,9 +631,6 @@ function widget:Update(dt)
 end
 
 function widget:Shutdown()
-	if not gl.CreateShader then
-		return
-	end
 	-- restore unit lighting settings
 	if presets[preset].tonemapA then
 		Spring.SetConfigFloat("tonemapA", initialTonemapA)
