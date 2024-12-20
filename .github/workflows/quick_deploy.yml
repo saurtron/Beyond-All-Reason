@@ -8,7 +8,7 @@ on:
       - completed
 jobs:
   get_context:
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
     outputs:
       event: ${{ steps.event_step.value }}
       branch: ${{ steps.branch_step.value }}
