@@ -24,6 +24,10 @@ jobs:
       actions: read
 
     steps:
+      - name: Dump workflow_run
+        env:
+          WORKFLOW_CONTEXT: ${{ toJson(github.event.workflow_run) }}
+        run: echo "$WORKFLOW_CONTEXT"
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
