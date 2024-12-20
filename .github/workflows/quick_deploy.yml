@@ -33,42 +33,6 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump workflow_run
-        env:
-          WORKFLOW_CONTEXT: ${{ toJson(github.event.workflow_run) }}
-        run: echo "$WORKFLOW_CONTEXT"
-      - name: Dump job
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps
-        env:
-          STEP_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEP_CONTEXT"
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          github-token: ${{ github.token }}
-          run-id: ${{ github.event.workflow_run.id }}
-      - name: Get json
-        run: echo "EVENT_JSON=$(jq -c . < 'artifacts/Event File/event.json')" >> $GITHUB_ENV
-      - name: Get context
-        run: echo "CONTEXT_JSON=$(jq -c . < 'artifacts/Context File/context.json')" >> $GITHUB_ENV
-      - name: Dump context json
-        run: echo ${{ env.CONTEXT_JSON }}
-      - name: Dump json
-        run: echo ${{ env.EVENT_JSON }}
-      - name: Dump json 2
-        run: echo "$EVENT_JSON"
-      - name: Dump event
-        run: echo "${{ fromJson(env.CONTEXT_JSON).event }}"
-      - name: Dump branch
-        run: echo "${{ fromJson(env.CONTEXT_JSON).branch }}"
       - name: Trigger rebuild
         run: |
           echo "$SSH_KEY" > id.key
