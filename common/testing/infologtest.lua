@@ -1,6 +1,6 @@
 local maxErrors = 10
 
-local function skipErrors()
+local function skipErrors(line)
 	if string.find(line, 'Could not finalize projectile-texture atlas', nil, true) then
 		return true
 	end
