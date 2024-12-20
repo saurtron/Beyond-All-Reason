@@ -10,7 +10,7 @@ jobs:
   get_context:
     runs-on: ubuntu-latest
     outputs:
-      event: ${{ fromJson(steps.context.outputs).event }}
+      event: ${{ fromJson(steps.context.outputs.data).event }}
       branch: ${{ fromJson(steps.context.outputs.data).branch }}
     steps:
       - name: Download Artifacts
