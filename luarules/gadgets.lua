@@ -416,7 +416,7 @@ function gadgetHandler:LoadGadget(filename, overridevfsmode)
 	end
 
 	if gadget.GetInfo and (Platform and not Platform.check(gadget.GetInfo().depends)) then
-		Spring.Echo('Disabling ' .. gadget:GetInfo().name .. ' for missing capabilities')
+		Spring.Echo('Missing capabilities:  ' .. gadget:GetInfo().name .. '. Disabling.')
 		return nil
 	end
 

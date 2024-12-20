@@ -919,7 +919,11 @@ function widgetHandler:InsertWidgetRaw(widget)
 		return
 	end
 	if widget.GetInfo and not Platform.check(widget:GetInfo().depends) then
-		Spring.Echo('Disabling ' .. widget:GetInfo().name .. ' for missing capabilities')
+		local name = widget.whInfo.name
+		if self.knownWidgets[name] then
+			self.knownWidgets[name].active = false
+		end
+		Spring.Echo('Missing capabilities:  ' .. name .. '. Disabling.')
 		return
 	end
 
