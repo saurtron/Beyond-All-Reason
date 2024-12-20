@@ -1,12 +1,18 @@
 local maxErrors = 10
 
+local function skipErrors()
+	if string.find(line, 'Could not finalize projectile-texture atlas', nil, true) then
+		return true
+	end
+end
+
 local function infologTest()
 	local errors = {}
 	local infolog = VFS.LoadFile("infolog.txt")
 	if infolog then
 		local fileLines = string.lines(infolog)
 		for i, line in ipairs(fileLines) do
-			if string.find(line, 'Error:', nil, true) then
+			if string.find(line, 'Error:', nil, true) and not skipErrors(line) then
 				errors[#errors+1] = line
 				if #errors > maxErrors then
 					return errors
