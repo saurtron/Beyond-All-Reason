@@ -2,13 +2,18 @@
 # on push to master much quicker without waiting for cron jobs.
 name: Deploy
 on:
-  push:
-    branches:
-      - master
+  workflow_run:
+    workflows: ["Process Test Results"]
+    types:
+      - completed
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.repository == 'beyond-all-reason/Beyond-All-Reason'
+    if: |
+      ${{ github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event_name == 'push' &&
+          github.head_ref == 'master' }}
     permissions:
       id-token: write
     steps:
