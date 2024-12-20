@@ -10,10 +10,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: |
-      ${{ github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
-          github.event.workflow_run.conclusion == 'success' &&
-          github.event_name == 'push' &&
-          github.head_ref == 'master' }}
+      github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event_name == 'push' &&
+      github.head_ref == 'master'
     permissions:
       id-token: write
     steps:
