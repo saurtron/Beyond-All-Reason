@@ -9,8 +9,8 @@ on:
       - 'master'
 
 jobs:
-  upload-event_file:
-    name: Upload Event File
+  run-tests:
+    name: Run Tests
     runs-on: ubuntu-latest
     steps:
       - name: Upload Event File
@@ -19,10 +19,6 @@ jobs:
           name: Event File
           path: ${{ github.event_path }}
 
-  run-tests:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
