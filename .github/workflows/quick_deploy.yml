@@ -10,8 +10,8 @@ jobs:
   get_context:
     runs-on: ubuntu-latest
     outputs:
-      event: ${{ steps.event_step.value }}
-      branch: ${{ steps.branch_step.value }}
+      event: ${{ fromJson(steps.getcontext.data).event }}
+      branch: ${{ fromJson(steps.getcontext.data).branch }}
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
@@ -19,6 +19,9 @@ jobs:
           path: artifacts
           github-token: ${{ github.token }}
           run-id: ${{ github.event.workflow_run.id }}
+      - name: Read context file
+        id: getcontext
+        run: echo "::set-output name=data::$(cat 'artifacts/Context File/context.json')"
       - name: Get context json
         run: echo "CONTEXT_JSON=$(jq -c . < 'artifacts/Context File/context.json')" >> $GITHUB_ENV
       - id: event_step
