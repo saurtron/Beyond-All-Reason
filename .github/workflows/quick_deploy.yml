@@ -7,11 +7,34 @@ on:
     types:
       - completed
 jobs:
+  get_context:
+    runs_on: ubuntu-latest
+    outputs:
+      event: ${{ steps.event_step.value }}
+      branch: ${{ steps.branch_step.value }}
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Get context json
+        run: echo "CONTEXT_JSON=$(jq -c . < 'artifacts/Context File/context.json')" >> $GITHUB_ENV
+      - id: event_step
+        name: Dump event
+        run: echo "`value=${{ fromJson(env.CONTEXT_JSON).event }}" >> "$GITHUB_OUTPUT"
+      - id: branch_step
+        name: Dump file
+        run: echo "value=${{ fromJson(env.CONTEXT_JSON).branch }}" >> "$GITHUB_OUTPUT"
   deploy:
+    needs: [get_context]
     runs-on: ubuntu-latest
     if: |
       github.repository == 'saurtron/Beyond-All-Reason' &&
-      github.event.workflow_run.conclusion == 'success'
+      github.event.workflow_run.conclusion == 'success' &&
+      needs.get_context.outputs.event == 'push' &&
+      needs.get_context.outputs.branch == 'master'
     permissions:
       id-token: write
     steps:
@@ -47,10 +70,10 @@ jobs:
         run: echo ${{ env.EVENT_JSON }}
       - name: Dump json 2
         run: echo "$EVENT_JSON"
-      - name: Dump json content
-        run: echo "${{ fromJson(env.EVENT_JSON).pull_request }}"
-      - name: Dump json content 2
-        run: echo "${{ fromJson(env.EVENT_JSON).pusher }}"
+      - name: Dump event
+        run: echo "${{ fromJson(env.CONTEXT_JSON).event }}"
+      - name: Dump branch
+        run: echo "${{ fromJson(env.CONTEXT_JSON).branch }}"
       - name: Trigger rebuild
         run: |
           echo "$SSH_KEY" > id.key
