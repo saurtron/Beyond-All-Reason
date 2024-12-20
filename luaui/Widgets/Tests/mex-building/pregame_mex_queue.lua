@@ -6,10 +6,10 @@ end
 function setup()
 	Test.clearMap()
 
-	widget_cmd_extractor_snap = widgetHandler:FindWidget("Extractor Snap (mex/geo)")
+	local widget_cmd_extractor_snap = widgetHandler:FindWidget("Extractor Snap (mex/geo)")
 	assert(widget_cmd_extractor_snap)
 
-	widget_gui_pregame_build = widgetHandler:FindWidget("Pregame Queue")
+	local widget_gui_pregame_build = widgetHandler:FindWidget("Pregame Queue")
 	assert(widget_gui_pregame_build)
 
 	WG['pregame-build'].setBuildQueue({})
