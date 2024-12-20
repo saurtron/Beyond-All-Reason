@@ -23,7 +23,6 @@ jobs:
         env:
           JOB_CONTEXT: ${{ toJson(github.event.workflow_run) }}
         run: echo "$JOB_CONTEXT"
-    steps:
       - name: Trigger rebuild
         run: |
           echo "$SSH_KEY" > id.key
