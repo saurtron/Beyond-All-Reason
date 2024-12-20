@@ -48,7 +48,8 @@ jobs:
       - name: Create context file
         run: |
             printf '{ 
-              "event": "${{github.event.workflow_run.event}}"
+              "event": "${{github.event.workflow_run.event}}",
+              "branch" "${{github.event.workflow_run.head_branch}}"
             }' >> artifacts/context.json
       - name: Upload Event File
         uses: actions/upload-artifact@v4
