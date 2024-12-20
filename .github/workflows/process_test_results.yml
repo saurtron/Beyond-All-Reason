@@ -24,6 +24,19 @@ jobs:
       actions: read
 
     steps:
+      - name: Create context file
+        run: |
+            printf '{
+              "event": "${{github.event.workflow_run.event}}",
+              "branch": "${{github.event.workflow_run.head_branch}}"
+            }' >> artifacts/context.json
+
+      - name: Upload Context File
+        uses: actions/upload-artifact@v4
+        with:
+          name: Context File
+          path: artifacts/context.json
+
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
