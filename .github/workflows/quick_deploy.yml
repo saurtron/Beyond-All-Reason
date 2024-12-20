@@ -39,10 +39,18 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
       - name: Get json
         run: echo "EVENT_JSON=$(jq -c . < 'artifacts/Event File/event.json')" >> $GITHUB_ENV
+      - name: Get context
+        run: echo "CONTEXT_JSON=$(jq -c . < 'artifacts/Context File/context.json')" >> $GITHUB_ENV
+      - name: Dump context json
+        run: echo ${{ env.CONTEXT_JSON }}
       - name: Dump json
         run: echo ${{ env.EVENT_JSON }}
       - name: Dump json 2
         run: echo "$EVENT_JSON"
+      - name: Dump json content
+        run: echo "${{ fromJson(env.EVENT_JSON).pull_request }}"
+      - name: Dump json content 2
+        run: echo "${{ fromJson(env.EVENT_JSON).pusher }}"
       - name: Trigger rebuild
         run: |
           echo "$SSH_KEY" > id.key
