@@ -21,7 +21,7 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
       - name: Read context file
         id: getcontext
-        run: echo "::set-output name=data::$(cat 'artifacts/Context File/context.json')"
+        run: echo "::set-output name=data::$(jq -c . < 'artifacts/Context File/context.json')"
       - name: Get context json
         run: echo "CONTEXT_JSON=$(jq -c . < 'artifacts/Context File/context.json')" >> $GITHUB_ENV
       - id: event_step
