@@ -65,7 +65,7 @@ function MochaJSONReporter:testResult(label, filePath, success, skipped, duratio
 			}
 		else
 			result.err = {
-				message = "<empty>",
+				message = "<unknown error>",
 			}
 		end
 	end
