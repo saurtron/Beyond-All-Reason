@@ -9,6 +9,9 @@ on:
 jobs:
   get_context:
     runs-on: ubuntu-latest
+    if: |
+      github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
+      github.event.workflow_run.conclusion == 'success'
     outputs:
       event: ${{ fromJson(steps.context.outputs.data).event }}
       branch: ${{ fromJson(steps.context.outputs.data).branch }}
@@ -26,8 +29,6 @@ jobs:
     needs: [get_context]
     runs-on: ubuntu-latest
     if: |
-      github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
-      github.event.workflow_run.conclusion == 'success' &&
       needs.get_context.outputs.event == 'push' &&
       needs.get_context.outputs.branch == 'master'
     permissions:
