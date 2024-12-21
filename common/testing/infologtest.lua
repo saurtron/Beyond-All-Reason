@@ -29,6 +29,7 @@ end
 function test()
 	local errors = infologTest()
 	if #errors > 0 then
+		Spring.Echo("INFOLOG", table.concat(errors, "\n"))
 		error(table.concat(errors, "\n"), 0)
 	end
 end
