@@ -31,7 +31,7 @@ jobs:
           path: tools/headless_testing/testlog/results.json
 
   test-results:
-    name: Test Results
+    name: Process Test Results
     runs-on: ubuntu-latest
     needs: run-tests
     steps:
