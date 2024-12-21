@@ -2,13 +2,35 @@
 # on push to master much quicker without waiting for cron jobs.
 name: Deploy
 on:
-  push:
-    branches:
-      - master
+  workflow_run:
+    workflows: ["Process Test Results"]
+    types:
+      - completed
 jobs:
-  deploy:
+  get_context:
     runs-on: ubuntu-latest
-    if: github.repository == 'beyond-all-reason/Beyond-All-Reason'
+    if: |
+      github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
+      github.event.workflow_run.conclusion == 'success'
+    outputs:
+      event: ${{ fromJson(steps.context.outputs.data).event }}
+      branch: ${{ fromJson(steps.context.outputs.data).branch }}
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Get context json
+        id: context
+        run: echo "data=$(jq -c . < 'artifacts/Context File/context.json')" >> $GITHUB_OUTPUT
+  deploy:
+    needs: [get_context]
+    runs-on: ubuntu-latest
+    if: |
+      needs.get_context.outputs.event == 'push' &&
+      needs.get_context.outputs.branch == 'master'
     permissions:
       id-token: write
     steps:

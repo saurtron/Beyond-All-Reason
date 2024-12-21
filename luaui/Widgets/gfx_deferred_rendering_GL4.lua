@@ -9,7 +9,8 @@ function widget:GetInfo()
 		date = "2022.06.10",
 		license = "Lua code is GPL V2, GLSL is (c) Beherith (mysterme@gmail.com)",
 		layer = -99999990,
-		enabled = true
+		enabled = true,
+		depends = {'gl4'},
 	}
 end
 
@@ -1612,7 +1613,6 @@ function widget:TextCommand(command)
 end
 
 function widget:Initialize()
-
 	Spring.Debug.TraceEcho("Initialize DLGL4")
 	if Spring.GetConfigString("AllowDeferredMapRendering") == '0' or Spring.GetConfigString("AllowDeferredModelRendering") == '0' then
 		Spring.Echo('Deferred Rendering (gfx_deferred_rendering.lua) requires  AllowDeferredMapRendering and AllowDeferredModelRendering to be enabled in springsettings.cfg!')
