@@ -51,3 +51,7 @@ end
 
 determineCapabilities()
 extendPlatform()
+
+Spring.Echo("PLATFORM", Platform.numDisplays, Platform.glslVersionNum, Json.encode(Platform.availableVideoModes))
+Spring.Echo("PLATFORM2", Platform.glHaveAMD, Platform.glHaveNVidia, Platform.glHaveIntel, Platform.glSupportDepthBufferBitDepth)
+Spring.Echo("FULLPLATFORM", Json.encode(Platform))
