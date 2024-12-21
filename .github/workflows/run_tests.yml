@@ -13,12 +13,6 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Upload Event File
-        uses: actions/upload-artifact@v4
-        with:
-          name: Event File
-          path: ${{ github.event_path }}
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -26,10 +20,13 @@ jobs:
         run: docker compose -f tools/headless_testing/docker-compose.yml up
         timeout-minutes: 30
 
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          name: Test Results
-          path: |
-            tools/headless_testing/testlog/results.json
+          action_fail_on_inconclusive: true
+          check_name: "Test Results"
+          time_unit: milliseconds
+          commit: ${{ github.head_sha }}
+          event_file: ${{ github.event_path }}
+          event_name: ${{ github.event_name }}
+          files: "tools/headless_testing/testlog/results.json"
