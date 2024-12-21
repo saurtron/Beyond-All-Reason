@@ -227,6 +227,9 @@ local function makeInstanceVBO(layout, vertexVBO, numVertices)
 end
 
 local function initGL4()
+	if not gl.CreateShader then
+		return
+	end
 	local outlineVBO, outlineVertices = makeOutlineVBO()
 	outlineInstanceVBO = makeInstanceVBO(outlineInstanceVBOLayout, outlineVBO, outlineVertices)
 
@@ -527,6 +530,9 @@ local BUILD_MODES_HANDLERS = {
 local instanceIDs = {}
 
 local function clearInstances()
+	if not gl.CreateShader then
+		return
+	end
 	clearInstanceTable(outlineInstanceVBO)
 
 	if WG.StopDrawUnitShapeGL4 then
@@ -611,6 +617,9 @@ end
 ---@param buildPositions StartPoints
 ---@param teamID number
 local function updateInstances(blueprint, buildPositions, teamID)
+	if not gl.CreateShader then
+		return
+	end
 	if not blueprint or not buildPositions then
 		clearInstances()
 		return
@@ -668,6 +677,9 @@ local function drawOutlines()
 end
 
 function widget:DrawWorldPreUnit()
+	if not gl.CreateShader then
+		return
+	end
 	if not activeBlueprint then
 		return
 	end
@@ -725,17 +737,7 @@ local function setActiveBuilders(unitIDs)
 end
 
 function widget:Initialize()
-	if not gl.CreateShader then
-		-- no shader support, so just remove the widget itself, especially for headless
-		widgetHandler:RemoveWidget()
-		return
-	end
-
-	if not initGL4() then
-		-- shader compile failed
-		widgetHandler:RemoveWidget()
-		return
-	end
+	initGL4()
 
 	WG["api_blueprint"] = {
 		setActiveBlueprint = setActiveBlueprint,
@@ -757,6 +759,9 @@ end
 function widget:Shutdown()
 	WG["api_blueprint"] = nil
 
+	if not gl.CreateShader then
+		return
+	end
 	clearInstances()
 
 	if outlineInstanceVBO and outlineInstanceVBO.VAO then

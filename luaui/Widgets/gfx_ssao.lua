@@ -20,6 +20,7 @@ function widget:GetInfo()
         license   = "GPL",
         layer     = 999999,
         enabled   = not isPotatoGpu,
+	depends   = {'gl4'},
     }
 end
 
@@ -630,7 +631,6 @@ function widget:Update(dt)
 end
 
 function widget:Shutdown()
-
 	-- restore unit lighting settings
 	if presets[preset].tonemapA then
 		Spring.SetConfigFloat("tonemapA", initialTonemapA)
