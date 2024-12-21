@@ -32,6 +32,7 @@ jobs:
 
   test-results:
     runs-on: ubuntu-latest
+    needs: run-tests
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
@@ -53,6 +54,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    needs: test-results
     if: |
       github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
       github.event_name == 'push' &&
@@ -67,6 +69,7 @@ jobs:
           ssh -i id.key -o StrictHostKeyChecking=no debian@repos.beyondallreason.dev byar
         env:
           SSH_KEY: ${{ secrets.SSH_REPOS_DEPLOY_KEY }}
+
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
@@ -76,10 +79,12 @@ jobs:
           token_format: id_token
           id_token_audience: cdnupdater
           id_token_include_email: true
+
       - name: Sync files to CDN
         run: |
           curl --fail -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
             -X POST -d '["byar"]' https://rapidsyncer-ssd-7xiouooxaa-ey.a.run.app/sync
+
       - name: Update CDN pointer
         run: |
           curl --fail -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
