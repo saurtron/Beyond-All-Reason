@@ -9,6 +9,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
     if: |
       github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
       github.event.workflow_run.conclusion == 'success' &&
