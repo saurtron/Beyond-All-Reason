@@ -26,6 +26,7 @@ jobs:
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
+          action_fail: true
           action_fail_on_inconclusive: true
           check_name: "Test Results"
           time_unit: milliseconds
