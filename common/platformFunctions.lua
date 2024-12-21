@@ -54,4 +54,8 @@ extendPlatform()
 
 Spring.Echo("PLATFORM", Platform.numDisplays, Platform.glslVersionNum, Json.encode(Platform.availableVideoModes))
 Spring.Echo("PLATFORM2", Platform.glHaveAMD, Platform.glHaveNVidia, Platform.glHaveIntel, Platform.glSupportDepthBufferBitDepth)
-Spring.Echo("FULLPLATFORM", Json.encode(Platform))
+local platformStr = Json.encode(Platform)
+local strLen = string.len(platformStr)
+for i=0, math.floor(strLen/20) do
+	Spring.Echo(string.sub(platformStr, i*20, (i+1)*20))
+end
