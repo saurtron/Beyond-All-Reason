@@ -47,9 +47,6 @@ jobs:
           action_fail_on_inconclusive: true
           check_name: "Test Results"
           time_unit: milliseconds
-          commit: ${{ github.head_sha }}
-          event_file: ${{ github.event_path }}
-          event_name: ${{ github.event_name }}
           files: "artifacts/Test Results/*.json"
 
   deploy:
