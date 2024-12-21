@@ -1,22 +1,44 @@
-# Workflow to push the change to deploy the change to players
-# on push to master much quicker without waiting for cron jobs.
-name: Deploy
+name: Run Tests
+
 on:
-  workflow_run:
-    workflows: ["Run Tests"]
-    types:
-      - completed
-run-name: "Deploy - ${{ github.event.workflow_run.display_title }}"
+#  pull_request
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
+  run-tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Tests
+        run: docker compose -f tools/headless_testing/docker-compose.yml up
+        timeout-minutes: 30
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          action_fail_on_inconclusive: true
+          check_name: "Test Results"
+          time_unit: milliseconds
+          commit: ${{ github.head_sha }}
+          event_file: ${{ github.event_path }}
+          event_name: ${{ github.event_name }}
+          files: "tools/headless_testing/testlog/results.json"
   deploy:
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
     if: |
       github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'master'
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master'
     permissions:
       id-token: write
     steps:
