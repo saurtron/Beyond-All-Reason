@@ -1,5 +1,5 @@
 function skip()
-	return Spring.GetGameFrame() <= 0
+	return Game.mapName ~= "Full Metal Plate 1.5"
 end
 
 function setup()
@@ -14,14 +14,14 @@ end
 
 function test()
 	local units = {
-		[0] = "armfig",
-		[1] = "corveng"
+		[0] = "armpw",
+		[1] = "corak"
 	}
-	local n = 200
+	local n = 20
 
 	local midX, midZ = Game.mapSizeX / 2, Game.mapSizeZ / 2
-	local xOffset = 1000
-	local zStep = 10
+	local xOffset = 200
+	local zStep = 30
 	local startZ = midZ - zStep * n / 2
 
 	-- make two lines of units facing each other
@@ -29,18 +29,18 @@ function test()
 		do
 			local x = locals.midX - locals.xOffset
 			for i = 1, locals.n do
-				local z = locals.startZ + locals.zStep * i
+				local z = locals.startZ
 				local y = Spring.GetGroundHeight(x, z)
-				local unitID = Spring.CreateUnit(locals.units[0], x, y, z, "east", 0)
+				Spring.CreateUnit(locals.units[0], x, y, z + locals.zStep * i, "east", 0)
 			end
 		end
 
 		do
 			local x = locals.midX + locals.xOffset
 			for i = 1, locals.n do
-				local z = locals.startZ + locals.zStep * i
+				local z = locals.startZ
 				local y = Spring.GetGroundHeight(x, z)
-				local unitID = Spring.CreateUnit(locals.units[1], x, y, z, "west", 1)
+				Spring.CreateUnit(locals.units[1], x, y, z + locals.zStep * i, "west", 1)
 			end
 
 		end
@@ -48,28 +48,15 @@ function test()
 
 	Test.waitFrames(1)
 
-	if false then
-		Spring.GiveOrderToUnitArray(Spring.GetTeamUnits(0), CMD.FIGHT, { midX, 0, midZ }, 0)
-		Spring.GiveOrderToUnitArray(Spring.GetTeamUnits(1), CMD.FIGHT, { midX, 0, midZ }, 0)
-	else
-		SyncedRun(function()
-			local midX = locals.midX
-			local midZ = locals.midZ
-			for _, unitID in ipairs(Spring.GetAllUnits()) do
-				local ux, uy, uz = Spring.GetUnitPosition(unitID)
+	Spring.GiveOrderToUnitArray(Spring.GetTeamUnits(0), CMD.FIGHT, { midX, 0, midZ }, 0)
+	Spring.GiveOrderToUnitArray(Spring.GetTeamUnits(1), CMD.FIGHT, { midX, 0, midZ }, 0)
 
-				Spring.GiveOrderToUnit(unitID, CMD.FIGHT, { 2 * midX - ux, 0, uz }, 0)
-				Spring.GiveOrderToUnit(unitID, CMD.FIGHT, { midX, 0, midZ }, { "shift" })
-			end
-		end)
-	end
-
-	Spring.SendCommands("setspeed " .. 5)
+	Spring.SendCommands("setspeed " .. 20)
 
 	-- wait until one team has no units left
 	Test.waitUntil(function()
 		return #(Spring.GetTeamUnits(0)) == 0 or #(Spring.GetTeamUnits(1)) == 0
-	end, 60 * 30)
+	end, 30 * 30)
 
 	Spring.SendCommands("setspeed " .. 1)
 
@@ -85,17 +72,14 @@ function test()
 		if UnitDefNames and units[winner] and UnitDefNames[units[winner]] then
 			unitName = UnitDefNames[units[winner]].translatedHumanName or units[winner]
 		end
-		unitsLeft = #(Spring.GetAllUnits())
 		resultStr = resultStr .. "team " .. winner .. " wins"
-		resultStr = resultStr .. " with " .. unitsLeft
-		resultStr = resultStr .. " (" .. string.format("%.f%%", 100 * unitsLeft / n) .. ")"
-		resultStr = resultStr .. " " .. unitName .. " left"
+		resultStr = resultStr .. " with " .. #(Spring.GetAllUnits()) .. " " .. unitName .. " left"
 	else
 		resultStr = resultStr .. "tie"
 	end
 
 	Spring.Echo(resultStr)
 
-	-- cor fighters should win
-	assert(winner == 1)
+	-- pawns should win
+	assert(winner == 0)
 end

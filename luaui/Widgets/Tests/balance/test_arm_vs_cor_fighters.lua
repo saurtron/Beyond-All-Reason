@@ -1,7 +1,3 @@
-function skip()
-	return Spring.GetGameFrame() <= 0
-end
-
 function setup()
 	Test.clearMap()
 end
@@ -52,7 +48,7 @@ function test()
 		Spring.GiveOrderToUnitArray(Spring.GetTeamUnits(0), CMD.FIGHT, { midX, 0, midZ }, 0)
 		Spring.GiveOrderToUnitArray(Spring.GetTeamUnits(1), CMD.FIGHT, { midX, 0, midZ }, 0)
 	else
-		SyncedRun(function()
+		SyncedRun(function(locals)
 			local midX = locals.midX
 			local midZ = locals.midZ
 			for _, unitID in ipairs(Spring.GetAllUnits()) do

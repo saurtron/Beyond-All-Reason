@@ -1,14 +1,45 @@
-# Workflow to push the change to deploy the change to players
-# on push to master much quicker without waiting for cron jobs.
-name: Deploy
+name: Run Tests
+
 on:
+#  pull_request
+  workflow_dispatch:
+  pull_request:
   push:
     branches:
-      - master
+      - 'master'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
-  deploy:
+  run-tests:
+    name: Run Tests
     runs-on: ubuntu-latest
-    if: github.repository == 'beyond-all-reason/Beyond-All-Reason'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Tests
+        run: docker compose -f tools/headless_testing/docker-compose.yml up
+        timeout-minutes: 30
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          action_fail: true
+          action_fail_on_inconclusive: true
+          check_name: "Test Results"
+          time_unit: milliseconds
+          files: "tools/headless_testing/testlog/results.json"
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: run-tests
+    if: |
+      github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master'
     permissions:
       id-token: write
     steps:
@@ -19,6 +50,7 @@ jobs:
           ssh -i id.key -o StrictHostKeyChecking=no debian@repos.beyondallreason.dev byar
         env:
           SSH_KEY: ${{ secrets.SSH_REPOS_DEPLOY_KEY }}
+
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
@@ -28,10 +60,12 @@ jobs:
           token_format: id_token
           id_token_audience: cdnupdater
           id_token_include_email: true
+
       - name: Sync files to CDN
         run: |
           curl --fail -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
             -X POST -d '["byar"]' https://rapidsyncer-ssd-7xiouooxaa-ey.a.run.app/sync
+
       - name: Update CDN pointer
         run: |
           curl --fail -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
