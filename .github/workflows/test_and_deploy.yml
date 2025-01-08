@@ -1,44 +1,43 @@
-name: Run Tests
+name: Process Tests
 
 on:
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-      - 'master'
+  workflow_run:
+    workflows: ["Run Tests"]
+    types:
+      - completed
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+permissions: {}
 
 jobs:
-  run-tests:
-    name: Run Tests
+  process-test-results:
+    name: Process Test Results
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion != 'skipped'
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Run Tests
-        run: docker compose -f tools/headless_testing/docker-compose.yml up
-        timeout-minutes: 30
-
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          action_fail: true
           action_fail_on_inconclusive: true
-          check_name: "Test Results"
+          check_name: "Test Results (${{ github.event.workflow_run.event || github.event_name }})"
           time_unit: milliseconds
-          files: "tools/headless_testing/testlog/results.json"
-
+          commit: ${{ github.event.workflow_run.head_sha }}
+          event_file: artifacts/Event File/event.json
+          event_name: ${{ github.event.workflow_run.event }}
+          files: "artifacts/Test Results/*.json"
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: run-tests
+    needs: process-test-results
     if: |
       github.repository == 'beyond-all-reason/Beyond-All-Reason' &&
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/master'
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master'
     permissions:
       id-token: write
     steps:
