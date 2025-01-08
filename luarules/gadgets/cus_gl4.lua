@@ -2085,6 +2085,14 @@ function gadget:RenderUnitDestroyed(unitID, unitDefID)
 	UpdateUnit(unitID, 0)
 end
 
+function gadget:UnitReverseBuilt(unitID, unitDefID, unitTeam)
+	local flag = Spring.GetUnitDrawFlag(unitID)
+	if flag > 0 and flag < 128 then
+		UpdateUnit(unitID, 0)
+		UnitCreated(unitID, unitDefID)
+	end
+end
+
 function gadget:UnitFinished(unitID)
 	gl.SetUnitBufferUniforms(unitID, {-1}, 0) -- set build progress to built
 	buildProgresses[unitID] = nil

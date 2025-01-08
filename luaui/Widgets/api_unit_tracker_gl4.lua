@@ -404,6 +404,11 @@ function widget:UnitFinished(unitID, unitDefID, unitTeam) -- todo, this should p
 	end
 end
 
+function widget:UnitReverseBuilt(unitID, unitDefID, unitTeam)
+	widget:UnitDestroyed(unitID, unitDefID, unitTeam, "UnitReverseBuilt")
+	widget:UnitCreated(unitID, unitDefID, unitTeam, nil, "UnitReverseBuilt")
+end
+
 function widget:UnitTaken(unitID, unitDefID, oldTeam, newTeam) --1.  this is only called when one if my units gets captured
 	widget:UnitDestroyed(unitID, unitDefID, oldTeam, "UnitTaken")
 	-- not needed, as the unit will call enemyenteredlos, but what if we are spec?
