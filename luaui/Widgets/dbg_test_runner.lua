@@ -783,7 +783,7 @@ Test = {
 			for _, featureID in ipairs(Spring.GetAllFeatures()) do
 				Spring.DestroyFeature(featureID)
 			end
-		end)
+		end, 1000)
 	end,
 	setUnsafeCallins = function(unsafe)
 		callinState.unsafe = unsafe
