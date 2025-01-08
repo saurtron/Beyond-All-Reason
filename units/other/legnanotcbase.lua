@@ -26,6 +26,7 @@ return {
 		footprintz = 6,
 		idleautoheal = 5,
 		idletime = 1800,
+		leavesRadarGhost = true,
 		mass = 700,
 		health = 20000,
 		maxslope = 10,
