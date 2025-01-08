@@ -108,6 +108,7 @@ local flexCallIns = {
 	'ActiveCommandChanged',
 	'DefaultCommand',
 	'UnitCreated',
+	'UnitReverseBuilt',
 	'UnitFinished',
 	'UnitFromFactory',
 	'UnitDestroyed',
@@ -2233,6 +2234,13 @@ function widgetHandler:UnitCreated(unitID, unitDefID, unitTeam, builderID)
 	tracy.ZoneEnd()
 	return
 end
+
+function widgetHandler:UnitReverseBuilt(unitID, unitDefID, unitTeam)
+	for _, w in r_ipairs(self.UnitReverseBuiltList) do
+		w:UnitReverseBuilt(unitID, unitDefID, unitTeam)
+	end
+end
+
 
 function widgetHandler:UnitFinished(unitID, unitDefID, unitTeam)
 	tracy.ZoneBeginN("W:UnitFinished")
