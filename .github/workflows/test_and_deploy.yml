@@ -6,8 +6,6 @@ on:
     types:
       - completed
 
-permissions: {}
-
 jobs:
   process-test-results:
     name: Process Test Results
