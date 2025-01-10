@@ -5,6 +5,8 @@ local hasShaders = false
 local hasFBO = false
 local isSyncedCode = (SendToUnsynced ~= nil)
 
+local a
+
 local function determineCapabilities()
 	if not gl then
 		return
