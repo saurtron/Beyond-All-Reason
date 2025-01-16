@@ -4,7 +4,7 @@
 function gadget:GetInfo()
 	return {
 		name = "Sunfacer",
-		desc = "Attempts to have advsolars face the sun",
+		desc = "praise the sun",
 		author = "Hornet",
 		date = "March 18, 2024",
 		license = "GNU GPL, v2 or later",
