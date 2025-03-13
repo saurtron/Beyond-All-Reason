@@ -14,16 +14,25 @@ end
 
 if (gadgetHandler:IsSyncedCode()) then
 
-    local isNano = {}
+    local isTransportable = {}
     for unitDefID, defs in pairs(UnitDefs) do
         if string.find(defs.name, "nanotc") then
-            isNano[unitDefID] = true
-        end
+            isTransportable[unitDefID] = true
+        elseif not (defs.cantBeTransported and defs.cantBeTransported or false) and defs.leavesGhost then
+            isTransportable[unitDefID] = true
+	end
     end
 
-    function gadget:UnitCreated(uid, udid)
-        if isNano[udid] then
-            Spring.SetUnitPosErrorParams(udid, 0,0,0, 0,0,0, math.huge)
+    function gadget:UnitLoaded(unitId, unitDefId, unitTeam, transportId, transportTeam)
+        if isTransportable[unitDefId] then
+		Spring.Echo("Pick up", unitId)
+		Spring.SetUnitLeavesGhost(unitId, false, true)
+        end
+    end
+    function gadget:UnitUnloaded(unitId, unitDefId, unitTeam, transportId, transportTeam)
+        if isTransportable[unitDefId] then
+		Spring.Echo("Drop", unitId)
+		Spring.SetUnitLeavesGhost(unitId, true)
         end
     end
 
