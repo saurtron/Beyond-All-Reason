@@ -111,7 +111,6 @@ return {
 				explosiongenerator = "custom:genericshellexplosion-large-bomb",
 				firestarter = 100,
 				flighttime = 6,
-				impulseboost = 0.2,
 				impulsefactor = 0.2,
 				metalpershot = 0,
 				model = "leghomingmissile.s3o",
@@ -145,6 +144,10 @@ return {
 					commanders = 200,
 					default = 500,
 				},
+				customparams = {
+					projectile_destruction_method = "descend",
+					overrange_distance = 1093,
+				},
 			},
 			laser = {
 				areaofeffect = 8,
@@ -160,7 +163,6 @@ return {
 				explosiongenerator = "",
 				firestarter = 0,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 8,
 				name = "Targeting laser",
@@ -187,13 +189,13 @@ return {
 			[1] = {
 				def = "LASER",
 				maindir = "0 0 1",
-				maxangledif = 270,
+				maxangledif = 300,
 				onlytargetcategory = "SURFACE",
 			},
 			[2] = {
 				def = "LEGMED_MISSILE",
 				maindir = "0 0 1",
-				maxangledif = 270,
+				maxangledif = 300,
 				onlytargetcategory = "SURFACE",
 				slaveto = 1,
 			},

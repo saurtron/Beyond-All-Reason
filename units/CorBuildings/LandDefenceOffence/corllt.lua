@@ -115,7 +115,6 @@ return {
 				explosiongenerator = "custom:laserhit-small-red",
 				firestarter = 100,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 7,
 				name = "Light g2g laser",
@@ -133,6 +132,9 @@ return {
 				turret = true,
 				weapontype = "BeamLaser",
 				weaponvelocity = 2250,
+				customparams = {
+					exclude_preaim = true,
+				},
 				damage = {
 					commanders = 112.5,
 					default = 75,

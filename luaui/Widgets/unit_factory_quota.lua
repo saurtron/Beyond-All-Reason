@@ -90,15 +90,15 @@ local function isFactoryUsable(factoryID)
     if not commandQueue then
         return true
     end
-    return commandQueue and( #commandQueue == 0 or not (commandQueue[1].options.alt or (commandQueue[2] and commandQueue[2].options.alt)))
+    return commandQueue and( #commandQueue == 0 or not (commandQueue[1].options.alt or (commandQueue[2] and (commandQueue[2].options.alt or (commandQueue[2].id == CMD.WAIT))) or (commandQueue[1].id == CMD.WAIT)))
 end
 
 local function appendToFactoryQueue(factoryID, unitDefID)
-    local currentCmd, targetID = Spring.GetUnitWorkerTask(factoryID)
+    local currentCmdID, targetID = Spring.GetUnitWorkerTask(factoryID)
     local insertPosition = 1
     if targetID then
         local _, _, _, _, buildProgress = Spring.GetUnitHealth(targetID)
-        if buildProgress < maxBuildProg and metalcosts[-currentCmd] and (buildProgress * metalcosts[-currentCmd]) < maxMetal then -- 7.5 % is the most that it is willing to cancel, and maximally 500 metal
+        if buildProgress < maxBuildProg and metalcosts[-currentCmdID] and (buildProgress * metalcosts[-currentCmdID]) < maxMetal then -- 7.5 % is the most that it is willing to cancel, and maximally 500 metal
             insertPosition = 0
         end
     else
@@ -137,14 +137,6 @@ local function isOnQuotaBuildMode(unitID)
 	return cmdDescIndex and spGetUnitCmdDescs(unitID)[cmdDescIndex].params[1]+0 == 1
 end
 
-function widget:SelectionChanged(newSelection)
-    for _, unitID in ipairs(newSelection) do
-        if factoryDefIDs[spGetUnitDefID(unitID)] and isOnQuotaBuildMode(unitID) then
-            spGiveOrderToUnit(unitID, CMD_QUOTA_BUILD_TOGGLE, {0}, {})
-        end
-    end
-end
-
 ----- handle unit tracking
 function widget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
     if builderID and unitTeam == myTeam and factoryDefIDs[spGetUnitDefID(builderID)] then
@@ -168,7 +160,7 @@ local function removeUnit(unitID, unitDefID, unitTeam)
     end
 end
 
-function widget:UnitDestroyed(unitID, unitDefID, unitTeam)
+function widget:UnitDestroyed(unitID, unitDefID, unitTeam, attackerID, attackerDefID, attackerTeam, weaponDefID)
     removeUnit(unitID, unitDefID, unitTeam)
 end
 
