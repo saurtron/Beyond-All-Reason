@@ -114,7 +114,6 @@ return {
 				explosiongenerator = "custom:laserhit-small-red",
 				firestarter = 100,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 7.7,
 				name = "Close-quarters light g2g laser",
@@ -138,6 +137,9 @@ return {
 					default = 75,
 					vtol = 5,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 			hllt_top = {
 				areaofeffect = 12,
@@ -152,7 +154,6 @@ return {
 				explosiongenerator = "custom:laserhit-small-red",
 				firestarter = 30,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 8.8,
 				name = "Close-quarters light g2g laser",
@@ -176,6 +177,9 @@ return {
 					default = 75,
 					vtol = 5,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 		},
 		weapons = {

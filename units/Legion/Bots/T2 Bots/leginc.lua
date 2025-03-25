@@ -114,7 +114,6 @@ return {
 				explosiongenerator = "custom:heatray-large",
 				firestarter = 90,
 				firetolerance = 300,
-				impulseboost = 0,
 				impulsefactor = 0,
 				intensity = 5,
 				laserflaresize = 6,
@@ -142,9 +141,9 @@ return {
 					vtol = 11,
 				},
 				customparams = {
+					exclude_preaim = true,
 					--sweepfire=0.4,--multiplier for displayed dps during the 'bonus' sweepfire stage, needed for DPS calcs
-				}
-
+				},
 			},
 		},
 		weapons = {
