@@ -3,7 +3,6 @@ return {
 		buildpic = "ARMMH.DDS",
 		buildtime = 3300,
 		canmove = true,
-		category = "ALL HOVER MOBILE WEAPON NOTSUB NOTSHIP NOTAIR SURFACE EMPABLE",
 		collisionvolumeoffsets = "0 0 0",
 		collisionvolumescales = "33 26 43",
 		collisionvolumetype = "CylY",
@@ -116,7 +115,6 @@ return {
 				explosiongenerator = "custom:genericshellexplosion-medium-bomb",
 				firestarter = 100,
 				flighttime = 10,
-				impulseboost = 0.123,
 				impulsefactor = 0.123,
 				metalpershot = 0,
 				model = "corkbmissl1.s3o",
@@ -145,6 +143,10 @@ return {
 				damage = {
 					default = 300,
 					subs = 150,
+				},
+				customparams = {
+					projectile_destruction_method = "descend",
+					overrange_distance = 817,
 				},
 			},
 		},

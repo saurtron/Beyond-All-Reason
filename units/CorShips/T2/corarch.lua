@@ -5,7 +5,6 @@ return {
 		buildpic = "CORARCH.DDS",
 		buildtime = 15000,
 		canmove = true,
-		category = "ALL MOBILE WEAPON NOTLAND SHIP NOTSUB NOTAIR NOTHOVER SURFACE EMPABLE",
 		collisionvolumeoffsets = "0 -4 3",
 		collisionvolumescales = "37 37 74",
 		collisionvolumetype = "CylZ",
@@ -114,7 +113,6 @@ return {
 				craterboost = 0,
 				cratermult = 0,
 				edgeeffectiveness = 0.15,
-				impulseboost = 0,
 				impulsefactor = 0,
 				metalpershot = 0,
 				name = "Missiles",
@@ -153,7 +151,6 @@ return {
 				explosiongenerator = "custom:genericshellexplosion-tiny-aa",
 				firestarter = 72,
 				flighttime = 1.75,
-				impulseboost = 0.123,
 				impulsefactor = 0.123,
 				metalpershot = 0,
 				model = "cormissile.s3o",
@@ -185,6 +182,10 @@ return {
 				damage = {
 					default = 125,
 				},
+				customparams = {
+					projectile_destruction_method = "descend",
+					overrange_distance = 1001,
+				},
 			},
 			mobileflak = {
 				accuracy = 1000,
@@ -200,7 +201,6 @@ return {
 				edgeeffectiveness = 1,
 				explosiongenerator = "custom:flak",
 				gravityaffected = "true",
-				impulseboost = 0,
 				impulsefactor = 0,
 				name = "FlakCannon",
 				noselfdamage = true,

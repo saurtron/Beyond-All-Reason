@@ -4,7 +4,6 @@ return {
 		buildpic = "CORMAW.DDS",
 		buildtime = 4420,
 		canrepeat = false,
-		category = "ALL NOTLAND WEAPON NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE EMPABLE",
 		corpse = "DEAD",
 		damagemodifier = 0.33,
 		decoyfor = "cordrag",
@@ -129,12 +128,11 @@ return {
 				explosiongenerator = "custom:burnblack",
 				firestarter = 100,
 				flamegfxtime = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				intensity = 0.68,
 				name = "Pop-up anti-swarm AoE flamethrower",
 				noselfdamage = true,
-				proximitypriority = 3,
+				proximitypriority = 1,
 				range = 410,
 				reloadtime = 1.1,
 				rgbcolor = "1 0.94 0.88",
@@ -159,6 +157,9 @@ return {
 					default = 22,
 					subs = 5.5,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 		},
 		weapons = {

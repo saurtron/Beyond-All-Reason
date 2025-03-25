@@ -5,7 +5,6 @@ return {
 		buildtime = 5440,
 		canrepeat = false,
 		cantbetransported = false,
-		category = "ALL NOTLAND WEAPON NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE EMPABLE",
 		collisionvolumeoffsets = "0 6 0",
 		collisionvolumescales = "32 90 32",
 		collisionvolumetype = "CylY",
@@ -115,12 +114,11 @@ return {
 				explosiongenerator = "custom:laserhit-small-red",
 				firestarter = 100,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 7.7,
 				name = "Close-quarters light g2g laser",
 				noselfdamage = true,
-				proximitypriority = 3,
+				proximitypriority = 1,
 				range = 400,
 				reloadtime = 0.46667,
 				rgbcolor = "1 0 0",
@@ -139,6 +137,9 @@ return {
 					default = 75,
 					vtol = 5,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 			hllt_top = {
 				areaofeffect = 12,
@@ -153,12 +154,11 @@ return {
 				explosiongenerator = "custom:laserhit-small-red",
 				firestarter = 30,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 8.8,
 				name = "Close-quarters light g2g laser",
 				noselfdamage = true,
-				proximitypriority = -1.5,
+				proximitypriority = -1,
 				range = 480,
 				reloadtime = 0.46667,
 				rgbcolor = "1 0 0",
@@ -177,6 +177,9 @@ return {
 					default = 75,
 					vtol = 5,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 		},
 		weapons = {

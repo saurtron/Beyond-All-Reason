@@ -7,7 +7,6 @@ return {
 		buildtime = 15000,
 		canattack = true,
 		canrepeat = false,
-		category = "ALL NOTLAND NOTSUB NOWEAPON NOTSHIP NOTAIR NOTHOVER SURFACE EMPABLE",
 		cloakcost = 20,
 		collisionvolumeoffsets = "0 0 0",
 		collisionvolumescales = "40 45 40",
@@ -136,14 +135,13 @@ return {
 				explosiongenerator = "custom:genericshellexplosion-small-lightning",
 				firestarter = 100,
 				impactonly = 0,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 7.7,
 				name = "Medium EMP turret",
 				noselfdamage = true,
 				paralyzer = true,
 				paralyzetime = 5,
-				proximitypriority = 3,
+				proximitypriority = 1,
 				range = 500,
 				reloadtime = 1.3,
 				rgbcolor = "0.8 0.8 1",
@@ -161,6 +159,9 @@ return {
 					default = 800,
 					vtol = 0,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 		},
 		weapons = {

@@ -5,8 +5,7 @@ return {
 		buildtime = 2660,
 		canrepeat = false,
 		cantbetransported = false,
-		category = "ALL NOTLAND WEAPON NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE EMPABLE",
-		collisionvolumeoffsets = "0 5 0",
+		collisionvolumeoffsets = "0 -31 0",
 		collisionvolumescales = "32 77 32",
 		collisionvolumetype = "CylY",
 		corpse = "DEAD",
@@ -116,7 +115,6 @@ return {
 				explosiongenerator = "custom:laserhit-small-red",
 				firestarter = 30,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 7,
 				name = "Light g2g laser turret",
@@ -140,6 +138,9 @@ return {
 					subs = 5,
 					vtol = 5,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 		},
 		weapons = {

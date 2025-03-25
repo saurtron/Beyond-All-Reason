@@ -162,15 +162,6 @@ local options = {
     },
 
     {
-        key 	= "unit_market",
-        name 	= "Unit Market",
-        desc 	= "Allow players to trade units. (Select unit, press 'For Sale' in order window or say /sell_unit in chat to mark the unit for sale. Double-click to buy from allies. T2cons show up in shop window!)",
-        type   	= "bool",
-        def    	= false,
-        section = "options_main",
-    },
-
-    {
         key		= "transportenemy",
         name	= "Enemy Transporting",
         desc	= "Toggle which enemy units you can kidnap with an air transport",
@@ -183,7 +174,6 @@ local options = {
             { key= "none", 		name= "Disallow All", 		desc= "No enemy units can be napped" },
         }
     },
-
 
     {
         key     = "teamffa_start_boxes_shuffle",
@@ -224,8 +214,12 @@ local options = {
 
     {
         key    	= "norushtimer",
-        name   	= "No Rush Time",
-        desc   	= "Set timer in which players cannot get out of their startbox, so you have time to prepare before fighting. PLEASE NOTE: For this to work, the game needs to have set startboxes. It won't work in FFA mode without boxes. Also, it does not affect Scavengers and Raptors.",
+        name   	= "No Rush Time".."\255\128\128\128".." [minutes]",
+        desc   	= "Set timer in which players cannot get out of their startbox, so you have time to prepare before fighting.\n"..
+			"PLEASE NOTE: For this to work, the game needs to have set startboxes.\n"..
+			-- tabs don't do much in chobby
+			"                          It won't work in FFA mode without boxes.\n"..
+			"                          Also, it does not affect Scavengers and Raptors.",
         type   	= "number",
         section	= "options_main",
         def    	= 0,
@@ -233,6 +227,78 @@ local options = {
         max    	= 30,
         step   	= 1,
     },
+
+	{
+		key		= "sub_header",
+		section	= "options_main",
+		type	= "separator",
+	},
+	{
+		key		= "sub_header",
+		name	= "-- Sharing and Taxes",
+		section	= "options_main",
+		type	= "subheader",
+		def		=  true,
+	},
+	{
+		key		= "tax_resource_sharing_amount",
+		name	= "Resource Sharing Tax",
+		desc	=	"Taxes resource sharing".."\255\128\128\128".." and overflow (engine TODO:)\n"..
+					"Set to [0] to turn off. Recommened: [0.4]. (Ranges: 0 - 0.99)\n"..
+					"*Disables: Reclaiming of Allied Units, [Unit Sharing] and [Assisting Ally Construction] to prevent loopholes",
+		type	= "number",
+		def		= 0,
+		min		= 0,
+		max		= 0.99,
+		step	= 0.01,
+		section	= "options_main",
+		column	= 1,
+		lock	= {"disable_unit_sharing","disable_assist_ally_construction"},
+		unlock	= {"disable_unit_sharing_forced","disable_assist_ally_construction_forced"},
+	},
+	{
+		key		= "disable_unit_sharing",
+		name	= "Disable Unit Sharing",
+		desc	= "Disable sharing units and structures to allies",
+		type	= "bool",
+		section	= "options_main",
+		def		= false,
+	},
+	{
+		key		= "disable_assist_ally_construction",
+		name	= "Disable Assist Ally Construction",
+		desc	= "Disables assisting allied blueprints and labs.",
+		type	= "bool",
+		section	= "options_main",
+		def		=  false,
+		column	= 1.76,
+	},
+	{	key = "tax_padding", name = "", type = "subheader", section = "options_main", column = -3, },
+	{
+		key		= "disable_unit_sharing_forced",
+		--name	= "\255\252\191\76".."Disable Unit Sharing                              [Forced ON]",
+		name	= "\255\252\191\76".."Disable Unit Sharing                                                             Disable Assist Ally Construction",
+		type	= "subheader",
+		section	= "options_main",
+	},
+	{
+		key		= "disable_assist_ally_construction_forced",
+		--name	= "\255\252\191\76".."Disable Assist Ally Construction           [Forced ON]",
+		name	= "\255\252\191\76".."[■]                                                                          [■]",
+		type	= "subheader",
+		section	= "options_main",
+		column	= 1.505,
+		font	= 4,
+	},
+	{
+		key		= "unit_market",
+		name	= "Unit Market",
+		desc	= "Allow players to trade units. (Select unit, press 'For Sale' in order window or say /sell_unit in chat to mark the unit for sale. Double-click to buy from allies. T2cons show up in shop window!)",
+		type	= "bool",
+		def		= false,
+		section	= "options_main",
+	},
+
 
     {
         key     = "sub_header",
@@ -378,6 +444,7 @@ local options = {
         def    	= false,
         column  = 1.66,
     },
+
 
     ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -567,6 +634,18 @@ local options = {
     },
 
     {
+        key		= "raptor_queen_count",
+        name	= "Raptor Queen Count",
+        desc	= "(Range: 1 - 20). Number of queens that will spawn.",
+        type	= "number",
+        def		= 1,
+        min		= 1,
+        max		= 20,
+        step	= 1,
+        section	= "raptor_defense_options",
+    },
+
+    {
         key		= "raptor_spawncountmult",
         name	= "Unit Spawn Per Wave Multiplier",
         desc	= "(Range: 1 - 5). How many times more raptors will spawn per wave.",
@@ -722,6 +801,18 @@ local options = {
         min		= 0.1,
         max		= 2,
         step	= 0.1,
+        section	= "scav_defense_options",
+    },
+
+    {
+        key		= "scav_boss_count",
+        name	= "Scavengers Boss Count",
+        desc	= "(Range: 1 - 20). Number of bosses that will spawn.",
+        type	= "number",
+        def		= 1,
+        min		= 1,
+        max		= 20,
+        step	= 1,
         section	= "scav_defense_options",
     },
 
@@ -1183,9 +1274,10 @@ local options = {
     -- Hidden Tests
     {
         key    	= "shieldsrework",
-        name   	= "Shields Rework",
-        desc   	= "Shields block all projectiles. Overkill damage is blocked once before reaching 0% charge. Shields are disabled for a few seconds upon reaching 0%.",
+        name   	= "Shields Rework v2.0",
+        desc   	= "Shields block plasma. Overkill damage is absorbed. Shield is down for the duration required to recharge the overkill damage at normal energy cost.",
         type   	= "bool",
+        hidden 	= false,
         section = "options_experimental",
         def  	= false,
     },
@@ -1266,7 +1358,7 @@ local options = {
         name 	= "Proposed Unit Reworks",
         desc 	= "Modoption used to test and balance unit reworks that are being considered for the base game.",
         type 	= "bool",
-        hidden 	= true,
+        --hidden 	= true,
         section = "options_experimental",
         def 	= false,
     },
@@ -1367,6 +1459,14 @@ local options = {
         type    = "bool",
         def     =  false,
     },
+    {
+        key     = "pushresistant",
+        name    = "Pushresistance",
+        desc    = "Enable to do desync test by the use of pushresistance",
+        section = "dev",
+        type    = "bool",
+        def     =  false,
+    },
 
     ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1433,6 +1533,45 @@ local options = {
         section = "options_cheats",
         type    = "subheader",
         def     =  true,
+    },
+
+    {
+        key     = "sub_header",
+        section = "options_cheats",
+        type    = "separator",
+    },
+
+    {
+        key     = "sub_header",
+        name    = "-- AI Cheats",
+        desc    = "",
+        section = "options_cheats",
+        type    = "subheader",
+        def     =  true,
+    },
+
+    {
+        key 	= "dynamiccheats",
+        name 	= "Dynamic Cheats",
+        desc   	= "Cheats marked as [Dynamic] react to the game state and are suspended when the opposition is losing",
+        type 	= "bool",
+        def 	= true,
+        section = "options_cheats",
+    },
+
+    {
+        key		= "nowasting",
+        name	= "No Resource Wasting",
+        desc	= "[Dynamic] Increases Buildpower for the affected team's builders and factories to prevent resource",
+        type	= "list",
+        def		= "default",
+        section	= "options_cheats",
+        items	= {
+            { key= "default", 	name= "Default", 		desc="Disabled, unless other features use it"},
+            { key= "disabled", 	name= "Disabled", 		desc="Disabled"},
+            { key= "ai", 		name= "AI Only", 	    desc="All AI except Scavengers and Raptors"},
+            { key= "all", 	    name= "All",			desc="AI and Player Teams both excluding Scavengers and Raptors" },
+        }
     },
 
     {
@@ -1706,6 +1845,7 @@ local options = {
         type   	= "list",
         section = "options_cheats",
         def  	= "unchanged",
+        hidden  = true,
         items	= {
             { key = "unchanged", 		name = "Unchanged", 			desc = "Unchanged" },
             { key = "absorbplasma", 	name = "Absorb Plasma", 		desc = "Collisions Disabled" },

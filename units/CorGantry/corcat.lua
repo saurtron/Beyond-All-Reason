@@ -4,7 +4,6 @@ return {
 		buildtime = 127000,
 		canmove = true,
 		cantbetransported = true,
-		category = "WEAPON NOTSUB NOTAIR NOTHOVER SURFACE BOT EMPABLE",
 		collisionvolumeoffsets = "0 0 2",
 		collisionvolumescales = "60 53 48",
 		collisionvolumetype = "CylY",
@@ -118,8 +117,7 @@ return {
 				explosiongenerator = "custom:genericshellexplosion-catapult",
 				firestarter = 70,
 				flighttime = 3.2,
-				impulseboost = 0.123,
-				impulsefactor = 0.123,
+				impulsefactor = 0.6,
 				metalpershot = 0,
 				model = "catapultmissile.s3o",
 				movingaccuracy = 600,
@@ -150,6 +148,10 @@ return {
 				wobble = 2000,
 				damage = {
 					default = 450,
+				},
+				customparams = {
+					projectile_destruction_method = "descend",
+					overrange_distance = 1553,
 				},
 			},
 		},

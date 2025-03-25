@@ -5,7 +5,6 @@ return {
 		buildtime = 4120,
 		canfly = true,
 		canmove = true,
-		category = "ALL MOBILE WEAPON NOTLAND VTOL NOTSUB NOTSHIP NOTHOVER",
 		collide = false,
 		cruisealtitude = 100,
 		energycost = 1450,
@@ -40,6 +39,7 @@ return {
 			normaltex = "unittextures/cor_normal.dds",
 			paralyzemultiplier = 0,
 			subfolder = "CorAircraft",
+			crashable = 0,
 		},
 		sfxtypes = {
 			crashexplosiongenerators = {

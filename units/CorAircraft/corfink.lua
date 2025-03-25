@@ -5,7 +5,7 @@ return {
 		buildtime = 2400,
 		canfly = true,
 		canmove = true,
-		category = "ALL MOBILE NOTLAND NOTSUB VTOL NOWEAPON NOTSHIP NOTHOVER LIGHTAIRSCOUT",
+		category = "LIGHTAIRSCOUT",
 		collide = false,
 		cruisealtitude = 110,
 		energycost = 1450,
@@ -43,6 +43,7 @@ return {
 			normaltex = "unittextures/cor_normal.dds",
 			subfolder = "CorAircraft",
 			unitgroup = "util",
+			crashable = 0,
 		},
 		sfxtypes = {
 			pieceexplosiongenerators = {

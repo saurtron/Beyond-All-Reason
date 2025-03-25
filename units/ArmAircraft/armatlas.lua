@@ -5,7 +5,6 @@ return {
 		buildtime = 3850,
 		canfly = true,
 		canmove = true,
-		category = "ALL MOBILE WEAPON NOTLAND NOTSUB VTOL NOTSHIP NOTHOVER",
 		collide = false,
 		cruisealtitude = 100,
 		energycost = 1300,
@@ -40,6 +39,7 @@ return {
 			normaltex = "unittextures/Arm_normal.dds",
 			paralyzemultiplier = 0,
 			subfolder = "ArmAircraft",
+			crashable = 0,
 		},
 		sfxtypes = {
 			crashexplosiongenerators = {

@@ -6,7 +6,6 @@ return {
 		buildtime = 140000,
 		canmanualfire = true,
 		canmove = true,
-		category = "ALL MOBILE NOTLAND WEAPON SUB NOTSHIP NOTAIR NOTHOVER EMPABLE UNDERWATER",
 		collisionvolumeoffsets = "0 -3 -5",
 		collisionvolumescales = "32 29 110",
 		collisionvolumetype = "box",
@@ -129,7 +128,6 @@ return {
 				craterboost = 0,
 				cratermult = 0,
 				edgeeffectiveness = 0,
-				impulseboost = 0,
 				impulsefactor = 0,
 				metalpershot = 0,
 				name = "Nuclear Launch",
@@ -145,6 +143,9 @@ return {
 				weaponvelocity = 100,
 				damage = {
 					default = 0,
+				},
+				customparams = {
+					scavforcecommandfire = true,
 				},
 			},
 			sdmssl = {
@@ -164,7 +165,6 @@ return {
 				explosiongenerator = "custom:newnuke",
 				firestarter = 100,
 				flighttime = 400,
-				impulseboost = 0.5,
 				impulsefactor = 0.5,
 				metalpershot = 1000,
 				model = "cortronmissile.s3o",
@@ -197,6 +197,8 @@ return {
 				weaponvelocity = 1600,
 				customparams = {
 					place_target_on_ground = "true",
+					scavforcecommandfire = true,
+					stockpilelimit = 10,
 				},
 				damage = {
 					commanders = 2500,
@@ -215,7 +217,6 @@ return {
 				cratermult = 0,
 				edgeeffectiveness = 0.15,
 				explosiongenerator = "custom:genericshellexplosion-medium-uw",
-				impulseboost = 0.123,
 				impulsefactor = 0.123,
 				model = "torpedo.s3o",
 				name = "Torpedo launcher",

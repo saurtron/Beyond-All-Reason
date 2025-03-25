@@ -3,7 +3,6 @@ return {
 		buildpic = "CORSUMO.DDS",
 		buildtime = 51000,
 		canmove = true,
-		category = "BOT MOBILE WEAPON ALL NOTSUB NOTSHIP NOTAIR NOTHOVER SURFACE EMPABLE",
 		collisionvolumeoffsets = "0 0 0",
 		collisionvolumescales = "38 34 36",
 		collisionvolumetype = "Box",
@@ -23,7 +22,6 @@ return {
 		movementclass = "HBOT4",
 		nochasecategory = "VTOL",
 		objectname = "Units/CORSUMO.s3o",
-		pushresistant = true,
 		script = "Units/CORSUMO.cob",
 		seismicsignature = 0,
 		selfdestructas = "explosiont3",
@@ -35,7 +33,7 @@ return {
 		turnrate = 368,
 		usepiececollisionvolumes = 1,
 		customparams = {
-			model_author = "Beherith",
+			model_author = "Tharsis",
 			normaltex = "unittextures/cor_normal.dds",
 			paralyzemultiplier = 1,
 			subfolder = "CorBots/T2",
@@ -46,8 +44,8 @@ return {
 			dead = {
 				blocking = true,
 				category = "corpses",
-				collisionvolumeoffsets = "-2.34260559082 -0.241825708008 -1.33148193359",
-				collisionvolumescales = "60.9344787598 36.418548584 64.3249511719",
+				collisionvolumeoffsets = "0.0 -8 1.8",
+				collisionvolumescales = "44.2 41.0 49.1",
 				collisionvolumetype = "Box",
 				damage = 8400,
 				featuredead = "HEAP",
@@ -74,6 +72,9 @@ return {
 			},
 		},
 		sfxtypes = {
+			explosiongenerators = {
+				[1] = "custom:footstep-medium",
+			},
 			pieceexplosiongenerators = {
 				[1] = "deathceg2",
 				[2] = "deathceg3",
@@ -116,7 +117,6 @@ return {
 				explosiongenerator = "custom:laserhit-large-green",
 				firestarter = 90,
 				impactonly = 1,
-				impulseboost = 0,
 				impulsefactor = 0,
 				laserflaresize = 6.2,
 				name = "HighEnergyLaser",
