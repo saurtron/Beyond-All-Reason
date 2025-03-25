@@ -44,6 +44,7 @@ return {
 			paralyzemultiplier = 0.025,
 			subfolder = "CorAircraft/T2",
 			techlevel = 2,
+			crashable = 0,
 		},
 		sfxtypes = {
 			explosiongenerators = {
@@ -98,7 +99,6 @@ return {
 				explosiongenerator = "custom:plasmahit-sparkonly",
 				fallOffRate = 0.2,
 				firestarter = 0,
-				impulseboost = 0.4,
 				impulsefactor = 1.5,
 				intensity = 0.8,
 				name = "Medium Shotgun",

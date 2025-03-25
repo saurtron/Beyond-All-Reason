@@ -123,7 +123,6 @@ return {
 				edgeeffectiveness = 0.9,
 				explosiongenerator = "custom:genericshellexplosion-large",
 				impulsefactor = 2.0,
-				impulseboost = 2.0,
 				name = "Area Control Riot Cannon",
 				noselfdamage = true,
 				range = 400,
@@ -148,6 +147,9 @@ return {
 					subs = 90,
 					vtol = 35,
 				},
+				customparams = {
+					exclude_preaim = true
+				}
 			},
 		},
 		weapons = {

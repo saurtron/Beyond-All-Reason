@@ -122,7 +122,6 @@ return {
 
 				explosiongenerator = "custom:starfire-explosion",
 				gravityaffected = "true",
-				impulseboost = 0.5,
 				impulsefactor = 0.5,
 				name = "Starfire Barrage Launcher",
 				noselfdamage = true,
@@ -137,6 +136,9 @@ return {
 				weapontimer = 14,
 				weapontype = "Cannon",
 				weaponvelocity = 900,
+				--customparams = {
+				--	stockpilelimit = 1,
+				--},
 				damage = {
 					default = 600,
 					shields = 375,
