@@ -370,7 +370,7 @@ end
 
 -- Shader globals
 local shader
-local luaShaderDir = "LuaUI/Widgets/Include/"
+local luaShaderDir = "LuaUI/Include/"
 local LuaShader = VFS.Include(luaShaderDir.."LuaShader.lua")
 
 -- GL speedups
