@@ -125,7 +125,6 @@ return {
 				gravityaffected = "true",
 				heightboostfactor = 8,
 				hightrajectory = 0,
-				impulseboost = 0.5,
 				impulsefactor = 0.5,
 				leadbonus = 0,
 				metalpershot = 96,
@@ -152,6 +151,7 @@ return {
 				customparams = {
 					spawns_name = "armpw",
 					spawns_surface = "LAND", -- Available: "LAND SEA" blah
+					stockpilelimit = 50,
 				},
 				damage = {
 					default = 10,
