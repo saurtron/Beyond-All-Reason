@@ -22,13 +22,20 @@ local gaiaTeamID = Spring.GetGaiaTeamID()
 local mapX = Game.mapSizeX
 local mapZ = Game.mapSizeZ
 local allMobileUnits = {}
+local spGetUnitCurrentCommand = Spring.GetUnitCurrentCommand
 local spGetUnitPosition = Spring.GetUnitPosition
 local spGetUnitTeam = Spring.GetUnitTeam
 local spGetUnitDefID = Spring.GetUnitDefID
 local spValidUnitID = Spring.ValidUnitID
+local spGiveOrderToUnit = Spring.GiveOrderToUnit
 local spIsPosInMap = Spring.IsPosInMap
 local CMD_STOP = CMD.STOP
 local CMD_GUARD = CMD.GUARD
+local CMD_INSERT = CMD.INSERT
+local CMD_INTERNAL = CMD.OPT_INTERNAL
+local math_bit_and = math.bit_and
+
+local MAX_OUT_OF_MAP = Game.gameSpeed*5
 
 local isMobileUnit = {}
 local isBuilder = {}
@@ -41,9 +48,12 @@ for unitDefID, udef in pairs(UnitDefs) do
 	end
 end
 
+local guardingUnits = {}
+
 function gadget:Initialize()
 	gadgetHandler:RegisterAllowCommand(CMD_STOP)
 	gadgetHandler:RegisterAllowCommand(CMD_GUARD)
+	gadgetHandler:RegisterAllowCommand(CMD_INSERT)
 	for _, unitID in pairs(Spring.GetAllUnits()) do
 		gadget:UnitCreated(unitID, Spring.GetUnitDefID(unitID), spGetUnitTeam(unitID))
 	end
@@ -57,7 +67,27 @@ end
 
 function gadget:UnitDestroyed(unitID, unitDefID, unitTeam, attackerID, attackerDefID, attackerTeam, weaponDefID)
 	allMobileUnits[unitID] = nil
+	guardingUnits[unitID] = nil
 end
+local function isInsideMap(unitID)
+	local x,_,z = spGetUnitPosition(unitID)
+	return spIsPosInMap(x, z)
+end
+local function maybeCancelGuard(unitID, cmdTag, guardeeID, frame)
+	if guardeeID and spValidUnitID(guardeeID) then
+		if isInsideMap(guardeeID) then
+			guardingUnits[unitID] = frame
+		else
+			if frame - guardingUnits[unitID] > MAX_OUT_OF_MAP then
+				spGiveOrderToUnit(unitID, CMD.REMOVE, cmdTag)
+			end
+		end
+	else
+		guardingUnits[unitID] = nil
+	end
+end
+
+
 
 function gadget:GameFrame(f)
 	if f % 69 == 0 then
@@ -81,25 +111,46 @@ function gadget:GameFrame(f)
 					end
 				end
 			end
+			if guardingUnits[unitID] then
+				local cmdID, cmdOptions, cmdTag, cmdParam1  = spGetUnitCurrentCommand(unitID)
+				if cmdID and math_bit_and(cmdOptions, CMD_INTERNAL) == CMD_INTERNAL then
+					cmdID, cmdOptions, cmdTag, cmdParam1  = spGetUnitCurrentCommand(unitID, 2)
+				end
+				if cmdID == CMD_GUARD then
+					maybeCancelGuard(unitID, cmdTag, cmdParam1, f)
+				elseif not cmdID then
+					guardingUnits[unitID] = nil
+				end
+			end
 		end
 	end
 end
 
-local function isInsideMap(unitID)
-	local x,_,z = spGetUnitPosition(unitID)
-	return spIsPosInMap(x, z)
-end
-
 function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOptions, cmdTag, fromSynced, fromLua)
-	if cmdID == CMD_STOP and isMobileUnit[unitDefID] then
+	if not isMobileUnit[unitDefID] then
+		return true
+	end
+	if cmdID == CMD_STOP then
 		return isInsideMap(unitID)
-	elseif cmdID == CMD_GUARD then
+	elseif cmdID == CMD_GUARD or cmdID == CMD_INSERT then
+		guardeeID = cmdParams[1]
+		if cmdID == CMD_INSERT then
+			cmdID = cmdParams[2]
+			if not cmdID == CMD_GUARD then return true end
+			guardeeID = cmdParams[4]
+		else
+			guardeeID = cmdParams[1]
+		end
 		-- To guard out of map both units must be builders
-		local guardeeID = cmdParams[1]
-		if guardeeID and spValidUnitID(guardeeID) and not isInsideMap(guardeeID) then
+		if guardeeID and spValidUnitID(guardeeID) then
 			local guardeeUnitDefID = spGetUnitDefID(guardeeID)
 			if not (isBuilder[unitDefID] and isBuilder[guardeeUnitDefID]) then
-				return false
+				if isInsideMap(guardeeID) then
+					-- storing frame number, but will be updated later
+					guardingUnits[unitID] = 0
+				else
+					return false
+				end
 			end
 		end
 	end
