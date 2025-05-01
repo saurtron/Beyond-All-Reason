@@ -59,26 +59,25 @@ function testListener:FinishTests(duration)
 	end
 end
 
+local function findTestFiles(w, forScenarios)
+	local res = w:findAllTestFiles({''}, forScenarios)
+	for i, t in ipairs(res) do
+		local splitLabel = t.label:split("/")
+		t.name = splitLabel[#splitLabel]:split(".")[1]
+	end
+	return res
+end
+
 function widget:InitializeData()
 	local w = widgetHandler:FindWidget("Test Runner")
 	if w then
-		init_model.tests = w:findAllTestFiles({''}, false)
-		init_model.scenarios = w:findAllTestFiles({''}, true)
+		init_model.tests = findTestFiles(w, false)
+		init_model.scenarios = findTestFiles(w, true)
 		w:registerListener(testListener)
-	widgetHandler:RemoveWidgetCallIn("Update", widget)
+		widgetHandler:RemoveWidgetCallIn("Update", widget)
 	else
 		return false
 	end
-	for i, t in ipairs(init_model.tests) do
-		local splitLabel = t.label:split("/")
-		t.name = splitLabel[#splitLabel]:split(".")[1]
-	end
-	for i, t in ipairs(init_model.scenarios) do
-		local splitLabel = t.label:split("/")
-		t.name = splitLabel[#splitLabel]:split(".")[1]
-	end
-	init_model.testNumber = #init_model.tests
-	init_model.scenarioNumber = #init_model.scenarios
 	return true
 end
 
