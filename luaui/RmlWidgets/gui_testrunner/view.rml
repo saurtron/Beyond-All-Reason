@@ -1,0 +1,63 @@
+<rml>
+<head>
+	<title>Rml Starter</title>
+	<link rel="stylesheet" href="../styles.rcss" type="text/rcss" />
+	<link rel="stylesheet" href="../rml-utils.rcss" type="text/rcss" />
+	<link rel="stylesheet" href="../palette-standard-global.rcss" type="text/rcss" />
+	<link rel="stylesheet" href="../palette-red.rcss" type="text/rcss" />
+	<link rel="stylesheet" href="../tabset.rcss" type="text/rcss" />
+	<link rel="stylesheet" href="style.rcss" type="text/rcss" />
+</head>
+<body>
+	<div id="rml-starter-widget" class="relative" data-model="testrunner_model">
+		<div id="main-content" class="bg-primary-50">
+			<handle move_target="#document">
+				<h1 class="text-primary">Test runner frontend</h1>
+			</handle>
+			<tabset>
+				<tab onclick="widget:ActivateScenarios()">Scenarios</tab>
+				<panel>
+					<div class="scrollarea">
+						<div class="testrunner-items">
+							<div data-for="t, i: scenarios" class="testrunner-item flex flex-row gap-1 h-2" onclick="widget:TestClicked(element)">
+								<span>{{t.name}}</span>
+								<span class="hidden">{{t.label}}</span>
+								<span class="hidden">{{t.filename}}</span>
+							</div>
+						</div>
+					</div>
+				</panel>
+				<tab onclick="widget:ActivateTests()">Tests</tab>
+				<panel class="itemlist">
+					<div class="scrollarea">
+						<div class="testrunner-items">
+							<div data-for="t, i: tests" class="testrunner-item gap-1 h-2" onclick="widget:TestClicked(element)">
+								<span>{{t.name}}</span>
+								<span class="hidden">{{t.label}}</span>
+								<span class="hidden">{{t.filename}}</span>
+							</div>
+						</div>
+					</div>
+				</panel>
+				<tab>Settings</tab>
+				<panel>
+					<div class="actions flex flex-col gap-2 h-10 m-1">
+						<input type="checkbox" class="testrunner-items" data-checked="autolevel" onclick="widget:AutolevelClicked(element)">autolevel: {{autolevelText}}</input>
+					</div>
+				</panel>
+				<tab>Logs</tab>
+				<panel>
+					<p>Logs</p>
+					<div id="log-area" class="logarea"></div>
+				</panel>
+			</tabset>
+			<div class="bbb m-3">{{running}}</div>
+			<div class="bbb m-4">
+				<div class="bbb actions">
+					<button class="button-primary text-center p-2" onclick="widget:Reload()">reload widget</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</rml>
