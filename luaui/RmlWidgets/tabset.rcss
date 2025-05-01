@@ -18,9 +18,9 @@ tabset tabs
 /* Force each tab to only take up 50 pixels across the tabs element. */
 tabset tab
 {
-	padding-left: 10dp;
 	display: inline-block;
 	width: 80dp;
+	text-align: center;
 }
 tabset tab:hover
 {
