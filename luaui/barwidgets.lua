@@ -14,6 +14,7 @@ VFS.Include(LUAUI_DIRNAME .. "Headers/keysym.h.lua", nil, VFS.ZIP)
 VFS.Include(LUAUI_DIRNAME .. "system.lua",           nil, VFS.ZIP)
 VFS.Include(LUAUI_DIRNAME .. "callins.lua",          nil, VFS.ZIP)
 VFS.Include(LUAUI_DIRNAME .. "savetable.lua",        nil, VFS.ZIP)
+local RmlWidget = VFS.Include(LUAUI_DIRNAME .. "rml_widgethandler.lua",        nil, VFS.ZIP)
 
 local gl = gl
 
@@ -920,6 +921,37 @@ function widgetHandler:InsertWidgetRaw(widget)
 		Spring.Echo('Missing capabilities:  ' .. name .. '. Disabling.')
 		return
 	end
+	RmlWidget.WrapWidget(self, widget)
+	--[[if widget.GetInfo and widget:GetInfo().rmlcontext then
+		if not RmlUi then
+			return
+		end
+		widget.rmlContext = RmlUi.GetContext(widget:GetInfo().rmlcontext)
+		local name = widget.whInfo.name
+		local filename = self.knownWidgets[name].filename
+		function widget:InitializeRml(model_name, model, rmlmain)
+		    local dm_handle = widget.rmlContext:OpenDataModel(model_name, model)
+		    if not dm_handle then
+			Spring.Echo("RmlUi: Failed to open data model ", model_name)
+			return false
+		    end
+
+		    local document = widget.rmlContext:LoadDocument(rmlmain, widget)
+		    if not document then
+			Spring.Echo("Failed to load document")
+			return false
+		    end
+
+		    -- uncomment the line below to enable debugger
+		    -- RmlUi.SetDebugContext('shared')
+
+		    document:ReloadStyleSheet()
+		    document:Show()
+		    widget.dm_handle = dm_handle
+		    widget.document = document
+		    return true
+		end
+	end]]--
 
 	SafeWrapWidget(widget)
 
