@@ -11,29 +11,28 @@ function widget:GetInfo()
 	}
 end
 
-local spSendCommands = Spring.SendCommands
-local init_model = {
+local model = {
 	running = 'select one',
 	autolevel = true,
 	autolevelText = "off",
 	fullLogs = "logs go here",
 }
 
+local main_model_name = "testrunner_model"
+local rmlmain = "luaui/rmlwidgets/gui_testrunner/view.rml"
+
 local logArea
 local fullLogs = ""
 
 local isScenario = true
-
-local main_model_name = "testrunner_model"
-local rmlmain = "luaui/rmlwidgets/gui_testrunner/view.rml"
-
-local dbgListener = function(data)
-end
+local testFinished = false
 
 local testListener = {}
-local testFinished = false
+
+local spSendCommands = Spring.SendCommands
+
+
 function testListener:TestResults(data)
-	Spring.Echo("RESULTS", data)
 	testFinished = true
 	local item = data[1]
 	local ms = item.milliseconds
@@ -44,15 +43,12 @@ function testListener:TestLog(level, text)
 	if level < 30 then
 		return
 	end
-	--Spring.Echo("LOG", level, text)
 	fullLogs = fullLogs .. "<br/>" .. tostring(text)
 	logArea.inner_rml = fullLogs
 end
 
 function testListener:FinishTests(duration)
-	Spring.Echo("FINISH TESTS", testFinished)
 	if not testFinished then
-		Spring.Echo("FINISH TESTS FB", testFinished)
 		testFinished = true
 		widget:Feedback("Finished with no feedback")
 		dm_handle.running = "Finished with no feedback"
@@ -71,8 +67,8 @@ end
 function widget:InitializeData()
 	local w = widgetHandler:FindWidget("Test Runner")
 	if w then
-		init_model.tests = findTestFiles(w, false)
-		init_model.scenarios = findTestFiles(w, true)
+		model.tests = findTestFiles(w, false)
+		model.scenarios = findTestFiles(w, true)
 		w:registerListener(testListener)
 		widgetHandler:RemoveWidgetCallIn("Update", widget)
 	else
@@ -82,30 +78,22 @@ function widget:InitializeData()
 end
 
 function widget:Initialize()
-	isScenario = not isScenario
 	widget:InitializeAll()
-end
-
-function widget:InitializeAll()
-	local res = widget:InitializeData()
-	if res and widget:InitializeRml(main_model_name, init_model, rmlmain) then
-		logArea = document:GetElementById("log-area")
-		RmlUi.SetDebugContext('shared')
-	end
-end
-
-function widget:ActivateScenarios()
-	isScenario = true
-end
-function widget:ActivateTests()
-	isScenario = false
 end
 
 function widget:Update()
 	widget:InitializeAll()
 end
 
-function widget:TestClicked(element, b)
+function widget:InitializeAll()
+	local res = widget:InitializeData()
+	if res and widget:InitializeRml(main_model_name, model, rmlmain) then
+		logArea = document:GetElementById("log-area")
+		RmlUi.SetDebugContext('shared')
+	end
+end
+
+function widget:TestClicked(element)
 	testFinished = false
 	local name = element.child_nodes[1].inner_rml
 	local label = element.child_nodes[2].inner_rml
@@ -116,6 +104,16 @@ function widget:TestClicked(element, b)
 	fullLogs = ""
 	dm_handle.running = text .. "..."
 	spSendCommands(command .. " " .. text)
+end
+
+function widget:RunTest(element)
+	isScenario = false
+	widget:TestClicked(element, false)
+end
+
+function widget:RunScenario(element)
+	isScenario = true
+	widget:TestClicked(element, true)
 end
 
 function widget:AutolevelClicked(element, b)

@@ -15,11 +15,11 @@
 				<h1 class="text-primary">Test runner frontend</h1>
 			</handle>
 			<tabset>
-				<tab onclick="widget:ActivateScenarios()">Scenarios</tab>
+				<tab>Scenarios</tab>
 				<panel>
 					<div class="scrollarea">
 						<div class="testrunner-items">
-							<div data-for="t, i: scenarios" class="testrunner-item flex flex-row gap-1 h-2" onclick="widget:TestClicked(element)">
+							<div data-for="t, i: scenarios" class="testrunner-item flex flex-row gap-1 h-2" onclick="widget:RunScenario(element)">
 								<span>{{t.name}}</span>
 								<span class="hidden">{{t.label}}</span>
 								<span class="hidden">{{t.filename}}</span>
@@ -27,11 +27,11 @@
 						</div>
 					</div>
 				</panel>
-				<tab onclick="widget:ActivateTests()">Tests</tab>
+				<tab>Tests</tab>
 				<panel class="itemlist">
 					<div class="scrollarea">
 						<div class="testrunner-items">
-							<div data-for="t, i: tests" class="testrunner-item gap-1 h-2" onclick="widget:TestClicked(element)">
+							<div data-for="t, i: tests" class="testrunner-item gap-1 h-2" onclick="widget:RunTest(element)">
 								<span>{{t.name}}</span>
 								<span class="hidden">{{t.label}}</span>
 								<span class="hidden">{{t.filename}}</span>
