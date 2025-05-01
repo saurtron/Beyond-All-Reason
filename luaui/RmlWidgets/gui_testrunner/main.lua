@@ -14,6 +14,12 @@ end
 local model = {
 	running = 'select one',
 	autolevel = false,
+	godmode = false,
+	debugquadfield = false,
+	debugcolvol = false,
+	debugvis = false,
+	debugpath = false,
+	nocost = false,
 	globallos = false,
 	fullLogs = "logs go here",
 }
@@ -120,7 +126,7 @@ end
 
 function widget:CommandChange(cmd, value)
 	--local state = element.attributes.checked and 'on' or 'off'
-	local state = value and 'on' or 'off'
+	local state = value and '1' or '0'
 	spSendCommands(cmd .. " " .. state)
 	return false
 end
