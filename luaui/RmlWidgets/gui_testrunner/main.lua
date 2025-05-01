@@ -13,8 +13,8 @@ end
 
 local model = {
 	running = 'select one',
-	autolevel = true,
-	autolevelText = "off",
+	autolevel = false,
+	globallos = false,
 	fullLogs = "logs go here",
 }
 
@@ -69,6 +69,8 @@ function widget:InitializeData()
 	if w then
 		model.tests = findTestFiles(w, false)
 		model.scenarios = findTestFiles(w, true)
+		model.onCommandToggle = function(evt, cmd, value) widget:CommandChange(cmd, value) end
+		model.onGloballos = function(evt, value) widget:GloballosChange(value) end
 		w:registerListener(testListener)
 		widgetHandler:RemoveWidgetCallIn("Update", widget)
 	else
@@ -116,10 +118,16 @@ function widget:RunScenario(element)
 	widget:TestClicked(element, true)
 end
 
-function widget:AutolevelClicked(element, b)
-	local state = element.attributes.checked and 'on' or 'off'
-	dm_handle.autolevelText = state
-	spSendCommands("testsautoheightmap " .. state)
+function widget:CommandChange(cmd, value)
+	--local state = element.attributes.checked and 'on' or 'off'
+	local state = value and 'on' or 'off'
+	spSendCommands(cmd .. " " .. state)
+	return false
+end
+
+function widget:GloballosChange(value)
+	-- just a toggle :(
+	spSendCommands("globallos 0") -- 0 is team
 	return false
 end
 
