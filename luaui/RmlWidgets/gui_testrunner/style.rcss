@@ -1,0 +1,65 @@
+#rml-starter-widget {
+    pointer-events: auto;
+    width: 400dp;
+    right: 0;
+    top: 200dp;
+    position: absolute;
+    margin-right: 10dp;
+}
+#main-content {
+    padding: 5dp;
+    border-radius: 8dp;
+    z-index: 1;
+	display: block;
+}
+.scrollarea {
+    overflow-y: scroll;
+    pointer-events: none;
+    border-radius: 8dp;
+}
+.testrunner-items {
+    margin-left: 5dp;
+    border-radius: 8dp;
+    pointer-events: auto;
+    background-color: rgba(0, 0, 0, 255);
+    color: rgba(244,244,244,255);
+    display: block;
+    width: 375dp;
+    height: 350dp;
+}
+.testrunner-item {
+    border-radius: 8dp;
+    pointer-events: auto;
+    padding: 10dp;
+    background-color: rgba(0, 0, 0, 255);
+    color: rgba(244,244,244,255);
+    display: block;
+}
+.testrunner-item:hover {
+    background-color: rgba(125, 125, 125, 255);
+}
+.testrunner-item .hidden {
+    display: none;
+}
+
+.logarea {
+    padding-left: 10dp;
+    background-color: rgba(0, 0, 0, 255);
+    color: rgba(244,244,244,255);
+    display: block;
+    width: 99%;
+    height: 370dp;
+}
+
+.button-primary
+{
+	background-color: #f03e3e;
+}
+.button-primary:hover
+{
+	background-color: #f43f5e;
+}
+.button-primary:active
+{
+	background-color: #3ff45e;
+}
