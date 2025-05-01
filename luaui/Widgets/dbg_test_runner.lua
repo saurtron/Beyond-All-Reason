@@ -50,10 +50,15 @@ local config = {
 }
 
 local testReporter = nil
+local globalListener
+
 
 -- utils
 -- =====
 local function log(level, str, ...)
+	if globalListener and globalListener.TestLog then
+		globalListener:TestLog(level, str, ...)
+	end
 	if level < LOG_LEVEL then
 		return
 	end
@@ -175,6 +180,20 @@ local function findAllTestFiles(patterns)
 		end
 	end
 	return result
+end
+
+function widget:findAllTestFiles(patterns, scenario)
+	if not scenario then
+		scenario = false
+	end
+	testModeScenario = scenario
+	local res = findAllTestFiles(patterns)
+	testModeScenario = false
+	return res
+end
+
+function widget:registerListener(listener)
+	globalListener = listener
 end
 
 local function displayTestResults(results)
@@ -557,6 +576,10 @@ local function startTests(patterns)
 
 	if testRunState.files == nil or #(testRunState.files) == 0 then
 		log(LOG.INFO, "no test files found")
+
+		if globalListener and globalListener.FinishTests then
+			globalListener:FinishTests()
+		end
 		return
 	end
 
@@ -582,6 +605,9 @@ local function finishTest(result)
 	result.milliseconds = getTestTime()
 
 	log(LOG.NOTICE, TestResults.formatTestResult(result, config.noColorOutput))
+	if globalListener and globalListener.TestResult then
+		globalListener:TestResult(result)
+	end
 
 	logTestResult(result)
 
@@ -600,6 +626,14 @@ local function finishTest(result)
 		testRunState.runningTests = false
 		if config.showAllResults then
 			displayTestResults(testRunState.results)
+		end
+
+		if globalListener and globalListener.TestResults then
+			globalListener:TestResults(testRunState.results)
+		end
+
+		if globalListener and globalListener.FinishTests then
+			globalListener:FinishTests(duration)
 		end
 
 		logEndTests(getRunTestsTime())
