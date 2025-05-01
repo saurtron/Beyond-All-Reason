@@ -42,7 +42,8 @@
 				<tab>Settings</tab>
 				<panel>
 					<div class="actions flex flex-col gap-2 h-10 m-1">
-						<input type="checkbox" class="testrunner-items" data-checked="autolevel" onclick="widget:AutolevelClicked(element)">autolevel: {{autolevelText}}</input>
+						<input type="checkbox" class="testrunner-items" data-checked="autolevel" data-event-change="onCommandToggle('testsautoheightmap', autolevel)">autolevel: {{autolevel ? 'on' : 'off' }}</input>
+						<input type="checkbox" class="testrunner-items" data-checked="globallos" data-event-change="onGloballos(globallos)">globallos: {{globallos ? 'on' : 'off' }}</input>
 					</div>
 				</panel>
 				<tab>Logs</tab>
