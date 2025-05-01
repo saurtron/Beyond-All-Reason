@@ -1,22 +1,22 @@
 local widget = widget ---@type Widget
 
 function widget:GetInfo()
-    return {
-        name = "Testrunner Gui",
-        desc = "Gui for the testrunner",
-        layer = -500,
-        enabled = true,
-	handler = true,
-	rmlwidget = true,
-    }
+	return {
+		name = "Testrunner Gui",
+		desc = "Gui for the testrunner",
+		layer = -500,
+		enabled = true,
+		handler = true,
+		rmlwidget = true,
+	}
 end
 
 local spSendCommands = Spring.SendCommands
 local init_model = {
-    running = 'select one',
-    autolevel = true,
-    autolevelText = "off",
-    fullLogs = "logs go here",
+	running = 'select one',
+	autolevel = true,
+	autolevelText = "off",
+	fullLogs = "logs go here",
 }
 
 local logArea
@@ -60,40 +60,39 @@ function testListener:FinishTests(duration)
 end
 
 function widget:InitializeData()
-    local w = widgetHandler:FindWidget("Test Runner")
-    if w then
-    	init_model.tests = w:findAllTestFiles({''}, false)
-    	init_model.scenarios = w:findAllTestFiles({''}, true)
-    	w:registerListener(testListener)
+	local w = widgetHandler:FindWidget("Test Runner")
+	if w then
+		init_model.tests = w:findAllTestFiles({''}, false)
+		init_model.scenarios = w:findAllTestFiles({''}, true)
+		w:registerListener(testListener)
 	widgetHandler:RemoveWidgetCallIn("Update", widget)
-    else
-	return false
-    end
-    for i, t in ipairs(init_model.tests) do
-	    local splitLabel = t.label:split("/")
-	    t.name = splitLabel[#splitLabel]:split(".")[1]
-    end
-    for i, t in ipairs(init_model.scenarios) do
-	    local splitLabel = t.label:split("/")
-	    t.name = splitLabel[#splitLabel]:split(".")[1]
-    end
-    init_model.testNumber = #init_model.tests
-    init_model.scenarioNumber = #init_model.scenarios
-    return true
+	else
+		return false
+	end
+	for i, t in ipairs(init_model.tests) do
+		local splitLabel = t.label:split("/")
+		t.name = splitLabel[#splitLabel]:split(".")[1]
+	end
+	for i, t in ipairs(init_model.scenarios) do
+		local splitLabel = t.label:split("/")
+		t.name = splitLabel[#splitLabel]:split(".")[1]
+	end
+	init_model.testNumber = #init_model.tests
+	init_model.scenarioNumber = #init_model.scenarios
+	return true
 end
 
 function widget:Initialize()
-    isScenario = not isScenario
-    widget:InitializeAll()
+	isScenario = not isScenario
+	widget:InitializeAll()
 end
 
 function widget:InitializeAll()
-    local res = widget:InitializeData()
-    if res then
-	    widget:InitializeRml(main_model_name, init_model, rmlmain)
-	logArea = document:GetElementById("log-area")
-	RmlUi.SetDebugContext('shared')
-    end
+	local res = widget:InitializeData()
+	if res and widget:InitializeRml(main_model_name, init_model, rmlmain) then
+		logArea = document:GetElementById("log-area")
+		RmlUi.SetDebugContext('shared')
+	end
 end
 
 function widget:ActivateScenarios()
@@ -132,16 +131,16 @@ function widget:Feedback(text)
 end
 
 function widget:Shutdown()
-    widget.rmlContext:RemoveDataModel(main_model_name)
-    if document then
-        document:Close()
-    end
+	widget.rmlContext:RemoveDataModel(main_model_name)
+	if document then
+		document:Close()
+	end
 end
 
 function widget:Reload(event)
-    Spring.Echo("Reloading")
-    Spring.Echo(event)
-    widget:Shutdown()
-    widget:Initialize()
+	Spring.Echo("Reloading")
+	Spring.Echo(event)
+	widget:Shutdown()
+	widget:Initialize()
 end
 
