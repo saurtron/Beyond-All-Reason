@@ -11,7 +11,7 @@
 <body>
 	<div id="rml-starter-widget" class="relative" data-model="testrunner_model">
 		<div id="main-content" class="bg-primary-50">
-			<handle move_target="#document">
+			<handle move_target="#document" class="move-handle">
 				<h1 class="text-primary">Test runner frontend</h1>
 			</handle>
 			<tabset>
@@ -48,7 +48,7 @@
 				<tab>Logs</tab>
 				<panel>
 					<p>Logs</p>
-					<div id="log-area" class="logarea"></div>
+					<textarea id="log-area" class="logarea"></textarea>
 				</panel>
 			</tabset>
 			<div class="bbb m-3">{{running}}</div>
