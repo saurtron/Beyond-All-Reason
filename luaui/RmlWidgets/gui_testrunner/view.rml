@@ -45,6 +45,19 @@
 						<input type="checkbox" class="testrunner-items" data-checked="autolevel" data-event-change="onCommandToggle('testsautoheightmap', autolevel)">autolevel: {{autolevel ? 'on' : 'off' }}</input>
 						<input type="checkbox" class="testrunner-items" data-checked="globallos" data-event-change="onGloballos(globallos)">globallos: {{globallos ? 'on' : 'off' }}</input>
 					</div>
+					<div class="actions flex flex-col gap-2 h-10 m-1">
+						<input type="checkbox" class="testrunner-items" data-checked="godmode" data-event-change="onCommandToggle('godmode', godmode)">godmode: {{godmode ? 'on' : 'off' }}</input>
+						<input type="checkbox" class="testrunner-items" data-checked="nocost" data-event-change="onCommandToggle('nocost', nocost)">nocost: {{nocost ? 'on' : 'off' }}</input>
+					</div>
+					<div class="actions flex flex-col gap-2 h-10 m-1">
+						<input type="checkbox" class="testrunner-items" data-checked="debugquadfield" data-event-change="onCommandToggle('DebugQuadField', debugquadfield)">debugquadfield: {{debugquadfield ? 'on' : 'off' }}</input>
+						<input type="checkbox" class="testrunner-items" data-checked="debugcolvol" data-event-change="onCommandToggle('DebugColVol', debugcolvol)">debugcolvol: {{debugcolvol ? 'on' : 'off' }}</input>
+					</div>
+					<div class="actions flex flex-col gap-2 h-10 m-1">
+						<input type="checkbox" class="testrunner-items" data-checked="debugvis" data-event-change="onCommandToggle('DebugVisibility', debugvis)">debugvis: {{debugvis ? 'on' : 'off' }}</input>
+						<input type="checkbox" class="testrunner-items" data-checked="debugpath" data-event-change="onCommandToggle('DebugPath', debugpath)">debugpath: {{debugpath ? 'on' : 'off' }}</input>
+					</div>
+
 				</panel>
 				<tab>Logs</tab>
 				<panel>
