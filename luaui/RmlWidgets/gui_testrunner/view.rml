@@ -26,6 +26,8 @@
 							</div>
 						</div>
 					</div>
+					<div id="scenario-controls">
+					</div>
 				</panel>
 				<tab>Tests</tab>
 				<panel class="itemlist">
@@ -69,6 +71,7 @@
 			<div class="bbb m-4">
 				<div class="bbb actions">
 					<button class="button-primary text-center p-2" onclick="widget:Reload()">reload widget</button>
+					<button class="button-primary text-center p-2" onclick="widget:RunCurrent()">run</button>
 				</div>
 			</div>
 		</div>

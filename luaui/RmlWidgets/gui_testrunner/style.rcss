@@ -57,15 +57,33 @@
     height: 370dp;
 }
 
+@keyframes make-red {
+	from   { background-color: #f03e3e; }
+	to   { background-color: #f07e7e; }
+}
+
 .button-primary
 {
 	background-color: #f03e3e;
+	/*animation: 0.1s alternate make-red quadratic-in;*/
+	/*transition: background-color 1000ms linear;*/
+	/*transition: all 0.5 ease-in-out;*/
 }
 .button-primary:hover
 {
-	background-color: #f43f5e;
+	background-color: #f07e7e;
+	/*animation: 0.5s make-red quadratic-in;*/
 }
 .button-primary:active
 {
 	background-color: #3ff45e;
+}
+
+.scenario-controls {
+	display: block;
+	height: 200dp;
+}
+.scenario-controls input {
+	display: block;
+	height: 200dp;
 }

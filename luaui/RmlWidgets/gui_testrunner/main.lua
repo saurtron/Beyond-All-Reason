@@ -32,6 +32,8 @@ local fullLogs = ""
 
 local isScenario = true
 local testFinished = false
+local currentScenario = nil
+local scenarioArguments = {}
 
 local testListener = {}
 
@@ -97,7 +99,60 @@ function widget:InitializeAll()
 	local res = widget:InitializeData()
 	if res and widget:InitializeRml(main_model_name, model, rmlmain) then
 		logArea = document:GetElementById("log-area")
-		RmlUi.SetDebugContext('shared')
+		--RmlUi.SetDebugContext('shared')
+	else
+		Spring.Echo("Could not initialize")
+	end
+end
+
+local function GetScenarioArguments(filename)
+	local w = widgetHandler:FindWidget("Test Runner")
+	local res, env = w:loadTestFromFile(filename)
+
+	if err then
+		widget:Feedback(tostring(err))
+		return {}
+	else
+		return env.scenario_arguments()
+	end
+
+end
+
+local function createElement(idx, name, value)
+	local elmt_type
+	if type(value) == 'string' then
+		elmt_type = 'text'
+	else
+		elmt_type = 'number'
+	end
+	local container = document:GetElementById("scenario-controls")
+	local input_element = document:CreateElement('input')
+	input_element = container:AppendChild(input_element)
+	input_element:SetAttribute('type', elmt_type)
+	input_element:SetAttribute('name', name)
+	--input_element:SetAttribute('class', 'testrunner-items')
+	input_element:SetAttribute('value', tostring(value))
+	scenarioArguments[idx] = {name, input_element}
+end
+
+local function clearElements()
+	for idx, argData in pairs(scenarioArguments) do
+		container:RemoveChild(argData[2])
+	end
+	scenarioArguments = {}
+end
+
+local function runTest(label, args)
+	local text = label:split(".")[1]
+	local command = isScenario and 'runscenario' or 'runtests'
+	logArea.inner_rml = fullLogs
+	fullLogs = ""
+	dm_handle.running = text .. "..."
+	if args then
+		Spring.Echo("Run", command, text, args)
+		spSendCommands(command .. " " .. text .. args)
+	else
+		spSendCommands(command .. " " .. text)
 	end
 end
 
@@ -106,17 +161,42 @@ function widget:TestClicked(element)
 	local name = element.child_nodes[1].inner_rml
 	local label = element.child_nodes[2].inner_rml
 	local filename = element.child_nodes[3].inner_rml
-	local text = label:split(".")[1]
-	local command = isScenario and 'runscenario' or 'runtests'
-	logArea.inner_rml = fullLogs
-	fullLogs = ""
-	dm_handle.running = text .. "..."
-	spSendCommands(command .. " " .. text)
+
+	if isScenario then
+		clearElements()
+		args = GetScenarioArguments(filename)
+		Spring.Echo(args)
+		for i,k in ipairs(args) do
+			for name, value in pairs(k) do
+				createElement(i, name, value)
+			end
+		end
+		Spring.Echo("Set scenario")
+		currentScenario = element
+		return
+	end
+	currentScenario = false
+	runTest(label)
 end
 
 function widget:RunTest(element)
 	isScenario = false
 	widget:TestClicked(element, false)
+end
+
+function widget:RunCurrent()
+	if not currentScenario then
+		return
+	end
+	local element = currentScenario
+	local label = element.child_nodes[2].inner_rml
+	local args = ""
+	for idx, argData in pairs(scenarioArguments) do
+		local name = argData[1]
+		local elmt = argData[2]
+		args = args .. " " .. tostring(elmt.attributes.value)
+	end
+	runTest(label, args)
 end
 
 function widget:RunScenario(element)
@@ -151,7 +231,7 @@ end
 function widget:Reload(event)
 	Spring.Echo("Reloading")
 	Spring.Echo(event)
-	widget:Shutdown()
-	widget:Initialize()
+	widgetHandler:DisableWidget("Testrunner Gui")
+	widgetHandler:EnableWidget("Testrunner Gui")
 end
 
