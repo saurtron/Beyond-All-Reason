@@ -921,7 +921,11 @@ function widgetHandler:InsertWidgetRaw(widget)
 		Spring.Echo('Missing capabilities:  ' .. name .. '. Disabling.')
 		return
 	end
-	RmlWidget.WrapWidget(self, widget)
+	if not RmlWidget.WrapWidget(self, widget) then
+		local name = widget.whInfo.name
+		Spring.Echo('Missing rml:  ' .. name .. '. Disabling.')
+		return
+	end
 	--[[if widget.GetInfo and widget:GetInfo().rmlcontext then
 		if not RmlUi then
 			return

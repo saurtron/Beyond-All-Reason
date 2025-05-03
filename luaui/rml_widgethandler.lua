@@ -1,14 +1,14 @@
 
 local function WrapWidget(wh, widget)
-	if not RmlUi then
-		return
-	end
 	if not widget.GetInfo then
-		return
+		return true
 	end
 	local whInfo = widget.GetInfo()
 	if not whInfo.rmlwidget then
-		return
+		return true
+	end
+	if not RmlUi then
+		return false
 	end
 	if whInfo.rmlwidget and not whInfo.rmlcontext then
 		whInfo.rmlcontext = 'shared'
@@ -39,6 +39,7 @@ local function WrapWidget(wh, widget)
 	    widget.document = document
 	    return true
 	end
+	return true
 end
 
 return {WrapWidget = WrapWidget}
