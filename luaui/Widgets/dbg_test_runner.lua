@@ -1109,6 +1109,11 @@ local function loadTestFromFile(filename)
 	return true, testEnvironment
 end
 
+function widget:loadTestFromFile(filename)
+	return loadTestFromFile(filename)
+end
+
+
 local function handleReturn()
 	if returnState.success == nil and returnState.waitingForReturnID == nil then
 		-- no return to handle, so just continue
