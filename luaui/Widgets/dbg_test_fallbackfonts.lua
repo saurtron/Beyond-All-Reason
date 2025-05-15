@@ -14,8 +14,8 @@ end
 local fenabled = false
 
 -- to test color use the second fontfile here
-local fontfile = 'fonts2/NotoEmoji-VariableFont_wght.ttf'
---local fontfile = 'fonts2/NotoColorEmoji.ttf'
+--local fontfile = 'fonts2/NotoEmoji-VariableFont_wght.ttf'
+local fontfile = 'fonts2/NotoColorEmoji.ttf'
 
 function widget:Initialize()
 	if not gl.ClearFallbackFonts then
@@ -26,7 +26,7 @@ function widget:Initialize()
 end
 
 function widget:MousePress(x, y, button)
-	if button == 1 then
+	if button == 4 then
 		if gl.ClearFallbackFonts then
 			if not fenabled then
 				fenabled = true
