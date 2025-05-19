@@ -21,7 +21,7 @@ local iconQuadDlist
 
 -- On/Off switches
 local use_colors = false -- set to false to use player color instead of custom ping color (controlled from options ui)
-local getMiniMapFlipped = VFS.Include("luaui/Widgets/Include/minimap_utils.lua").getMiniMapFlipped
+local getMiniMapFlipped = VFS.Include("luaui/Include/minimap_utils.lua").getMiniMapFlipped
 local defaultIcon = "anims/icexuick_75/cursorattack_2.png"
 local maxIconDuration = 300
 local minIconHeight = 4160
