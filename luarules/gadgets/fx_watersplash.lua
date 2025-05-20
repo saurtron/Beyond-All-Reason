@@ -127,15 +127,25 @@ function gadget:Explosion(weaponID, px, py, pz, ownerID)
 	end
 end
 
-function gadget:Initialize()
-	local minHeight, maxHeight = Spring.GetGroundExtremes()
-	if minHeight < 100 then
+local function checkEnable(maxMinHeight)
+	local minHeight, _ = Spring.GetGroundExtremes()
+	if minHeight < maxMinHeight then
 		for wDefID, wDef in pairs(WeaponDefs) do
 			if wDef.damageAreaOfEffect ~= nil and wDef.damageAreaOfEffect > 8 and (not weaponNoSplash[wDefID]) then
 				Script.SetWatchExplosion(wDef.id, true)
 			end
 		end
-	else
+	end
+end
+
+function gadget:UnsyncedHeightMapUpdate()
+	if checkEnable(10) then
+		gadget:RemoveCallIn("UnsyncedHeightMapUpdate")
+	end
+end
+
+function gadget:Initialize()
+	if not checkEnable(100) then
 		gadgetHandler:RemoveGadget(self)
 	end
 end
