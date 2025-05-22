@@ -24,7 +24,7 @@ local model = {
 	fullLogs = "logs go here",
 }
 
-local main_model_name = "testrunner_model"
+local model_name = "testrunner_model"
 local rmlmain = "luaui/rmlwidgets/gui_testrunner/view.rml"
 
 local logArea
@@ -97,7 +97,7 @@ end
 
 function widget:InitializeAll()
 	local res = widget:InitializeData()
-	if res and widget:InitializeRml(main_model_name, model, rmlmain) then
+	if res and widget:InitializeRml(model, model_name, rmlmain) then
 		logArea = document:GetElementById("log-area")
 		--RmlUi.SetDebugContext('shared')
 	else
