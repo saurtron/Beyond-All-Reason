@@ -926,36 +926,6 @@ function widgetHandler:InsertWidgetRaw(widget)
 		Spring.Echo('Missing rml:  ' .. name .. '. Disabling.')
 		return
 	end
-	--[[if widget.GetInfo and widget:GetInfo().rmlcontext then
-		if not RmlUi then
-			return
-		end
-		widget.rmlContext = RmlUi.GetContext(widget:GetInfo().rmlcontext)
-		local name = widget.whInfo.name
-		local filename = self.knownWidgets[name].filename
-		function widget:InitializeRml(model_name, model, rmlmain)
-		    local dm_handle = widget.rmlContext:OpenDataModel(model_name, model)
-		    if not dm_handle then
-			Spring.Echo("RmlUi: Failed to open data model ", model_name)
-			return false
-		    end
-
-		    local document = widget.rmlContext:LoadDocument(rmlmain, widget)
-		    if not document then
-			Spring.Echo("Failed to load document")
-			return false
-		    end
-
-		    -- uncomment the line below to enable debugger
-		    -- RmlUi.SetDebugContext('shared')
-
-		    document:ReloadStyleSheet()
-		    document:Show()
-		    widget.dm_handle = dm_handle
-		    widget.document = document
-		    return true
-		end
-	end]]--
 
 	SafeWrapWidget(widget)
 
