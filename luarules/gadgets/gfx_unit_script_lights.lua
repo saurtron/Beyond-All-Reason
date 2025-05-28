@@ -17,7 +17,7 @@ if gadgetHandler:IsSyncedCode() then
 	local SendToUnsynced = SendToUnsynced
 
 	local function UnitScriptLight(unitID, unitDefID, _, lightIndex, param)
-		--Spring.Echo("Synced Gadget UnitScriptLight", unitID, unitDefID, lightIndex, param)
+		Spring.Echo("Synced Gadget UnitScriptLight", unitID, unitDefID, lightIndex, param)
 		SendToUnsynced("cob_UnitScriptLight", unitID, unitDefID, lightIndex, param)
 	end
 	
@@ -64,7 +64,11 @@ else	-- UNSYNCED
 	end
 
 	local scriptUnitScriptDistortion = Script.LuaUI.UnitScriptDistortion
-	
+
+	local function UnitScriptLight2(unitID, unitDefID, _, lightIndex, param)
+		Spring.Echo("Unsynced Gadget UnitScriptLight", unitID, unitDefID, lightIndex, param)
+	end
+
 	local function UnitScriptDistortion(_, unitID, unitDefID, lightIndex, param)
 		if not fullview and not spIsUnitInLos(unitID, myAllyTeamID) then
 			return
@@ -76,6 +80,7 @@ else	-- UNSYNCED
 	end
 	
 	function gadget:Initialize()
+		gadgetHandler:RegisterGlobal("UnitScriptLight", UnitScriptLight2)
 		gadgetHandler:AddSyncAction("cob_UnitScriptLight", UnitScriptLight)
 		gadgetHandler:AddSyncAction("cob_UnitScriptDistortion", UnitScriptDistortion)
 	end

@@ -78,6 +78,9 @@ CallInsList = {
 
 	"FeatureCreated",
 	"FeatureDestroyed",
+	"Explosion",
+
+	"UnitScriptLight",
 
 	"DrawGenesis",
 	"DrawWorld",

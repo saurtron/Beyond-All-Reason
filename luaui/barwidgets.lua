@@ -166,6 +166,7 @@ local flexCallIns = {
 	'FeatureCreated',
 	'FeatureDestroyed',
 	'UnsyncedHeightMapUpdate',
+	'UnitScriptLight',
 }
 local flexCallInMap = {}
 for _, ci in ipairs(flexCallIns) do
@@ -213,6 +214,7 @@ local callInLists = {
 	'VisibleExplosion',
 	'Barrelfire',
 	'CrashingAircraft',
+	'Explosion',
 	'ClearMapMarks',
 
 	-- these use mouseOwner instead of lists
@@ -2651,6 +2653,19 @@ function widgetHandler:FeatureDestroyed(featureID, allyTeam)
 	return
 end
 
+function widgetHandler:Explosion(weaponID, px, py, pz, ownerID, projectileID)
+	-- "noGfx = noGfx or ..." short-circuits, so equivalent to this
+	Spring.Echo("widget Explosion")
+	for _, g in r_ipairs(self.ExplosionList) do
+		if g:Explosion(weaponID, px, py, pz, ownerID, projectileID) then
+			return true
+		end
+	end
+
+	return false
+end
+
+
 
 --------------------------------------------------------------------------------
 --
@@ -2674,6 +2689,16 @@ function widgetHandler:UnitSold(unitID, price, old_ownerTeamID, msgFromTeamID)
 	tracy.ZoneEnd()
 	return
 end
+
+function widgetHandler:UnitScriptLight(lights)
+	tracy.ZoneBeginN("W:UnitScriptLight")
+	for _, w in ipairs(self.UnitScriptLightList) do
+		w:UnitScriptLight(lights)
+	end
+	tracy.ZoneEnd()
+	return
+end
+
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

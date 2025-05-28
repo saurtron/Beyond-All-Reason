@@ -830,7 +830,7 @@ lua_UnitScriptLight(lightIndex, count)
 bigfire()
 {
 	shotcount = shotcount + 1;
-	call-script lua_UnitScriptLight(1, shotcount);
+	defer UnitScriptLight(1, shotcount);
 	turn ruparm to x-axis <40> now;
 	turn biggun to x-axis <-40> now;
 	turn ruparm to x-axis <0> speed <250>;
@@ -992,7 +992,7 @@ FireTertiary()
 {
 	//shotcount = shotcount + 1;
 	emit-sfx 1024 + 0 from rbigflash;
-	//call-script lua_UnitScriptLight(1, shotcount);
+	// call-lua UnitScriptLight(1, shotcount);
 	gun_3 = torso;
 	call-script bigfire();
 	return (0);
