@@ -68,6 +68,7 @@ if gadgetHandler:IsSyncedCode() then
     end
 
     function gadget:Explosion(weaponID, px, py, pz, ownerID, projectileID)
+	Spring.Echo("synced explosion")
         SendToUnsynced("explosion_light", px, py, pz, weaponID, ownerID)
     end
 
@@ -108,12 +109,69 @@ else	-- Unsynced
 			end
 		end
     end
+    local cannonWeapons = {}
+
+    function gadget:Explosion()
+	    Spring.Echo("Unsynced gadget explosion")
+    end
+    function gadget:Shutdown()
+        for wdid, wd in pairs(WeaponDefs) do
+            if wd.type == "Flame" then
+                Script.SetWatchExplosion(wdid, true)
+            end
+			if wd.type == "Cannon" then
+				cannonWeapons[wdid] = true
+				Script.SetWatchExplosion(wdid, true)
+				if wd.damages[0] >= 20 then
+					Script.SetWatchProjectile(wdid, true)
+				end
+			end
+			if wd.type == "LaserCannon" then
+				cannonWeapons[wdid] = true
+				Script.SetWatchExplosion(wdid, true)
+				if wd.damages[0] >= 10 then
+					Script.SetWatchProjectile(wdid, true)
+				end
+			end
+			if wd.type == "BeamLaser" then
+				Script.SetWatchExplosion(wdid, true)
+			end
+			if wd.type == "MissileLauncher" then
+				Script.SetWatchExplosion(wdid, true)
+			end
+            if wd.type == "AircraftBomb" then
+                Script.SetWatchExplosion(wdid, true)
+            end
+            if wd.type == "StarburstLauncher" then
+                Script.SetWatchExplosion(wdid, true)
+            end
+            if wd.type == "TorpedoLauncher" then
+                Script.SetWatchExplosion(wdid, true)
+            end
+        end
+
+        for wdid, wd in pairs(WeaponDefs) do
+            if wd.type == "Flame" then
+                Script.SetWatchExplosion(wdid, false)
+            end
+            if wd.type == "Cannon" then
+                Script.SetWatchExplosion(wdid, false)
+				if wd.damages[0] >= 20 then
+					Script.SetWatchProjectile(wdid, false)
+				end
+            end
+        end
+    end
+
 
     function gadget:Initialize()
         gadgetHandler:AddSyncAction("explosion_light", SpawnExplosion)
         gadgetHandler:AddSyncAction("barrelfire_light", SpawnBarrelfire)
     end
 
+    function gadget:Explosion(weaponID, px, py, pz, ownerID, projectileID)
+	Spring.Echo("unsynced explosion")
+    end
     function gadget:Shutdown()
         gadgetHandler.RemoveSyncAction("explosion_light")
         gadgetHandler.RemoveSyncAction("barrelfire_light")
