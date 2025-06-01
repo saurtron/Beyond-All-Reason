@@ -830,7 +830,7 @@ lua_UnitScriptLight(lightIndex, count)
 bigfire()
 {
 	shotcount = shotcount + 1;
-	defer UnitScriptLight(1, shotcount);
+	batch-lua UnitScriptLight(1, shotcount);
 	turn ruparm to x-axis <40> now;
 	turn biggun to x-axis <-40> now;
 	turn ruparm to x-axis <0> speed <250>;
