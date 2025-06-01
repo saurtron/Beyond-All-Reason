@@ -15,6 +15,7 @@ Spring.SetConfigFloat("unitSunMult", 1.0)
 Spring.SetConfigFloat("unitExposureMult", 1.0)
 Spring.SetConfigFloat("modelGamma", 1.0)
 
+Spring.SetConfigInt("AllowColorFonts", 1)
 
 -- BAR requires higher textureatlas size for particles than the default of 2048x2048
 local maxTextureAtlasSize = 8192
