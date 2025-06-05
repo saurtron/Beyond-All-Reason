@@ -96,6 +96,7 @@ local font, font2, font3, chobbyInterface, hovering
 
 local RectRound, UiElement, UiSelectHighlight, UiScroller, elementCorner, elementPadding, elementMargin
 
+local prevLine
 local prevGameID
 local prevOrgLines
 
@@ -2304,7 +2305,10 @@ function widget:AddConsoleLine(lines, priority)
 	if priority and priority == L_DEPRECATED and not isDevSingle then return end
 	lines = lines:match('^%[f=[0-9]+%] (.*)$') or lines
 	for line in lines:gmatch("[^\n]+") do
-		processAddConsoleLine(spGetGameFrame(), line)
+		if line ~= prevLine then
+			prevLine = line
+			processAddConsoleLine(spGetGameFrame(), line)
+		end
 	end
 end
 
