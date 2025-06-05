@@ -82,8 +82,14 @@ if gadgetHandler:IsSyncedCode() then
 		--strings[#strings+1] = ";"
 		--strings[#strings+1] = "\n"
 		--strings[#strings+1] = ""
+		--
+		local broken = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWV  phYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ejAxMjM0NTY3ODk"
+		local ok =     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ejAxMjM0NTY3ODk"
 
 		if Spring.GetModOption("verify_encoding") then
+			if Encoding.DecodeBase64(broken) == Encoding.DecodeBase64(ok) then
+				Spring.Echo("contaminated base64 decodes the same", Encoding.DecodeBase64(broken), Encoding.DecodeBase64(ok))
+			end
 			for i = 1, #strings do
 				if Encoding.DecodeBase64(Spring.GetModOption("encoded" .. i)) ~= strings[i] then
 					Spring.Echo("bad encode", i, strings[i], Spring.GetModOption("encoded" .. i))
