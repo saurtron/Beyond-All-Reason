@@ -18,8 +18,8 @@ local function WrapWidget(wh, widget)
 	local name = whInfo.name
 	local filename = wh.knownWidgets[name].filename
 	--local base, path = Basename(filename)
-  	local _,_,base = string.find(fullpath, "([^\\/:]*)$")
-	local _,_,path = string.find(fullpath, "(.*[\\/:])[^\\/:]*$")
+	local _,_,base = string.find(filename, "([^\\/:]*)$")
+	local _,_,path = string.find(filename, "(.*[\\/:])[^\\/:]*$")
 	function widget:InitializeRml(model, model_name, rmlmain)
 		Spring.Echo("RML", widget.whInfo, filename, base, path)
 		Spring.Echo("Filename", whInfo.filename, whInfo.name)
