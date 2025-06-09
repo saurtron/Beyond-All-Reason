@@ -222,10 +222,7 @@ function widget:Feedback(text)
 end
 
 function widget:Shutdown()
-	widget.rmlContext:RemoveDataModel(main_model_name)
-	if document then
-		document:Close()
-	end
+	widget:ShutdownRml()
 end
 
 function widget:Reload(event)

@@ -20,6 +20,7 @@ local function WrapWidget(wh, widget)
 	--local base, path = Basename(filename)
 	local _,_,base = string.find(filename, "([^\\/:]*)$")
 	local _,_,path = string.find(filename, "(.*[\\/:])[^\\/:]*$")
+	local widgetData = {}
 	function widget:InitializeRml(model, model_name, rmlmain)
 		Spring.Echo("RML", widget.whInfo, filename, base, path)
 		Spring.Echo("Filename", whInfo.filename, whInfo.name)
@@ -31,12 +32,14 @@ local function WrapWidget(wh, widget)
 			Spring.Echo("RmlUi: Failed to open data model ", model_name)
 			return false
 		end
+		widgetData.model_name = model_name
 
 		local document = widget.rmlContext:LoadDocument(rmlmain, widget)
 		if not document then
 			Spring.Echo("Failed to load document")
 			return false
 		end
+		widgetData.document = document
 
 		-- uncomment the line below to enable debugger
 		-- RmlUi.SetDebugContext('shared')
@@ -46,6 +49,14 @@ local function WrapWidget(wh, widget)
 		widget.dm_handle = dm_handle
 		widget.document = document
 		return true
+	end
+	function widget:ShutdownRml()
+		if not widgetData.model_name then return end
+
+		widget.rmlContext:RemoveDataModel(widgetData.model_name)
+		if widgetData.document then
+			widgetData.document:Close()
+		end
 	end
 	return true
 end
