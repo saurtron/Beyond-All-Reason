@@ -107,6 +107,8 @@ for weaponDefID, weaponDef in pairs(WeaponDefs) do
 		local destructionMethod = customParams.projectile_destruction_method or "explode"
 		if destructionMethod == "descend" then
 			watchParams.descentMethod = true
+		elseif destructionMethod == "cannondescend" then
+			watchParams.cannonDescentMethod = true
 		elseif destructionMethod == "expire" then
 			watchParams.expireMethod = true
 		end
@@ -173,6 +175,19 @@ function gadget:ProjectileCreated(proID, proOwnerID, weaponDefID)
 	local defData = defWatchTable[weaponDefID]
 	if not defData then return end
 
+	if defData.cannonDescentMethod then
+		local velocityX, velocityY, velocityZ, velocityOverall = spGetProjectileVelocity(proID)
+		local velocity2D = math.sqrt(velocityX*velocityX + velocityZ*velocityZ)
+		local ttl = defData.overRange / velocity2D;
+		Spring.Echo("CANNONDESCENT2", ttl, 1000/velocity2D, velocity2D)
+		setDestructionFrame(proID, math.floor(ttl))
+		local metaData = { weaponDefID = weaponDefID, proOwnerID = proOwnerID }
+		proMetaData[proID] = metaData
+		--descentTable[proID] = descentMultiplier
+		--spSetProjectileTimeToLive(proID, ttl)
+		return
+	end
+
 	setFlightTimeFrame(proID, defData.flightTimeFrames)
 
 	local metaData = { weaponDefID = weaponDefID, proOwnerID = proOwnerID }
@@ -237,12 +252,28 @@ function gadget:GameFrame(frame)
 			local proData = proMetaData[proID]
 			if proData then
 				local defData = defWatchTable[proData.weaponDefID]
+				Spring.Echo("KLL", proID, defData.cannonDescentMethod)
 				if defData.descentMethod then
 					if engineDescent then
 						spSetProjectileTimeToLive(proID, 0)
 						spSetProjectileGravity(proID, descentGravity)
 					else
 						descentTable[proID] = descentMultiplier
+					end
+				elseif defData.cannonDescentMethod then
+					Spring.Echo("CANNONDESCENT METHOD", proID)
+					local luaDescent = false
+					if luaDescent then
+						--Spring.SetProjectileMoveControl(proID, true)
+						descentTable[proID] = descentMultiplier
+					else
+						-- change velocity when setting gravity, doesnt look very good
+						--local velocityX, velocityY, velocityZ, velocityOverall = spGetProjectileVelocity(proID)
+						--if velocityY then
+						--	local multiplier = 0.80
+						--	spSetProjectileVelocity(proID, velocityX * multiplier, velocityY * multiplier, velocityZ * multiplier)
+						--end
+						spSetProjectileGravity(proID, descentGravity*2.0)
 					end
 				elseif defData.expireMethod then
 					spSetProjectileTimeToLive(proID, frame)
@@ -255,16 +286,19 @@ function gadget:GameFrame(frame)
 		killQueue[frame] = nil
 	end
 
-	if frame % descentModulo == 3 then
+	--if frame % descentModulo == 3 then
 		for proID, descentMultiplier in pairs(descentTable) do
+			Spring.Echo("DESCEND", proID)
 			local velocityX, velocityY, velocityZ, velocityOverall = spGetProjectileVelocity(proID)
 			if velocityY then
-				local newVelocityY = velocityY - velocityOverall * descentMultiplier
+				local lateralMultiplier = 0.95
+				--local newVelocityY = velocityY - velocityOverall * descentMultiplier
+				local newVelocityY = velocityY * lateralMultiplier
 				spSetProjectileVelocity(proID, velocityX * lateralMultiplier, newVelocityY, velocityZ * lateralMultiplier)
 				descentTable[proID] = descentMultiplier * compoundingMultiplier
 			else
 				descentTable[proID] = nil
 			end
 		end
-	end
+	--end
 end

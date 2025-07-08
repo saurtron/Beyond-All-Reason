@@ -137,6 +137,10 @@ return {
 					shields = 812,
 					subs = 500,
 				},
+				customparams = {
+					projectile_destruction_method = "cannondescend",
+					overrange_distance = 2330,
+				},
 			},
 		},
 		weapons = {
