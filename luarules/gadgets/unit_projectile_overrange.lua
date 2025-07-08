@@ -293,7 +293,7 @@ function gadget:GameFrame(frame)
 			if velocityY then
 				local lateralMultiplier = 0.95
 				--local newVelocityY = velocityY - velocityOverall * descentMultiplier
-				local newVelocityY = velocityY * lateralMultiplier
+				local newVelocityY = velocityY
 				spSetProjectileVelocity(proID, velocityX * lateralMultiplier, newVelocityY, velocityZ * lateralMultiplier)
 				descentTable[proID] = descentMultiplier * compoundingMultiplier
 			else
