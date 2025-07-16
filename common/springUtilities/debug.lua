@@ -6,6 +6,13 @@ local function paramsEcho(...)
 	return ...
 end
 
+
+local function getStackFunctionName(index, defaultName)
+	defaultName = (defaultName ~= nil) and defaultName or "UnknownFunction" -- allow passing 'false' for no defaultName.
+	return (debug and debug.getinfo and debug.getinfo(index and (index + 1) or 2).name) or defaultName
+end
+
+
 local function traceEcho(...)
 	local myargs = {...}
 	local infostr = ""
@@ -15,16 +22,14 @@ local function traceEcho(...)
 	if infostr ~= "" then infostr = infostr .. " " end 
 	local functionstr = "Trace:["
 	for i = 2, 10 do
-		if debug.getinfo(i) then
-			local funcName = (debug and debug.getinfo(i) and debug.getinfo(i).name)
-			if funcName then
-				functionstr = functionstr .. tostring(funcName) .. " <- "
-			else break end
+		local funcName = getStackFunctionName(i, false)
+		if funcName then
+			functionstr = functionstr .. tostring(funcName) .. " <- "
 		else break end
 	end
 	functionstr = functionstr .. "]"
 	local arguments = ""
-	local funcName1 = (debug and debug.getinfo(2) and debug.getinfo(2).name) or "??"
+	local funcName1 = getStackFunctionName(2, '??')
 	if funcName1 ~= "??" then 
 		for i = 1, 10 do
 			local name, value = debug.getlocal(2, i)
@@ -80,20 +85,21 @@ local function traceFullEcho(maxdepth, maxwidth, maxtableelements, ...)
 	infostr = infostr .. "]\n"
 	local functionstr = "" -- "Trace:["
 	for i = 2, maxdepth do
-		if debug.getinfo(i) then
-			local funcName = (debug and debug.getinfo(i) and debug.getinfo(i).name)
+		if debug and debug.getinfo then
+			local stackInfo = debug.getinfo(i)
+			local funcName = stackInfo.name
 			if funcName then
 				functionstr = functionstr .. tostring(i-1) .. ": " .. tostring(funcName) .. " "
 				local arguments = ""
-				local funcName = (debug and debug.getinfo(i) and debug.getinfo(i).name) or "??"
+				local funcName = funcName or "??"
 				if funcName ~= "??" then
-					if functionsource and debug.getinfo(i).source then 
-						local source = debug.getinfo(i).source 
+					if functionsource and stackInfo.source then
+						local source = stackInfo.source
 						if string.len(source) > 128 then source = "sourcetoolong" end
 						functionstr = functionstr .. " @" .. source
 					end 
-					if functionsource and debug.getinfo(i).linedefined then 
-						functionstr = functionstr .. ":" .. tostring(debug.getinfo(i).linedefined) 
+					if functionsource and stackInfo.linedefined then
+						functionstr = functionstr .. ":" .. tostring(stackInfo.linedefined)
 					end 
 					for j = 1, maxwidth do
 						local name, value = debug.getlocal(i, j)
@@ -118,8 +124,10 @@ local function traceFullEcho(maxdepth, maxwidth, maxtableelements, ...)
 	Spring.Echo(infostr .. functionstr)
 end
 
+
 return {
 	ParamsEcho = paramsEcho,
 	TraceEcho = traceEcho,
 	TraceFullEcho = traceFullEcho,
+	GetStackFunctionName = getStackFunctionName,
 }
